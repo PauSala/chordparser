@@ -1,1 +1,3 @@
 # chordparser
+
+Writen in rust
