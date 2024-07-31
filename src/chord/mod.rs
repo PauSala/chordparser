@@ -1,9 +1,12 @@
+use serde::{Deserialize, Serialize};
+use serde_json;
+
 use semantics::Note;
 
 pub mod chord_ir;
 pub mod semantics;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Chord {
     pub root: Note,
     pub bass: Option<Note>,
@@ -61,6 +64,14 @@ impl Chord {
             semantic_intervals,
             real_intervals: self.real_intervals.clone(),
             is_sus: self.is_sus,
+        }
+    }
+
+    pub fn to_json(&self) -> String{
+        let a = serde_json::to_string(self);
+        match a {
+            Ok(v) => v,
+            Err(_) => "{{}}".to_string(),
         }
     }
 }

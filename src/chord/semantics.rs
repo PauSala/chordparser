@@ -1,6 +1,7 @@
 use std::fmt::Display;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum NoteLiteral {
     C,
     D,
@@ -121,7 +122,7 @@ impl Display for NoteLiteral {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct NoteMatcher(Vec<(NoteLiteral, Option<Modifier>)>);
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize)]
 pub enum Modifier {
     Sharp,
     Flat,
@@ -140,7 +141,7 @@ impl Display for Modifier {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Note {
     pub literal: NoteLiteral,
     pub modifier: Option<Modifier>,
@@ -159,7 +160,6 @@ impl Note {
 
     pub fn transpose_to(&self, note: &Note, to: &Note) -> Note {
         let diff = self.get_difference(to);
-        dbg!(diff, (note.to_interval() + diff) % 12);
         let m = self.literal.get_matcher(note.to_interval(), diff);
         Note::new(m.0[0].clone().0, m.0[0].clone().1)
     }

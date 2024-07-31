@@ -55,7 +55,7 @@ use test_case::test_case;
 #[test_case("Cmi11(b5,b13)", vec!["C", "Eb", "Gb", "Bb", "D", "F", "Ab"])]
 #[test_case("Cmi13", vec!["C", "Eb", "G", "Bb", "D", "F", "A"])]
 #[test_case("Csus4(b5#5)", vec!["C", "F", "Gb", "G#"])]
-#[test_case("Bdim7Maj7b13", vec!["B", "D", "F", "Ab", "A#", "C#", "E", "G"])]
+#[test_case("Bdim7Maj7b13/G", vec!["B", "D", "F", "Ab", "A#", "C#", "E", "G"])]
 #[test_case("CMaj", vec!["C", "E", "G" ])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
@@ -67,6 +67,7 @@ fn test_notes(i: &str, expected: Vec<&str>) {
             dbg!(t);
             dbg!(&chord.note_literals);
             dbg!(&chord.real_intervals);
+            dbg!(chord.to_json());
             let literals = chord.note_literals;
             assert_eq!(literals, expected);
         }
