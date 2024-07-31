@@ -41,85 +41,64 @@ impl NoteLiteral {
         let interval = (root + interval) % 12;
         let i = interval % 12;
         match i {
-            0 => NoteMatcher {
-                matchers: vec![
-                    (NoteLiteral::C, None),
-                    (NoteLiteral::B, Some(Modifier::Sharp)),
-                    (NoteLiteral::D, Some(Modifier::DFlat)),
-                ],
-            },
-            1 => NoteMatcher {
-                matchers: vec![
-                    (NoteLiteral::D, Some(Modifier::Flat)),
-                    (NoteLiteral::C, Some(Modifier::Sharp)),
-                ],
-            },
-            2 => NoteMatcher {
-                matchers: vec![
-                    (NoteLiteral::D, None),
-                    (NoteLiteral::C, Some(Modifier::DSharp)),
-                    (NoteLiteral::E, Some(Modifier::DFlat)),
-                ],
-            },
-            3 => NoteMatcher {
-                matchers: vec![
-                    (NoteLiteral::E, Some(Modifier::Flat)),
-                    (NoteLiteral::D, Some(Modifier::Sharp)),
-                ],
-            },
-            4 => NoteMatcher {
-                matchers: vec![
-                    (NoteLiteral::E, None),
-                    (NoteLiteral::F, Some(Modifier::Flat)),
-                    (NoteLiteral::D, Some(Modifier::DSharp)),
-                ],
-            },
-            5 => NoteMatcher {
-                matchers: vec![
-                    (NoteLiteral::F, None),
-                    (NoteLiteral::E, Some(Modifier::Sharp)),
-                    (NoteLiteral::G, Some(Modifier::DFlat)),
-                ],
-            },
-            6 => NoteMatcher {
-                matchers: vec![
-                    (NoteLiteral::G, Some(Modifier::Flat)),
-                    (NoteLiteral::F, Some(Modifier::Sharp)),
-                ],
-            },
-            7 => NoteMatcher {
-                matchers: vec![
-                    (NoteLiteral::G, None),
-                    (NoteLiteral::F, Some(Modifier::DSharp)),
-                    (NoteLiteral::A, Some(Modifier::DFlat)),
-                ],
-            },
-            8 => NoteMatcher {
-                matchers: vec![
-                    (NoteLiteral::A, Some(Modifier::Flat)),
-                    (NoteLiteral::G, Some(Modifier::Sharp)),
-                ],
-            },
-            9 => NoteMatcher {
-                matchers: vec![
-                    (NoteLiteral::A, None),
-                    (NoteLiteral::G, Some(Modifier::DSharp)),
-                    (NoteLiteral::B, Some(Modifier::DFlat)),
-                ],
-            },
-            10 => NoteMatcher {
-                matchers: vec![
-                    (NoteLiteral::B, Some(Modifier::Flat)),
-                    (NoteLiteral::A, Some(Modifier::Sharp)),
-                ],
-            },
-            11 => NoteMatcher {
-                matchers: vec![
-                    (NoteLiteral::B, None),
-                    (NoteLiteral::A, Some(Modifier::DSharp)),
-                    (NoteLiteral::C, Some(Modifier::Flat)),
-                ],
-            },
+            0 => NoteMatcher(vec![
+                (NoteLiteral::C, None),
+                (NoteLiteral::B, Some(Modifier::Sharp)),
+                (NoteLiteral::D, Some(Modifier::DFlat)),
+            ]),
+            1 => NoteMatcher(vec![
+                (NoteLiteral::D, Some(Modifier::Flat)),
+                (NoteLiteral::C, Some(Modifier::Sharp)),
+            ]),
+            2 => NoteMatcher(vec![
+                (NoteLiteral::D, None),
+                (NoteLiteral::C, Some(Modifier::DSharp)),
+                (NoteLiteral::E, Some(Modifier::DFlat)),
+            ]),
+            3 => NoteMatcher(vec![
+                (NoteLiteral::E, Some(Modifier::Flat)),
+                (NoteLiteral::D, Some(Modifier::Sharp)),
+            ]),
+
+            4 => NoteMatcher(vec![
+                (NoteLiteral::E, None),
+                (NoteLiteral::F, Some(Modifier::Flat)),
+                (NoteLiteral::D, Some(Modifier::DSharp)),
+            ]),
+            5 => NoteMatcher(vec![
+                (NoteLiteral::F, None),
+                (NoteLiteral::E, Some(Modifier::Sharp)),
+                (NoteLiteral::G, Some(Modifier::DFlat)),
+            ]),
+            6 => NoteMatcher(vec![
+                (NoteLiteral::G, Some(Modifier::Flat)),
+                (NoteLiteral::F, Some(Modifier::Sharp)),
+            ]),
+
+            7 => NoteMatcher(vec![
+                (NoteLiteral::G, None),
+                (NoteLiteral::F, Some(Modifier::DSharp)),
+                (NoteLiteral::A, Some(Modifier::DFlat)),
+            ]),
+            8 => NoteMatcher(vec![
+                (NoteLiteral::A, Some(Modifier::Flat)),
+                (NoteLiteral::G, Some(Modifier::Sharp)),
+            ]),
+
+            9 => NoteMatcher(vec![
+                (NoteLiteral::A, None),
+                (NoteLiteral::G, Some(Modifier::DSharp)),
+                (NoteLiteral::B, Some(Modifier::DFlat)),
+            ]),
+            10 => NoteMatcher(vec![
+                (NoteLiteral::B, Some(Modifier::Flat)),
+                (NoteLiteral::A, Some(Modifier::Sharp)),
+            ]),
+            11 => NoteMatcher(vec![
+                (NoteLiteral::B, None),
+                (NoteLiteral::A, Some(Modifier::DSharp)),
+                (NoteLiteral::C, Some(Modifier::Flat)),
+            ]),
             _ => panic!("Dont call this with a number greater than 6"),
         }
     }
@@ -140,9 +119,7 @@ impl Display for NoteLiteral {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct NoteMatcher {
-    pub(crate) matchers: Vec<(NoteLiteral, Option<Modifier>)>,
-}
+pub struct NoteMatcher(Vec<(NoteLiteral, Option<Modifier>)>);
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub enum Modifier {
@@ -184,7 +161,7 @@ impl Note {
         let diff = self.get_difference(to);
         dbg!(diff, (note.to_interval() + diff) % 12);
         let m = self.literal.get_matcher(note.to_interval(), diff);
-        Note::new(m.matchers[0].clone().0, m.matchers[0].clone().1)
+        Note::new(m.0[0].clone().0, m.0[0].clone().1)
     }
 
     pub fn to_real_interval(semantic_interval: u8, interval: u8) -> String {
@@ -223,7 +200,7 @@ impl Note {
                 _ => "".to_owned(),
             },
             9 => match interval {
-                13 =>  String::from("b9"),
+                13 => String::from("b9"),
                 14 => String::from("9"),
                 15 => String::from("#9"),
                 _ => "".to_owned(),
@@ -310,10 +287,9 @@ impl Note {
         let m = self.literal.get_matcher(self.to_interval(), exact_interval);
         let root_index = NoteLiteral::to_int(&self.literal);
         let interval_index = (root_index + (semantic_interval - 1)) % 7;
-        let f = m
-            .matchers
-            .iter()
-            .find(|m| NoteLiteral::to_int(&m.0) == interval_index);
+        let f =
+            m.0.iter()
+                .find(|m| NoteLiteral::to_int(&m.0) == interval_index);
         let (literal, modifier) = f.unwrap().to_owned();
         Note::new(literal, modifier)
     }
