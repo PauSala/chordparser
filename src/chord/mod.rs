@@ -39,11 +39,7 @@ impl Chord {
     }
 
     pub fn transpose_to_root(&self, transpose_to: &Note) -> Chord {
-        let bass = if let Some(bass) = &self.bass {
-            Some(self.root.transpose_to(bass, transpose_to))
-        } else {
-            None
-        };
+        let bass = self.bass.as_ref().map(|bass| self.root.transpose_to(bass, transpose_to));
 
         let mut notes = Vec::new();
         let semitones = self.semitones.clone();
