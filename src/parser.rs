@@ -14,8 +14,8 @@ use crate::{
         remove_omits, Transformer,
     },
     validator::{
-        no_minor_and_major_seventh, no_minor_and_major_thirds, no_natural_and_altered_nine,
-        no_perfect_fifth_and_altered_fifth, no_souble_eleventh, Validator,
+        no_double_eleventh, no_minor_and_major_seventh, no_minor_and_major_thirds,
+        no_natural_and_altered_nine, no_perfect_fifth_and_altered_fifth, Validator,
     },
 };
 
@@ -46,7 +46,7 @@ impl Parser {
                 no_perfect_fifth_and_altered_fifth,
                 no_minor_and_major_seventh,
                 no_natural_and_altered_nine,
-                no_souble_eleventh,
+                no_double_eleventh,
             ],
         }
     }

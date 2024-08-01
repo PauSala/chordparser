@@ -103,7 +103,7 @@ pub fn no_natural_and_altered_nine(chord: &mut ChordIr, errors: &mut Vec<String>
     }
 }
 
-pub fn no_souble_eleventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
+pub fn no_double_eleventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut n = (false, 0);
     let mut s = (false, 0);
     for note in &chord.notes {
@@ -124,7 +124,7 @@ pub fn no_souble_eleventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
     }
 }
 
-pub fn no_souble_thirteenth(chord: &mut ChordIr, errors: &mut Vec<String>) {
+pub fn no_double_thirteenth(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut f = (false, 0);
     let mut n = (false, 0);
     for note in &chord.notes {
