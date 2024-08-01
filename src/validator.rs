@@ -49,6 +49,43 @@ pub fn no_perfect_fifth_and_altered_fifth(chord: &mut ChordIr, errors: &mut Vec<
     }
 }
 
+pub fn no_duplicate_seventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
+    let mut m7 = 0;
+    let mut maj7 = 0;
+    let mut dim7 = 0;
+    for note in &chord.notes {
+        match note.sem_interval {
+            SemInterval::Seventh => {
+                if note.semitone == 9 {
+                    dim7 += 1;
+                }
+                if note.semitone == 10 {
+                    m7 += 1;
+                }
+                if note.semitone == 11 {
+                    maj7 += 1;
+                }
+            }
+            _ => {}
+        }
+    }
+    if m7 > 1 {
+        errors.push(format!(
+            "Error: A chord cannot have multiple minor sevenths"
+        ));
+    }
+    if dim7 > 1 {
+        errors.push(format!(
+            "Error: A chord cannot have multiple diminished sevenths"
+        ));
+    }
+    if maj7 > 1 {
+        errors.push(format!(
+            "Error: A chord cannot have multiple major sevenths"
+        ));
+    }
+}
+
 pub fn no_minor_and_major_seventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut m7 = (false, 0);
     let mut maj7 = (false, 0);

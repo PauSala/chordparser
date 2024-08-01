@@ -11,6 +11,7 @@ use test_case::test_case;
 #[test_case("C11#11", vec![])]
 #[test_case("C#11#11", vec![])]
 #[test_case("Db13#13", vec![])]
+#[test_case("Db137min7", vec![])]
 fn should_error(i: &str, _expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);

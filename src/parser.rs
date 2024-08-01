@@ -14,8 +14,9 @@ use crate::{
         remove_omits, Transformer,
     },
     validator::{
-        no_double_eleventh, no_minor_and_major_seventh, no_minor_and_major_thirds,
-        no_natural_and_altered_nine, no_perfect_fifth_and_altered_fifth, Validator,
+        no_double_eleventh, no_duplicate_seventh, no_minor_and_major_seventh,
+        no_minor_and_major_thirds, no_natural_and_altered_nine, no_perfect_fifth_and_altered_fifth,
+        Validator,
     },
 };
 
@@ -44,6 +45,7 @@ impl Parser {
             validators: vec![
                 no_minor_and_major_thirds,
                 no_perfect_fifth_and_altered_fifth,
+                no_duplicate_seventh,
                 no_minor_and_major_seventh,
                 no_natural_and_altered_nine,
                 no_double_eleventh,
