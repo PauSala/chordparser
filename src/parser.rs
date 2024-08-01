@@ -427,7 +427,7 @@ impl Parser {
                 11,
                 token.pos as usize,
             ));
-            // Skyp the seventh
+            // Skip the seventh
             tokens.next();
         }
     }
