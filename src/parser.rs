@@ -6,7 +6,7 @@ use crate::{
         semantics::{Modifier, Note, NoteDescriptor, NoteLiteral, SemInterval},
         Chord,
     },
-    lexer::Scanner,
+    lexer::Lexer,
     parser_error::ParserErrors,
     token::{Token, TokenType},
     transformer::{
@@ -21,7 +21,7 @@ use crate::{
 };
 
 pub struct Parser {
-    scanner: Scanner,
+    scanner: Lexer,
     errors: Vec<String>,
     ir: ChordIr,
     transformers: Vec<Transformer>,
@@ -31,7 +31,7 @@ pub struct Parser {
 impl Parser {
     pub fn new() -> Parser {
         Parser {
-            scanner: Scanner::new(),
+            scanner: Lexer::new(),
             errors: Vec::new(),
             ir: ChordIr::new(),
             transformers: vec![

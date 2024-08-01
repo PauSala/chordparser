@@ -4,17 +4,17 @@ use regex::Regex;
 
 use crate::token::{Token, TokenType};
 static EXTENSIONS: &str = r"\b(?:2|3|4|5|6|7|9|11|13)\b";
-pub struct Scanner {
+pub struct Lexer {
     source: String,
     tokens: Vec<Token>,
     current: usize,
     reg_alt: Regex,
 }
 
-impl Scanner {
-    pub fn new() -> Scanner {
+impl Lexer {
+    pub fn new() -> Lexer {
         let reg_alt = Regex::new(EXTENSIONS).unwrap();
-        Scanner {
+        Lexer {
             source: String::from(""),
             tokens: Vec::new(),
             current: 0,
@@ -168,25 +168,8 @@ impl Scanner {
     }
 }
 
-impl Default for Scanner {
+impl Default for Lexer {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    #[test]
-    fn it_should_work() {
-        let mut scanner = Scanner::new();
-        let res = scanner.scan_tokens("G7sus2add13");
-        dbg!(res);
-        // let res = scanner.scan_tokens("A13b9".to_string());
-        // dbg!(res);
-        // let res = scanner.scan_tokens("A7sus4 add9 b13/D#".to_string());
-        // dbg!(res);
-        // let res = scanner.scan_tokens("DbMaj7#5".to_string());
-        // dbg!(res);
     }
 }
