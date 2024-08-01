@@ -10,8 +10,12 @@ use crate::{
     parser_error::ParserErrors,
     token::{Token, TokenType},
     transformer::{
-        implicit_eleventh, implicit_fifth, implicit_min_seventh, implicit_nineth, implicit_third,
+        implicit_eleventh, implicit_fifth, implicit_min_seventh, implicit_ninth, implicit_third,
         remove_omits, Transformer,
+    },
+    validator::{
+        no_minor_and_major_seventh, no_minor_and_major_thirds, no_natural_and_altered_nine,
+        no_perfect_fifth_and_altered_fifth, no_souble_eleventh, Validator,
     },
 };
 
@@ -20,6 +24,7 @@ pub struct Parser {
     errors: Vec<String>,
     ir: ChordIr,
     transformers: Vec<Transformer>,
+    validators: Vec<Validator>,
 }
 
 impl Parser {
@@ -32,9 +37,16 @@ impl Parser {
                 implicit_third,
                 implicit_fifth,
                 implicit_min_seventh,
-                implicit_nineth,
+                implicit_ninth,
                 implicit_eleventh,
                 remove_omits,
+            ],
+            validators: vec![
+                no_minor_and_major_thirds,
+                no_perfect_fifth_and_altered_fifth,
+                no_minor_and_major_seventh,
+                no_natural_and_altered_nine,
+                no_souble_eleventh,
             ],
         }
     }
@@ -44,9 +56,8 @@ impl Parser {
         let mut tokens = binding.iter().peekable();
 
         self.read_tokens(&mut tokens);
-        for t in &self.transformers {
-            t(&mut self.ir);
-        }
+        self.transform();
+        self.validate();
 
         if !self.errors.is_empty() {
             let errors = self.errors.clone();
@@ -57,6 +68,18 @@ impl Parser {
         res.sort_notes();
         self.clean_up();
         Ok(res.to_chord())
+    }
+
+    fn transform(&mut self) {
+        for t in &self.transformers {
+            t(&mut self.ir);
+        }
+    }
+
+    fn validate(&mut self) {
+        for v in &self.validators {
+            v(&mut self.ir, &mut self.errors);
+        }
     }
 
     fn clean_up(&mut self) {
@@ -234,8 +257,21 @@ impl Parser {
                     "9" | "11" | "13" => {
                         self.add_tension(t, token, modifier, true);
                     }
-                    // Looks like add 3 appears in real book
-                    "3" => self.add_tension("13", token, modifier, true),
+                    // Looks like add 3 appears in real book, but only as a mijor third
+                    "3" => {
+                        if let Some(_) = modifier {
+                            self.errors.push(format!(
+                                "Error: Add 3 cannot be sharp or flat at pos {}",
+                                token.pos
+                            ));
+                            return;
+                        }
+                        self.ir.notes.push(NoteDescriptor::new(
+                            SemInterval::Third,
+                            4,
+                            token.pos as usize,
+                        ));
+                    }
                     _ => self
                         .errors
                         .push(format!("Error: invalid Add target at pos {}", token.pos)),

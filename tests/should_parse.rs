@@ -1,4 +1,7 @@
-use chordparser::{chord::semantics::{Modifier, Note, NoteLiteral}, parser::Parser};
+use chordparser::{
+    chord::semantics::{Modifier, Note, NoteLiteral},
+    parser::Parser,
+};
 
 use test_case::test_case;
 
@@ -57,6 +60,7 @@ use test_case::test_case;
 #[test_case("Csus4(b5#5)", vec!["C", "F", "Gb", "G#"])]
 #[test_case("Bdim7Maj7b13/G", vec!["B", "D", "F", "Ab", "A#", "C#", "E", "G"])]
 #[test_case("CMaj", vec!["C", "E", "G" ])]
+#[test_case("CMaj7min7add3", vec!["C", "E", "G" ])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);

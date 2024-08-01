@@ -42,7 +42,7 @@ pub fn implicit_min_seventh(ir: &mut ChordIr) {
     }
 }
 
-pub fn implicit_nineth(ir: &mut ChordIr) {
+pub fn implicit_ninth(ir: &mut ChordIr) {
     let add13 = ir.has_add(SemInterval::Thirteenth);
     let t13 = ir.has(SemInterval::Thirteenth);
     let t9 = ir.has(SemInterval::Ninth);
