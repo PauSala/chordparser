@@ -24,6 +24,7 @@ impl Default for Omit {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ChordIr {
+    pub name: String,
     pub root: Option<Note>,
     pub bass: Option<Note>,
     pub notes: Vec<NoteDescriptor>,
@@ -35,6 +36,7 @@ pub struct ChordIr {
 impl ChordIr {
     pub fn new() -> ChordIr {
         ChordIr {
+            name: String::new(),
             root: None,
             bass: None,
             notes: Vec::new(),
@@ -89,16 +91,15 @@ impl ChordIr {
             real_intervals.push(Note::to_real_interval(e.sem_interval.to_int(), e.semitone))
         }
 
-        Chord {
-            root: self.root.clone().unwrap(),
-            bass: self.bass.clone(),
-            notes,
-            note_literals,
-            semantic_intervals,
-            real_intervals,
-            is_sus: self.is_sus,
-            semitones,
-        }
+        Chord::builder(&self.name, self.root.clone().unwrap())
+            .bass(self.bass.clone())
+            .notes(notes)
+            .note_literals(note_literals)
+            .semitones(semitones)
+            .semantic_intervals(semantic_intervals)
+            .real_intervals(real_intervals)
+            .is_sus(self.is_sus)
+            .build()
     }
 }
 

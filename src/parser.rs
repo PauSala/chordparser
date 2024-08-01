@@ -3,7 +3,8 @@ use std::{iter::Peekable, slice::Iter};
 use crate::{
     chord::{
         chord_ir::ChordIr,
-        semantics::{Modifier, Note, NoteDescriptor, NoteLiteral, SemInterval}, Chord,
+        semantics::{Modifier, Note, NoteDescriptor, NoteLiteral, SemInterval},
+        Chord,
     },
     lexer::Scanner,
     parser_error::ParserErrors,
@@ -38,6 +39,7 @@ impl Parser {
         }
     }
     pub fn parse(&mut self, input: &str) -> Result<Chord, ParserErrors> {
+        input.clone_into(&mut self.ir.name);
         let binding = self.scanner.scan_tokens(input);
         let mut tokens = binding.iter().peekable();
 
@@ -57,7 +59,7 @@ impl Parser {
         Ok(res.to_chord())
     }
 
-    fn clean_up(&mut self){
+    fn clean_up(&mut self) {
         self.errors.clear();
         self.ir = ChordIr::new();
     }
