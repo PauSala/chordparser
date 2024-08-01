@@ -1,4 +1,4 @@
-# chord_parser
+# chordparser
 
 ## Roadmap
 
