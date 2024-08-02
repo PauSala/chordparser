@@ -350,7 +350,7 @@ impl Parser {
         }
         self.ir.notes.push(NoteDescriptor::new(
             SemInterval::Fourth,
-            5,
+            Interval::PerfectFourth.st(),
             token.pos as usize,
         ));
     }
@@ -384,7 +384,7 @@ impl Parser {
         ));
         self.ir.notes.push(NoteDescriptor::new(
             SemInterval::Third,
-            3,
+            Interval::MinorThird.st(),
             token.pos as usize,
         ));
         if self.expect_peek(TokenType::Extension("7".to_owned()), tokens) {
