@@ -84,3 +84,34 @@ impl Interval {
         }
     }
 }
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum SemInterval {
+    Root,
+    Second,
+    Third,
+    Fourth,
+    Fifth,
+    Sixth,
+    Seventh,
+    Ninth,
+    Eleventh,
+    Thirteenth,
+}
+
+impl SemInterval {
+    pub fn to_int(&self) -> u8 {
+        match self {
+            SemInterval::Root => 1,
+            SemInterval::Second => 2,
+            SemInterval::Third => 3,
+            SemInterval::Fourth => 4,
+            SemInterval::Fifth => 5,
+            SemInterval::Sixth => 6,
+            SemInterval::Seventh => 7,
+            SemInterval::Ninth => 9,
+            SemInterval::Eleventh => 11,
+            SemInterval::Thirteenth => 13,
+        }
+    }
+}

@@ -1,5 +1,6 @@
 use super::{
-    semantics::{Note, NoteDescriptor, SemInterval},
+    intervals::SemInterval,
+    note::{Note, NoteDescriptor},
     Chord,
 };
 #[derive(Debug, PartialEq, Eq, Clone)]

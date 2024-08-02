@@ -1,7 +1,4 @@
-use crate::chord::{
-    chord_ir::ChordIr,
-    semantics::{NoteDescriptor, SemInterval},
-};
+use crate::chord::{chord_ir::ChordIr, intervals::SemInterval, note::NoteDescriptor};
 
 pub type Transformer = fn(&mut ChordIr);
 

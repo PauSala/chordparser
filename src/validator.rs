@@ -1,4 +1,4 @@
-use crate::chord::{chord_ir::ChordIr, semantics::SemInterval};
+use crate::chord::{chord_ir::ChordIr, intervals::SemInterval};
 
 pub type Validator = fn(&mut ChordIr, &mut Vec<String>);
 

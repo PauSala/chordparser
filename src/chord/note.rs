@@ -2,7 +2,7 @@ use core::panic;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-use super::intervals::Interval;
+use super::intervals::{Interval, SemInterval};
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum NoteLiteral {
@@ -310,37 +310,6 @@ impl Display for Note {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub enum SemInterval {
-    Root,
-    Second,
-    Third,
-    Fourth,
-    Fifth,
-    Sixth,
-    Seventh,
-    Ninth,
-    Eleventh,
-    Thirteenth,
-}
-
-impl SemInterval {
-    pub fn to_int(&self) -> u8 {
-        match self {
-            SemInterval::Root => 1,
-            SemInterval::Second => 2,
-            SemInterval::Third => 3,
-            SemInterval::Fourth => 4,
-            SemInterval::Fifth => 5,
-            SemInterval::Sixth => 6,
-            SemInterval::Seventh => 7,
-            SemInterval::Ninth => 9,
-            SemInterval::Eleventh => 11,
-            SemInterval::Thirteenth => 13,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct NoteDescriptor {
     pub sem_interval: SemInterval,
     pub semitone: u8,
@@ -359,7 +328,7 @@ impl NoteDescriptor {
 
 #[cfg(test)]
 mod test {
-    use crate::chord::semantics::Modifier;
+    use crate::chord::note::Modifier;
 
     use super::Note;
 

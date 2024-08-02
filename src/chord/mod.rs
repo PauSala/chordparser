@@ -2,11 +2,11 @@ use intervals::Interval;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
-use semantics::Note;
+use note::Note;
 
 pub mod chord_ir;
 pub mod intervals;
-pub mod semantics;
+pub mod note;
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Chord {

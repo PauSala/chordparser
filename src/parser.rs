@@ -3,8 +3,8 @@ use std::{iter::Peekable, slice::Iter, vec};
 use crate::{
     chord::{
         chord_ir::ChordIr,
-        intervals::Interval,
-        semantics::{Modifier, Note, NoteDescriptor, NoteLiteral, SemInterval},
+        intervals::{Interval, SemInterval},
+        note::{Modifier, Note, NoteDescriptor, NoteLiteral},
         Chord,
     },
     lexer::Lexer,
