@@ -53,15 +53,17 @@ impl NoteLiteral {
             1 => NoteMatcher(vec![
                 (NoteLiteral::D, Some(Modifier::Flat)),
                 (NoteLiteral::C, Some(Modifier::Sharp)),
+                (NoteLiteral::B, Some(Modifier::DSharp)),
             ]),
             2 => NoteMatcher(vec![
                 (NoteLiteral::D, None),
-                (NoteLiteral::C, Some(Modifier::DSharp)),
                 (NoteLiteral::E, Some(Modifier::DFlat)),
+                (NoteLiteral::C, Some(Modifier::DSharp)),
             ]),
             3 => NoteMatcher(vec![
                 (NoteLiteral::E, Some(Modifier::Flat)),
                 (NoteLiteral::D, Some(Modifier::Sharp)),
+                (NoteLiteral::F, Some(Modifier::DFlat)),
             ]),
 
             4 => NoteMatcher(vec![
@@ -77,6 +79,7 @@ impl NoteLiteral {
             6 => NoteMatcher(vec![
                 (NoteLiteral::G, Some(Modifier::Flat)),
                 (NoteLiteral::F, Some(Modifier::Sharp)),
+                (NoteLiteral::E, Some(Modifier::DSharp)),
             ]),
 
             7 => NoteMatcher(vec![
@@ -97,6 +100,7 @@ impl NoteLiteral {
             10 => NoteMatcher(vec![
                 (NoteLiteral::B, Some(Modifier::Flat)),
                 (NoteLiteral::A, Some(Modifier::Sharp)),
+                (NoteLiteral::C, Some(Modifier::DFlat)),
             ]),
             11 => NoteMatcher(vec![
                 (NoteLiteral::B, None),
@@ -290,9 +294,16 @@ impl Note {
         let m = self.literal.get_matcher(self.to_interval(), exact_interval);
         let root_index = NoteLiteral::to_int(&self.literal);
         let interval_index = (root_index + (semantic_interval - 1)) % 7;
-        let f =
+        let mut f =
             m.0.iter()
                 .find(|m| NoteLiteral::to_int(&m.0) == interval_index);
+        f = {
+            if f.is_none() {
+                Some(&m.0[0])
+            } else {
+                f
+            }
+        };
         let (literal, modifier) = f.unwrap().to_owned();
         Note::new(literal, modifier)
     }

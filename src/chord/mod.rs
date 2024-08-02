@@ -43,21 +43,20 @@ impl Chord {
         }
 
         let note_literals = notes.iter().map(|a| a.to_string()).collect::<Vec<String>>();
-        let mut origin = String::from("transposed_from: ");
-        origin.push_str(&self.origin);
 
-        Chord {
-            origin,
-            descriptor: self.descriptor.clone(),
-            root: transpose_to.clone(),
-            bass,
-            notes,
-            note_literals,
-            semitones,
-            semantic_intervals,
-            real_intervals: self.real_intervals.clone(),
-            is_sus: self.is_sus,
-        }
+        let mut origin = String::from(transpose_to.to_string());
+        origin.push_str(&self.descriptor);
+
+        Chord::builder(&origin, transpose_to.clone())
+            .descriptor(&self.descriptor)
+            .bass(bass)
+            .notes(notes)
+            .note_literals(note_literals)
+            .semitones(semitones)
+            .semantic_intervals(semantic_intervals)
+            .real_intervals(self.real_intervals.clone())
+            .is_sus(self.is_sus)
+            .build()
     }
 
     pub fn to_json(&self) -> String {

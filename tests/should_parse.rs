@@ -54,22 +54,44 @@ use test_case::test_case;
 #[test_case("Cmi11(b5,b13)", vec!["C", "Eb", "Gb", "Bb", "D", "F", "Ab"])]
 #[test_case("Cmi13", vec!["C", "Eb", "G", "Bb", "D", "F", "A"])]
 #[test_case("Csus4(b5#5)", vec!["C", "F", "Gb", "G#"])]
-#[test_case("Bdim7Maj7b13/G", vec!["B", "D", "F", "Ab", "A#", "C#", "E", "G"])]
+#[test_case("Cdim7Maj7b13/G", vec!["C", "Eb", "Gb", "B𝄫", "B", "D", "F", "Ab"])]
 #[test_case("C7", vec!["C", "E", "G", "Bb" ])]
 #[test_case("Cadd2", vec!["C", "E", "G", "D" ])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);
+    let notes = vec![
+        // Note::new(NoteLiteral::C, Some(Modifier::Flat)),
+        // Note::new(NoteLiteral::C, Some(Modifier::Sharp)),
+        // Note::new(NoteLiteral::D, Some(Modifier::Flat)),
+        // Note::new(NoteLiteral::D, None),
+        // Note::new(NoteLiteral::D, Some(Modifier::Sharp)),
+        // Note::new(NoteLiteral::E, Some(Modifier::Flat)),
+        // Note::new(NoteLiteral::E, None),
+        // Note::new(NoteLiteral::E, Some(Modifier::Sharp)),
+        // Note::new(NoteLiteral::F, Some(Modifier::Flat)),
+        // Note::new(NoteLiteral::F, None),
+        // Note::new(NoteLiteral::F, Some(Modifier::Sharp)),
+        // Note::new(NoteLiteral::G, Some(Modifier::Flat)),
+        // Note::new(NoteLiteral::G, None),
+        // Note::new(NoteLiteral::G, Some(Modifier::Sharp)),
+        // Note::new(NoteLiteral::A, Some(Modifier::Flat)),
+        // Note::new(NoteLiteral::A, None),
+        // Note::new(NoteLiteral::A, Some(Modifier::Flat)),
+        // Note::new(NoteLiteral::B, None),
+        // Note::new(NoteLiteral::B, Some(Modifier::Flat)),
+        Note::new(NoteLiteral::A, Some(Modifier::Sharp)),
+        Note::new(NoteLiteral::B, Some(Modifier::Sharp)),
+    ];
     match res {
         Ok(chord) => {
-            //dbg!(&chord);
-            let t = chord.transpose_to_root(&Note::new(NoteLiteral::E, Some(Modifier::Flat)));
-            dbg!(t);
-            dbg!(&chord.note_literals);
-            dbg!(&chord.real_intervals);
-            dbg!(chord.to_json());
-            let literals = chord.note_literals;
-            assert_eq!(literals, expected);
+            let literals = &chord.note_literals;
+            assert_eq!(literals, &expected);
+            for n in notes {
+                let t = chord.transpose_to_root(&n);
+                dbg!(&t.to_json());
+                assert_eq!(chord.real_intervals, t.real_intervals);
+            }
         }
         Err(e) => {
             let a = e.errors.iter().fold("".to_owned(), |acc, e| {

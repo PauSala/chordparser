@@ -424,10 +424,7 @@ impl Parser {
             Some(m) => m.to_string(),
             None => "".to_string(),
         };
-        self.ir.descriptor = self
-            .ir
-            .name
-            .replace(&format!("{}{}", n.to_string(), modifier_str), "");
+        self.ir.descriptor = self.ir.name.replace(&format!("{}{}", n, modifier_str), "");
         self.ir.root = Some(Note::new(literal, modifier));
     }
     fn process_maj(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
