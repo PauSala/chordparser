@@ -4,6 +4,7 @@ use serde_json;
 use semantics::Note;
 
 pub mod chord_ir;
+pub mod intervals;
 pub mod semantics;
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
