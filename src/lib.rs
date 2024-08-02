@@ -35,7 +35,7 @@
 //! - Bass symbol is not supported yet.
 //! - Parsed chord notes have enharmonically correct names when possible. For example, a `B#9` chord will have `C𝄪` as the ninth instead of D. Said that,
 //! triple flat/sharps are not suported since they add an unnecesasry complexity for very rare use cases.
-//! - When transposed, /bass note may not be enharmonically correct.
+//! - When transposed, slash-bass note (like C in Ab/C) may not be enharmonically correct.
 //! - The parser is not customizable for now, but it is expected to be in the future, for example:
 //!     - Include or remove both custom and default validators.
 //!     - Include or remove sets of allowed symbols.
