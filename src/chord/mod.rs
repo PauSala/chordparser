@@ -1,3 +1,5 @@
+use std::vec;
+
 use intervals::Interval;
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -57,6 +59,21 @@ impl Chord {
             .real_intervals(self.real_intervals.clone())
             .is_sus(self.is_sus)
             .build()
+    }
+
+    pub fn to_midi_codes(&self) -> Vec<u8> {
+        let root = self.root.to_midi_code();
+        let mut codes = vec![];
+        if let Some(bass) = &self.bass {
+            codes.push(bass.to_midi_code() - 12);
+            codes.push(root);
+        } else {
+            codes.push(root - 12);
+        }
+        for note in self.real_intervals.iter().skip(1) {
+            codes.push(note.st() + root);
+        }
+        codes
     }
 
     pub fn to_json(&self) -> String {

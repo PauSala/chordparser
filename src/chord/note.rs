@@ -298,6 +298,8 @@ impl Note {
             m.0.iter()
                 .find(|m| NoteLiteral::to_int(&m.0) == interval_index);
         f = {
+            // If the note is triple flat/sharp return the first note, it is wrong anyway
+            // Maybe in the future we can try to get the most reasonable note and return some kind of warning attached to the chord
             if f.is_none() {
                 Some(&m.0[0])
             } else {
@@ -306,6 +308,30 @@ impl Note {
         };
         let (literal, modifier) = f.unwrap().to_owned();
         Note::new(literal, modifier)
+    }
+
+    pub fn to_midi_code(&self) -> u8 {
+        let central_c = 60;
+        let mut code = central_c - 12;
+        match &self.modifier {
+            Some(m) => match m {
+                Modifier::Sharp => code += 1,
+                Modifier::Flat => code -= 1,
+                Modifier::DSharp => code += 2,
+                Modifier::DFlat => code -= 2,
+            },
+            None => (),
+        }
+        match self.literal {
+            NoteLiteral::C => (),
+            NoteLiteral::D => code += 2,
+            NoteLiteral::E => code += 4,
+            NoteLiteral::F => code += 5,
+            NoteLiteral::G => code += 7,
+            NoteLiteral::A => code += 9,
+            NoteLiteral::B => code += 11,
+        }
+        code
     }
 }
 
@@ -334,20 +360,5 @@ impl NoteDescriptor {
             semitone,
             pos,
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::chord::note::Modifier;
-
-    use super::Note;
-
-    #[test]
-    fn transpose() {
-        let notea = Note::new(super::NoteLiteral::G, Some(Modifier::Sharp));
-        let noteb = Note::new(super::NoteLiteral::D, Some(Modifier::Sharp));
-        let notec = Note::new(super::NoteLiteral::D, Some(Modifier::Sharp));
-        dbg!(notea.transpose_to(&noteb, &notec));
     }
 }

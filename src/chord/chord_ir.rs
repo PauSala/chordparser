@@ -4,13 +4,13 @@ use super::{
     Chord,
 };
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Omit {
+pub(crate) struct Omit {
     pub five: bool,
     pub third: bool,
 }
 
 impl Omit {
-    pub fn new() -> Omit {
+    pub(crate) fn new() -> Omit {
         Omit {
             five: false,
             third: false,
@@ -24,11 +24,11 @@ impl Default for Omit {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct ChordIr {
+pub(crate) struct ChordIr {
     pub name: String,
     pub descriptor: String,
-    pub root: Option<Note>,
     pub bass: Option<Note>,
+    pub root: Option<Note>,
     pub notes: Vec<NoteDescriptor>,
     pub adds: Vec<SemInterval>,
     pub omits: Omit,
@@ -36,7 +36,7 @@ pub struct ChordIr {
 }
 
 impl ChordIr {
-    pub fn new() -> ChordIr {
+    pub(crate) fn new() -> ChordIr {
         ChordIr {
             name: String::new(),
             descriptor: String::new(),
@@ -49,27 +49,27 @@ impl ChordIr {
         }
     }
 
-    pub fn is_minor(&self) -> bool {
+    pub(crate) fn is_minor(&self) -> bool {
         self.notes.iter().any(|n| match n.sem_interval {
             SemInterval::Third => n.semitone == Interval::MinorThird.st(),
             _ => false,
         })
     }
 
-    pub fn has(&self, int: SemInterval) -> bool {
+    pub(crate) fn has(&self, int: SemInterval) -> bool {
         self.notes.iter().any(|n| n.sem_interval == int)
     }
-    pub fn has_add(&self, int: SemInterval) -> bool {
+    pub(crate) fn has_add(&self, int: SemInterval) -> bool {
         self.adds.iter().any(|n| *n == int)
     }
 
-    pub fn sort_notes(&mut self) {
+    pub(crate) fn sort_by_semitone(&mut self) {
         self.notes.sort_by(|a, b| a.semitone.cmp(&b.semitone))
     }
 
-    pub fn get_notes(&mut self) -> Vec<Note> {
+    pub(crate) fn get_notes(&mut self) -> Vec<Note> {
         let mut notes = Vec::new();
-        self.sort_notes();
+        self.sort_by_semitone();
         if let Some(root) = &self.root {
             for n in &self.notes {
                 let note = root.get_note(n.semitone, n.sem_interval.to_int());
@@ -79,8 +79,8 @@ impl ChordIr {
         notes
     }
 
-    pub fn to_chord(&mut self) -> Chord {
-        self.sort_notes();
+    pub(crate) fn to_chord(&mut self) -> Chord {
+        self.sort_by_semitone();
         let mut semitones = Vec::new();
         let mut semantic_intervals = Vec::new();
         let mut real_intervals = Vec::new();

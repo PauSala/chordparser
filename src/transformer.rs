@@ -4,9 +4,9 @@ use crate::chord::{
     note::NoteDescriptor,
 };
 
-pub type Transformer = fn(&mut ChordIr);
+pub(crate) type Transformer = fn(&mut ChordIr);
 
-pub fn implicit_third(ir: &mut ChordIr) {
+pub(crate) fn implicit_third(ir: &mut ChordIr) {
     if !ir.is_sus && !ir.omits.third && !ir.has(SemInterval::Third) {
         ir.notes.push(NoteDescriptor::new(
             SemInterval::Third,
@@ -16,7 +16,7 @@ pub fn implicit_third(ir: &mut ChordIr) {
     }
 }
 
-pub fn implicit_fifth(ir: &mut ChordIr) {
+pub(crate) fn implicit_fifth(ir: &mut ChordIr) {
     if !ir.omits.five && !ir.has(SemInterval::Fifth) {
         ir.notes.push(NoteDescriptor::new(
             SemInterval::Fifth,
@@ -26,7 +26,7 @@ pub fn implicit_fifth(ir: &mut ChordIr) {
     }
 }
 
-pub fn implicit_min_seventh(ir: &mut ChordIr) {
+pub(crate) fn implicit_min_seventh(ir: &mut ChordIr) {
     let add_len = ir.adds.len();
     let tensions_len = ir
         .notes
@@ -52,7 +52,7 @@ pub fn implicit_min_seventh(ir: &mut ChordIr) {
     }
 }
 
-pub fn implicit_ninth(ir: &mut ChordIr) {
+pub(crate) fn implicit_ninth(ir: &mut ChordIr) {
     let add13 = ir.has_add(SemInterval::Thirteenth);
     let t13 = ir.has(SemInterval::Thirteenth);
     let t9 = ir.has(SemInterval::Ninth);
@@ -77,7 +77,7 @@ pub fn implicit_ninth(ir: &mut ChordIr) {
     }
 }
 
-pub fn implicit_eleventh(ir: &mut ChordIr) {
+pub(crate) fn implicit_eleventh(ir: &mut ChordIr) {
     let add13 = ir.has_add(SemInterval::Thirteenth);
     let t13 = ir.has(SemInterval::Thirteenth);
     let t11 = ir.has(SemInterval::Eleventh);
@@ -91,7 +91,7 @@ pub fn implicit_eleventh(ir: &mut ChordIr) {
     }
 }
 
-pub fn remove_omits(ir: &mut ChordIr) {
+pub(crate) fn remove_omits(ir: &mut ChordIr) {
     if ir.omits.five {
         ir.notes = ir
             .notes

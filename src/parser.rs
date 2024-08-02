@@ -15,7 +15,7 @@ use crate::{
         remove_omits, Transformer,
     },
     validator::{
-        no_double_eleventh, no_duplicate_seventh, no_minor_and_major_seventh,
+        no_double_eleventh, no_double_thirteenth, no_duplicate_seventh, no_minor_and_major_seventh,
         no_minor_and_major_thirds, no_natural_and_altered_nine, no_perfect_fifth_and_altered_fifth,
         Validator,
     },
@@ -50,6 +50,7 @@ impl Parser {
                 no_minor_and_major_seventh,
                 no_natural_and_altered_nine,
                 no_double_eleventh,
+                no_double_thirteenth,
             ],
         }
     }
@@ -68,7 +69,7 @@ impl Parser {
             return Err(ParserErrors::new(errors));
         }
         let mut res = self.ir.clone();
-        res.sort_notes();
+        res.sort_by_semitone();
         self.clean_up();
         Ok(res.to_chord())
     }

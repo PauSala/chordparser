@@ -3,9 +3,9 @@ use crate::chord::{
     intervals::{Interval, SemInterval},
 };
 
-pub type Validator = fn(&mut ChordIr, &mut Vec<String>);
+pub(crate) type Validator = fn(&mut ChordIr, &mut Vec<String>);
 
-pub fn no_minor_and_major_thirds(chord: &mut ChordIr, errors: &mut Vec<String>) {
+pub(crate) fn no_minor_and_major_thirds(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut minthirds = (false, 0);
     let mut majthirds = (false, 0);
     for note in &chord.notes {
@@ -26,7 +26,7 @@ pub fn no_minor_and_major_thirds(chord: &mut ChordIr, errors: &mut Vec<String>) 
     }
 }
 
-pub fn no_perfect_fifth_and_altered_fifth(chord: &mut ChordIr, errors: &mut Vec<String>) {
+pub(crate) fn no_perfect_fifth_and_altered_fifth(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut p5 = (false, 0);
     let mut a5 = (false, 0);
     for note in &chord.notes {
@@ -46,7 +46,7 @@ pub fn no_perfect_fifth_and_altered_fifth(chord: &mut ChordIr, errors: &mut Vec<
     }
 }
 
-pub fn no_duplicate_seventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
+pub(crate) fn no_duplicate_seventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut m7 = 0;
     let mut maj7 = 0;
     let mut dim7 = 0;
@@ -74,7 +74,7 @@ pub fn no_duplicate_seventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
     }
 }
 
-pub fn no_minor_and_major_seventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
+pub(crate) fn no_minor_and_major_seventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut m7 = (false, 0);
     let mut maj7 = (false, 0);
     for note in &chord.notes {
@@ -95,7 +95,7 @@ pub fn no_minor_and_major_seventh(chord: &mut ChordIr, errors: &mut Vec<String>)
     }
 }
 
-pub fn no_natural_and_altered_nine(chord: &mut ChordIr, errors: &mut Vec<String>) {
+pub(crate) fn no_natural_and_altered_nine(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut f = (false, 0);
     let mut n = (false, 0);
     let mut s = (false, 0);
@@ -124,7 +124,7 @@ pub fn no_natural_and_altered_nine(chord: &mut ChordIr, errors: &mut Vec<String>
     }
 }
 
-pub fn no_double_eleventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
+pub(crate) fn no_double_eleventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut n = (false, 0);
     let mut s = (false, 0);
     for note in &chord.notes {
@@ -144,7 +144,7 @@ pub fn no_double_eleventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
     }
 }
 
-pub fn no_double_thirteenth(chord: &mut ChordIr, errors: &mut Vec<String>) {
+pub(crate) fn no_double_thirteenth(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut f = (false, 0);
     let mut n = (false, 0);
     for note in &chord.notes {

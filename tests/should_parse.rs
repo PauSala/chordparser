@@ -1,5 +1,6 @@
 use chordparser::{
     chord::note::{Modifier, Note, NoteLiteral},
+    midi::to_midi,
     parser::Parser,
 };
 
@@ -54,14 +55,15 @@ use test_case::test_case;
 #[test_case("Cmi11(b5,b13)", vec!["C", "Eb", "Gb", "Bb", "D", "F", "Ab"])]
 #[test_case("Cmi13", vec!["C", "Eb", "G", "Bb", "D", "F", "A"])]
 #[test_case("Csus4(b5#5)", vec!["C", "F", "Gb", "G#"])]
-#[test_case("Cdim7Maj7b13/G", vec!["C", "Eb", "Gb", "B𝄫", "B", "D", "F", "Ab"])]
+#[test_case("Cdim7Maj7b13/Ab", vec!["C", "Eb", "Gb", "B𝄫", "B", "D", "F", "Ab"])]
 #[test_case("C7", vec!["C", "E", "G", "Bb" ])]
 #[test_case("Cadd2", vec!["C", "E", "G", "D" ])]
+#[test_case("CMaj713#9#11#5", vec!["C", "E", "G#", "B", "D#", "F#", "A" ])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);
     let notes = vec![
-        // Note::new(NoteLiteral::C, Some(Modifier::Flat)),
+        Note::new(NoteLiteral::C, Some(Modifier::Flat)),
         // Note::new(NoteLiteral::C, Some(Modifier::Sharp)),
         // Note::new(NoteLiteral::D, Some(Modifier::Flat)),
         // Note::new(NoteLiteral::D, None),
@@ -80,12 +82,13 @@ fn test_notes(i: &str, expected: Vec<&str>) {
         // Note::new(NoteLiteral::A, Some(Modifier::Flat)),
         // Note::new(NoteLiteral::B, None),
         // Note::new(NoteLiteral::B, Some(Modifier::Flat)),
-        Note::new(NoteLiteral::A, Some(Modifier::Sharp)),
-        Note::new(NoteLiteral::B, Some(Modifier::Sharp)),
+        // Note::new(NoteLiteral::A, Some(Modifier::Sharp)),
+        // Note::new(NoteLiteral::B, Some(Modifier::Sharp)),
     ];
     match res {
         Ok(chord) => {
             let literals = &chord.note_literals;
+            to_midi(&chord.to_midi_codes(), "test");
             assert_eq!(literals, &expected);
             for n in notes {
                 let t = chord.transpose_to_root(&n);
