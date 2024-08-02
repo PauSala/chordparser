@@ -315,13 +315,20 @@ impl Parser {
             tokens.next();
             modifier = Some(Modifier::Sharp);
         }
+        if self.expect_peek(TokenType::Maj, tokens) {
+            tokens.next();
+            self.process_maj(token, tokens);
+            return;
+        }
+        if self.expect_peek(TokenType::Maj7, tokens) {
+            tokens.next();
+            self.process_maj7(token, tokens);
+            return;
+        }
         if self.expect_extension(tokens) {
             let next = tokens.next().unwrap();
             if let TokenType::Extension(t) = &next.token_type {
                 match t.as_str() {
-                    "9" | "11" | "13" => {
-                        self.add_tension(t, token, modifier, true);
-                    }
                     "2" => self.add_tension("9", token, modifier, true),
                     // Looks like add 3 appears in real book, but only as a mijor third
                     "3" => {
@@ -337,6 +344,9 @@ impl Parser {
                             Interval::MajorThird.st(),
                             token.pos as usize,
                         ));
+                    }
+                    "9" | "11" | "13" => {
+                        self.add_tension(t, token, modifier, true);
                     }
                     _ => self
                         .errors
@@ -707,6 +717,9 @@ impl Parser {
                         Interval::Eleventh.st(),
                         token.pos as usize,
                     ));
+                    if !self.ir.has_minor_third() {
+                        self.ir.is_sus = true;
+                    }
                     if is_add {
                         self.ir.adds.push(SemInterval::Eleventh);
                     }

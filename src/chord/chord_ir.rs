@@ -50,7 +50,7 @@ impl ChordIr {
         }
     }
 
-    pub(crate) fn is_minor(&self) -> bool {
+    pub(crate) fn has_minor_third(&self) -> bool {
         self.notes.iter().any(|n| match n.sem_interval {
             SemInterval::Third => n.semitone == Interval::MinorThird.st(),
             _ => false,

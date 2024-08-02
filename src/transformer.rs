@@ -55,9 +55,11 @@ pub(crate) fn implicit_min_seventh(ir: &mut ChordIr) {
 pub(crate) fn implicit_ninth(ir: &mut ChordIr) {
     let add13 = ir.has_add(SemInterval::Thirteenth);
     let t13 = ir.has(SemInterval::Thirteenth);
+    let t11 = ir.has(SemInterval::Eleventh);
     let t9 = ir.has(SemInterval::Ninth);
+    let a11 = ir.has_add(SemInterval::Eleventh);
 
-    if !add13 && t13 && !t9 {
+    if !add13 && !a11 && t13 && !t9 {
         ir.notes.push(NoteDescriptor::new(
             SemInterval::Ninth,
             Interval::Ninth.st(),
@@ -66,8 +68,6 @@ pub(crate) fn implicit_ninth(ir: &mut ChordIr) {
     }
 
     let t9 = ir.has(SemInterval::Ninth);
-    let a11 = ir.has_add(SemInterval::Eleventh);
-    let t11 = ir.has(SemInterval::Eleventh);
     if !a11 && t11 && !t9 {
         ir.notes.push(NoteDescriptor::new(
             SemInterval::Ninth,
@@ -82,7 +82,7 @@ pub(crate) fn implicit_eleventh(ir: &mut ChordIr) {
     let t13 = ir.has(SemInterval::Thirteenth);
     let t11 = ir.has(SemInterval::Eleventh);
 
-    if !add13 && t13 && !t11 && ir.is_minor() {
+    if !add13 && t13 && !t11 && ir.has_minor_third() {
         ir.notes.push(NoteDescriptor::new(
             SemInterval::Eleventh,
             Interval::Eleventh.st(),
