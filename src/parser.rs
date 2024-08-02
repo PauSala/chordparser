@@ -208,7 +208,10 @@ impl Parser {
             match token.token_type {
                 TokenType::RParent => return,
                 TokenType::Eof => {
-                    todo!("Handle unmatched parenthesis")
+                    self.errors.push(format!(
+                        "Error: Missing closing parenthesis at position {}",
+                        token.pos
+                    ));
                 }
                 _ => (),
             }
