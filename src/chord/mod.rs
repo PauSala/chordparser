@@ -1,3 +1,4 @@
+use intervals::Interval;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
@@ -16,7 +17,7 @@ pub struct Chord {
     pub note_literals: Vec<String>,
     pub semitones: Vec<u8>,
     pub semantic_intervals: Vec<u8>,
-    pub real_intervals: Vec<String>,
+    pub real_intervals: Vec<Interval>,
     pub is_sus: bool,
 }
 
@@ -74,7 +75,7 @@ pub struct ChordBuilder {
     note_literals: Vec<String>,
     semitones: Vec<u8>,
     semantic_intervals: Vec<u8>,
-    real_intervals: Vec<String>,
+    real_intervals: Vec<Interval>,
     is_sus: bool,
 }
 
@@ -93,7 +94,7 @@ impl ChordBuilder {
         }
     }
 
-    pub fn real_intervals(mut self, real_intervals: Vec<String>) -> ChordBuilder {
+    pub fn real_intervals(mut self, real_intervals: Vec<Interval>) -> ChordBuilder {
         self.real_intervals = real_intervals;
         self
     }

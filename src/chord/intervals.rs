@@ -1,3 +1,6 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum Interval {
     Unison,
     MinorSecond,
@@ -50,6 +53,34 @@ impl Interval {
             Interval::SharpEleventh => 18,
             Interval::FlatThirteenth => 20,
             Interval::Thirteenth => 21,
+        }
+    }
+
+    pub fn to_string(&self) -> String {
+        match self {
+            Interval::Unison => "1".to_string(),
+            Interval::MinorSecond => "b2".to_string(),
+            Interval::MajorSecond => "2".to_string(),
+            Interval::MinorThird => "b3".to_string(),
+            Interval::MajorThird => "3".to_string(),
+            Interval::PerfectFourth => "4".to_string(),
+            Interval::AugmentedFourth => "#4".to_string(),
+            Interval::DiminishedFifth => "b5".to_string(),
+            Interval::PerfectFifth => "5".to_string(),
+            Interval::AugmentedFifth => "#5".to_string(),
+            Interval::MinorSixth => "b6".to_string(),
+            Interval::MajorSixth => "6".to_string(),
+            Interval::DiminishedSeventh => "b7".to_string(),
+            Interval::MinorSeventh => "b7".to_string(),
+            Interval::MajorSeventh => "7".to_string(),
+            Interval::Octave => "8".to_string(),
+            Interval::FlatNinth => "b9".to_string(),
+            Interval::Ninth => "9".to_string(),
+            Interval::SharpNinth => "#9".to_string(),
+            Interval::Eleventh => "11".to_string(),
+            Interval::SharpEleventh => "#11".to_string(),
+            Interval::FlatThirteenth => "b13".to_string(),
+            Interval::Thirteenth => "13".to_string(),
         }
     }
 }

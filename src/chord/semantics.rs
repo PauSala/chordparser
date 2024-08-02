@@ -1,5 +1,8 @@
+use core::panic;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use serde::{Serialize, Deserialize};
+
+use super::intervals::Interval;
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum NoteLiteral {
@@ -164,60 +167,60 @@ impl Note {
         Note::new(m.0[0].clone().0, m.0[0].clone().1)
     }
 
-    pub fn to_real_interval(semantic_interval: u8, interval: u8) -> String {
+    pub fn to_real_interval(semantic_interval: u8, interval: u8) -> Interval {
         match semantic_interval {
-            1 => String::from("1"),
+            1 => Interval::Unison,
             2 => match interval {
-                1 => String::from("b2"),
-                2 => String::from("2"),
-                _ => "".to_owned(),
+                1 => Interval::MinorSecond,
+                2 => Interval::MajorSecond,
+                _ => panic!("Invalid interval"),
             },
             3 => match interval {
-                3 => String::from("b3"),
-                4 => String::from("3"),
-                _ => "".to_owned(),
+                3 => Interval::MinorThird,
+                4 => Interval::MajorThird,
+                _ => panic!("Invalid interval"),
             },
             4 => match interval {
-                5 => String::from("4"),
-                6 => String::from("#4"),
-                _ => "".to_owned(),
+                5 => Interval::PerfectFourth,
+                6 => Interval::AugmentedFourth,
+                _ => panic!("Invalid interval"),
             },
             5 => match interval {
-                6 => String::from("b5"),
-                7 => String::from("5"),
-                8 => String::from("#5"),
-                _ => "".to_owned(),
+                6 => Interval::DiminishedFifth,
+                7 => Interval::PerfectFifth,
+                8 => Interval::AugmentedFifth,
+                _ => panic!("Invalid interval"),
             },
             6 => match interval {
-                8 => String::from("b6"),
-                9 => String::from("6"),
-                _ => "".to_owned(),
+                8 => Interval::MinorSixth,
+                9 => Interval::MajorSixth,
+                _ => panic!("Invalid interval"),
             },
             7 => match interval {
-                9 => String::from("bb7"),
-                10 => String::from("b7"),
-                11 => String::from("Maj7"),
-                _ => "".to_owned(),
+                9 => Interval::DiminishedSeventh,
+                10 => Interval::MinorSeventh,
+                11 => Interval::MajorSeventh,
+                _ => panic!("Invalid interval"),
             },
             9 => match interval {
-                13 => String::from("b9"),
-                14 => String::from("9"),
-                15 => String::from("#9"),
-                _ => "".to_owned(),
+                13 => Interval::FlatNinth,
+                14 => Interval::Ninth,
+                15 => Interval::SharpNinth,
+                _ => panic!("Invalid interval"),
             },
 
             11 => match interval {
-                17 => String::from("11"),
-                18 => String::from("#11"),
-                _ => "".to_owned(),
+                17 => Interval::Eleventh,
+                18 => Interval::SharpEleventh,
+                _ => panic!("Invalid interval"),
             },
 
             13 => match interval {
-                20 => String::from("b13"),
-                21 => String::from("13"),
-                _ => "".to_owned(),
+                20 => Interval::FlatThirteenth,
+                21 => Interval::Thirteenth,
+                _ => panic!("Invalid interval"),
             },
-            _ => "".to_owned(),
+            _ => panic!("Invalid interval"),
         }
     }
 
