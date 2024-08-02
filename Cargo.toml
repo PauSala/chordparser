@@ -2,6 +2,7 @@
 name = "chordparser"
 version = "0.1.0-beta"
 edition = "2021"
+license = "MIT"
 
 
 [dependencies]
