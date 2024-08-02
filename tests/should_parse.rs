@@ -1,6 +1,5 @@
 use chordparser::{
     chord::note::{Modifier, Note, NoteLiteral},
-    midi::to_midi,
     parser::Parser,
 };
 
@@ -96,7 +95,6 @@ fn test_notes(i: &str, expected: Vec<&str>) {
     match res {
         Ok(chord) => {
             let literals = &chord.note_literals;
-            to_midi(&chord.to_midi_codes(), "test");
             assert_eq!(literals, &expected);
             for n in notes {
                 let t = chord.transpose_to_root(&n);
