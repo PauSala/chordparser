@@ -36,6 +36,7 @@ As said, this is a work in progress project and the rules can change in the futu
 
 # [Limitations](#limitations)
 
+- No string representation of the chord is supported yet beyond the input string.
 - Bass symbol is not supported yet.
 - Parsed chord notes have enharmonically correct names when possible. For example, a `B#9` chord will have `C𝄪` as the ninth instead of D. Said that,
   triple flat/sharps are not suported since they add an unnecesasry complexity for very rare use cases.

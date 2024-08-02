@@ -270,7 +270,36 @@ impl Parser {
     }
 
     fn process_alt(&mut self) {
-        todo!();
+        self.ir.notes.push(NoteDescriptor::new(
+            SemInterval::Fifth,
+            Interval::DiminishedFifth.st(),
+            0,
+        ));
+        self.ir.notes.push(NoteDescriptor::new(
+            SemInterval::Seventh,
+            Interval::MinorSeventh.st(),
+            0,
+        ));
+        self.ir.notes.push(NoteDescriptor::new(
+            SemInterval::Ninth,
+            Interval::FlatNinth.st(),
+            0,
+        ));
+        self.ir.notes.push(NoteDescriptor::new(
+            SemInterval::Ninth,
+            Interval::SharpNinth.st(),
+            0,
+        ));
+        self.ir.notes.push(NoteDescriptor::new(
+            SemInterval::Eleventh,
+            Interval::SharpEleventh.st(),
+            0,
+        ));
+        self.ir.notes.push(NoteDescriptor::new(
+            SemInterval::Thirteenth,
+            Interval::FlatThirteenth.st(),
+            0,
+        ));
     }
 
     fn process_add(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
@@ -302,7 +331,7 @@ impl Parser {
                         }
                         self.ir.notes.push(NoteDescriptor::new(
                             SemInterval::Third,
-                            4,
+                            Interval::MajorThird.st(),
                             token.pos as usize,
                         ));
                     }
@@ -583,6 +612,11 @@ impl Parser {
                 self.ir.omits.third = true
             }
             "6" => {
+                if self.ir.has(SemInterval::Sixth) {
+                    self.errors
+                        .push(format!("Error: Duplicate 6th at position {}", token.pos));
+                    return;
+                }
                 self.ir.notes.push(NoteDescriptor::new(
                     SemInterval::Sixth,
                     Interval::MajorSixth.st(),

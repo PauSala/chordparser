@@ -12,11 +12,14 @@ use test_case::test_case;
 #[test_case("C#11#11", vec![])]
 #[test_case("Db13#13", vec![])]
 #[test_case("Db137min7", vec![])]
-#[test_case("Cma6(b5)", vec!["C", "E", "Gb", "A"])]
-#[test_case("Cma69", vec!["C", "E", "G", "A", "D"])]
-#[test_case("Cma6(#5)", vec!["C", "E", "G#", "A"])]
-#[test_case("Cmano3", vec!["C", "G"])]
-#[test_case("CMaj", vec!["C", "E", "G" ])]
+#[test_case("Cma6(b5)", vec![])]
+#[test_case("Cma69", vec![])]
+#[test_case("Cma6(#5)", vec![])]
+#[test_case("Cmano3", vec![])]
+#[test_case("CMaj", vec![])]
+#[test_case("CAltb9", vec![])]
+#[test_case("CAltb13", vec![])]
+#[test_case("CAlt#11", vec![])]
 fn should_error(i: &str, _expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);

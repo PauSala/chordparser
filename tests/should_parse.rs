@@ -39,6 +39,10 @@ use test_case::test_case;
 #[test_case("Cmi6", vec!["C", "Eb", "G", "A"])]
 #[test_case("Cmi69", vec!["C", "Eb", "G", "A", "D"])]
 #[test_case("Cmi6/9", vec!["C", "Eb", "G", "A", "D"])]
+#[test_case("C-6", vec!["C", "Eb", "G", "A"])]
+#[test_case("C-69", vec!["C", "Eb", "G", "A", "D"])]
+#[test_case("Cminor69", vec!["C", "Eb", "G", "A", "D"])]
+#[test_case("C-6/9", vec!["C", "Eb", "G", "A", "D"])]
 #[test_case("Cmi69add11", vec!["C", "Eb", "G", "A", "D", "F"])]
 #[test_case("Cmi(#5)", vec!["C", "Eb", "G#"])]
 #[test_case("Cmi7", vec!["C", "Eb", "G", "Bb"])]
@@ -62,6 +66,7 @@ use test_case::test_case;
 #[test_case("CM713#9#11#5", vec!["C", "E", "G#", "B", "D#", "F#", "A" ])]
 #[test_case("C△13#9#11#5", vec!["C", "E", "G#", "B", "D#", "F#", "A" ])]
 #[test_case("C△713#9#11#5", vec!["C", "E", "G#", "B", "D#", "F#", "A" ])]
+#[test_case("Calt", vec!["C", "E", "Gb", "Bb", "Db", "D#", "F#", "Ab"])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);

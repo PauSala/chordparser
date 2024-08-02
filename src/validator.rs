@@ -96,15 +96,15 @@ pub(crate) fn no_minor_and_major_seventh(chord: &mut ChordIr, errors: &mut Vec<S
 }
 
 pub(crate) fn no_natural_and_altered_nine(chord: &mut ChordIr, errors: &mut Vec<String>) {
-    let mut f = (false, 0);
-    let mut n = (false, 0);
-    let mut s = (false, 0);
+    let mut f = (false, 0, 0);
+    let mut n = (false, 0, 0);
+    let mut s = (false, 0, 0);
     for note in &chord.notes {
         if note.sem_interval == SemInterval::Ninth {
             match note.semitone {
-                13 => f = (true, note.pos),
-                14 => n = (true, note.pos),
-                15 => s = (true, note.pos),
+                13 => f = (true, note.pos, f.2 + 1),
+                14 => n = (true, note.pos, n.2 + 1),
+                15 => s = (true, note.pos, s.2 + 1),
                 _ => {}
             }
         }
@@ -122,16 +122,20 @@ pub(crate) fn no_natural_and_altered_nine(chord: &mut ChordIr, errors: &mut Vec<
             n.1, s.1
         ));
     }
+
+    if n.2 > 1 || f.2 > 1 || s.2 > 1 {
+        errors.push(format!("Error: A chord cannot have multiple 9, b9 or #9"));
+    }
 }
 
 pub(crate) fn no_double_eleventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
-    let mut n = (false, 0);
-    let mut s = (false, 0);
+    let mut n = (false, 0, 0);
+    let mut s = (false, 0, 0);
     for note in &chord.notes {
         if note.sem_interval == SemInterval::Eleventh {
             match note.semitone {
-                17 => n = (true, note.pos),
-                18 => s = (true, note.pos),
+                17 => n = (true, note.pos, n.2 + 1),
+                18 => s = (true, note.pos, s.2 + 1),
                 _ => {}
             }
         }
@@ -142,16 +146,20 @@ pub(crate) fn no_double_eleventh(chord: &mut ChordIr, errors: &mut Vec<String>) 
             n.1, s.1
         ));
     }
+
+    if n.2 > 1 || s.2 > 1 {
+        errors.push(format!("Error: A chord cannot have multiple 11 or #11"));
+    }
 }
 
 pub(crate) fn no_double_thirteenth(chord: &mut ChordIr, errors: &mut Vec<String>) {
-    let mut f = (false, 0);
-    let mut n = (false, 0);
+    let mut f = (false, 0, 0);
+    let mut n = (false, 0, 0);
     for note in &chord.notes {
         if note.sem_interval == SemInterval::Thirteenth {
             match note.semitone {
-                20 => f = (true, note.pos),
-                21 => n = (true, note.pos),
+                20 => f = (true, note.pos, f.2 + 1),
+                21 => n = (true, note.pos, f.2 + 1),
                 _ => {}
             }
         }
@@ -161,5 +169,8 @@ pub(crate) fn no_double_thirteenth(chord: &mut ChordIr, errors: &mut Vec<String>
             "Error: A chord cannot have both a 13 and a b13 at position {} {}",
             n.1, f.1
         ));
+    }
+    if f.2 > 1 || n.2 > 1 {
+        errors.push(format!("Error: A chord cannot have multiple 13 or b13"));
     }
 }
