@@ -20,6 +20,8 @@ use test_case::test_case;
 #[test_case("CAltb9", vec![])]
 #[test_case("CAltb13", vec![])]
 #[test_case("CAlt#11", vec![])]
+#[test_case("C(#11", vec![])]
+#[test_case("c-9", vec![])]
 fn should_error(i: &str, _expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);

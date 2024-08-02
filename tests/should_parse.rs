@@ -66,6 +66,9 @@ use test_case::test_case;
 #[test_case("C△13#9#11#5", vec!["C", "E", "G#", "B", "D#", "F#", "A" ])]
 #[test_case("C△713#9#11#5", vec!["C", "E", "G#", "B", "D#", "F#", "A" ])]
 #[test_case("Calt", vec!["C", "E", "Gb", "Bb", "Db", "D#", "F#", "Ab"])]
+#[test_case("C7(b5,#5,b9)", vec!["C", "E", "Gb", "G#", "Bb", "Db"])]
+#[test_case("C7(b5,#5,#9)", vec!["C", "E", "Gb", "G#", "Bb", "D#"])]
+#[test_case("C7(b5,#5,b9,#9)", vec!["C", "E", "Gb", "G#", "Bb", "Db", "D#"])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);
@@ -99,6 +102,11 @@ fn test_notes(i: &str, expected: Vec<&str>) {
             for n in notes {
                 let t = chord.transpose_to_root(&n);
                 assert_eq!(chord.real_intervals, t.real_intervals);
+                let parsed = parser.parse(&t.origin);
+                match parsed {
+                    Ok(p) => assert_eq!(t.real_intervals, p.real_intervals),
+                    Err(_) => panic!(),
+                }
             }
         }
         Err(e) => {
