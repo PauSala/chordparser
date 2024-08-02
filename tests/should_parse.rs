@@ -1,4 +1,7 @@
-use chordparser::parser::Parser;
+use chordparser::{
+    chord::note::{Modifier, Note, NoteLiteral},
+    parser::Parser,
+};
 
 use test_case::test_case;
 
@@ -60,11 +63,11 @@ fn test_notes(i: &str, expected: Vec<&str>) {
     match res {
         Ok(chord) => {
             //dbg!(&chord);
-            // let t = chord.transpose_to_root(&Note::new(NoteLiteral::E, Some(Modifier::Flat)));
-            // dbg!(t);
-            // dbg!(&chord.note_literals);
-            // dbg!(&chord.real_intervals);
-            //dbg!(chord.to_json());
+            let t = chord.transpose_to_root(&Note::new(NoteLiteral::E, Some(Modifier::Flat)));
+            dbg!(t);
+            dbg!(&chord.note_literals);
+            dbg!(&chord.real_intervals);
+            dbg!(chord.to_json());
             let literals = chord.note_literals;
             assert_eq!(literals, expected);
         }

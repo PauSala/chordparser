@@ -1,5 +1,5 @@
 use super::{
-    intervals::SemInterval,
+    intervals::{Interval, SemInterval},
     note::{Note, NoteDescriptor},
     Chord,
 };
@@ -26,6 +26,7 @@ impl Default for Omit {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ChordIr {
     pub name: String,
+    pub descriptor: String,
     pub root: Option<Note>,
     pub bass: Option<Note>,
     pub notes: Vec<NoteDescriptor>,
@@ -38,6 +39,7 @@ impl ChordIr {
     pub fn new() -> ChordIr {
         ChordIr {
             name: String::new(),
+            descriptor: String::new(),
             root: None,
             bass: None,
             notes: Vec::new(),
@@ -49,8 +51,7 @@ impl ChordIr {
 
     pub fn is_minor(&self) -> bool {
         self.notes.iter().any(|n| match n.sem_interval {
-            // 3 is the minor third
-            SemInterval::Third => n.semitone == 3,
+            SemInterval::Third => n.semitone == Interval::MinorThird.st(),
             _ => false,
         })
     }
