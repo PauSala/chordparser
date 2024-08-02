@@ -2,7 +2,8 @@
 
 # [Overview](#overview)
 
-chordparser is a library for parsing musical chords from a string representation inspired by chordSymbol: <https://www.npmjs.com/package/chord-symbol.>  
+ChordParser is a library for parsing musical chords from a human readable string representation.  
+It is inspired by chordSymbol: <https://www.npmjs.com/package/chord-symbol.>  
 Said that, it implements its own rules and conventions, which can change in the future since this it is a work in progress project.  
 For now, the scope of the library is to parse chords from Pop, Rock, and Jazz music in English _relatively standard_ notation.  
 Classical notation, as well as Latin or German notation, is not supported.
