@@ -109,9 +109,10 @@ use test_case::test_case;
 #[test_case("Cdim7add9", vec!["C", "Eb", "Gb", "B𝄫", "D"])]
 #[test_case("Cdim7add911", vec!["C", "Eb", "Gb", "B𝄫", "D", "F"])]
 #[test_case("Cdim7add911 b13", vec!["C", "Eb", "Gb", "B𝄫", "D", "F", "Ab"])]
-// This is questionable since the 13 could be interpreted as an add, but for now i can leave with that since it is arbitrary
-// and the chord could be more explicit about adds.
+// This is questionable since the 13 could be interpreted as an add, but for now i can leave with that since
+// and the chord could be more explicit about adds and it is possible to achieve the expected result.
 #[test_case("Cdim7(add9,13)", vec!["C", "Eb", "Gb", "B𝄫", "D", "F", "A"])]
+#[test_case("Cdim7(add9,add13)", vec!["C", "Eb", "Gb", "B𝄫", "D", "A"])]
 #[test_case("Cdim7(add9,b13)", vec!["C", "Eb", "Gb", "B𝄫", "D", "F", "Ab"])]
 #[test_case("Cdim7(add11,13)", vec!["C", "Eb", "Gb", "B𝄫", "F", "A"])]
 #[test_case("Cdim7(add13)", vec!["C", "Eb", "Gb", "B𝄫","A"])]
