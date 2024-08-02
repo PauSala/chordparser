@@ -1,3 +1,5 @@
+//! Useful abstractions to work with intervals
+
 use serde::ser::{Serialize, Serializer};
 use serde::Deserialize;
 use std::fmt::Display;
@@ -31,6 +33,11 @@ pub enum Interval {
 }
 
 impl Interval {
+    /// Semitone representation of the interval
+    /// # Arguments
+    /// * `self` - The interval
+    /// # Returns
+    /// * `u8` - The semitone representation of the interval
     pub fn st(&self) -> u8 {
         match self {
             Interval::Unison => 0,
@@ -104,7 +111,7 @@ impl Serialize for Interval {
 }
 
 /// Enum representing semantic intervals, meaning that every interval can be any of its possible values.  
-/// It is used mainly to calculate the correct enharmonic notes from root.
+/// It is used to calculate the correct enharmonic notes from given root.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum SemInterval {
     Root,
@@ -120,7 +127,12 @@ pub enum SemInterval {
 }
 
 impl SemInterval {
-    pub fn to_int(&self) -> u8 {
+    /// Numeric representation of the semantic interval
+    /// # Arguments
+    /// * `self` - The semantic interval
+    /// # Returns
+    /// * `u8` - The int representation of the semantic interval
+    pub fn numeric(&self) -> u8 {
         match self {
             SemInterval::Root => 1,
             SemInterval::Second => 2,

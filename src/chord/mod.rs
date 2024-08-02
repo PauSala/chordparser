@@ -1,4 +1,4 @@
-//! # Chord representation of a successfully parsed string.
+//! # Chords, notes and intervals
 use std::vec;
 
 use intervals::Interval;
@@ -11,6 +11,7 @@ pub(crate) mod chord_ir;
 pub mod intervals;
 pub mod note;
 
+/// Chord representation of a successfully parsed string.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Chord {
     pub origin: String,
@@ -86,6 +87,7 @@ impl Chord {
     }
 }
 
+/// Builder for the Chord struct.
 pub struct ChordBuilder {
     origin: String,
     descriptor: String,

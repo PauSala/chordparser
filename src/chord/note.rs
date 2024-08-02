@@ -1,3 +1,5 @@
+//! Useful abstractions to work with notes
+//!
 use core::panic;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;

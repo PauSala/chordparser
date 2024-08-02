@@ -75,7 +75,7 @@ impl ChordIr {
         self.sort_by_semitone();
         if let Some(root) = &self.root {
             for n in &self.notes {
-                let note = root.get_note(n.semitone, n.sem_interval.to_int());
+                let note = root.get_note(n.semitone, n.sem_interval.numeric());
                 notes.push(note);
             }
         }
@@ -92,8 +92,8 @@ impl ChordIr {
 
         for e in &self.notes {
             semitones.push(e.semitone);
-            semantic_intervals.push(e.sem_interval.to_int());
-            real_intervals.push(Note::to_real_interval(e.sem_interval.to_int(), e.semitone))
+            semantic_intervals.push(e.sem_interval.numeric());
+            real_intervals.push(Note::to_real_interval(e.sem_interval.numeric(), e.semitone))
         }
 
         Chord::builder(&self.name, self.root.clone().unwrap())
