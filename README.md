@@ -20,7 +20,7 @@ This includes:
 - Semitones relative to root note
 - Whether the chord is a sus chord
 
-The [Chord](chord/struct.Chord.html) is also serializable into JSON and MIDI.
+The [Chord](chord/struct.Chord.html) is also serializable into JSON and MIDI and allows transposition from one key to another.
 
 # [Parsing rules](#parsing_rules)
 
@@ -36,9 +36,11 @@ As said, this is a work in progress project and the rules can change in the futu
 
 # [Limitations and Todos](#limitations)
 
+- Bass symbol is not supported yet.
 - Parsed chord notes have enharmonically correct names when possible. For example, a `B#9` chord will have `C𝄪` as the ninth instead of D. Said that,
   triple flat/sharps are not suported since they add an unnecesasry complexity for very rare use cases.
+- When transposed, /bass note may not be enharmonically correct.
 - The parser is not customizable for now, but it is expected to be in the future, for example:
-- Include or remove both custom and default validators.
-- Include or remove sets of allowed symbols.
-- Maybe allow other notations like Latin or German.
+  - Include or remove both custom and default validators.
+  - Include or remove sets of allowed symbols.
+  - Maybe allow other notations like Latin or German.
