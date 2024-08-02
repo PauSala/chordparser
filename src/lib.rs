@@ -15,7 +15,8 @@
 //! - Semitones relative to root note
 //! - Whether the chord is a sus chord
 //!
-//! The [Chord](chord/struct.Chord.html) is also serializable into JSON and MIDI and allows transposition from one key to another.
+//! The [Chord](chord/struct.Chord.html) is also serializable into JSON and MIDI,  and allows transposition from one key to another.
+//!
 //!
 //! # [Parsing rules](#parsing_rules)
 //! Since there isn't a full consensus on how chords should be written, any chord parser is by definition opinionated.  

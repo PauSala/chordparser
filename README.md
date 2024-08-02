@@ -46,3 +46,6 @@ As said, this is a work in progress project and the rules can change in the futu
   - Include or remove both custom and default validators.
   - Include or remove sets of allowed symbols.
   - Maybe allow other notations like Latin or German.
+
+
+# [Examples]

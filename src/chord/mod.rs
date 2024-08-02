@@ -63,6 +63,11 @@ impl Chord {
             .build()
     }
 
+    /// Returns the MIDI codes for the chord.
+    /// # Arguments
+    /// * `self` - The chord to get the MIDI codes from.
+    /// # Returns
+    /// * A vector of MIDI codes.
     pub fn to_midi_codes(&self) -> Vec<u8> {
         let root = self.root.to_midi_code();
         let mut codes = vec![];

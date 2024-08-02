@@ -3,19 +3,25 @@ name = "chordparser"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-midi = []
 
 [dependencies]
-midly = "0.5.3"
 regex = "1.10.5"
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.121"
 test-case = "3.3.1"
+midly = { version = "0.5.3"}
 
-[target.'cfg(feature = "midi")'.dependencies]
+## Disable for now and pack all together
+## [features]
+## midi = ["dep:midly"]
+## midi = ["dep:midly"]
+
 
 [[example]]
 name = "parse-chord"
 path = "examples/parse-chord.rs"
+## required-features = ["midi"]
+
+
+
 

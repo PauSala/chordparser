@@ -1,22 +1,34 @@
 //! Generate a MIDI file from [Chord](chord/struct.Chord.html).
+//! Enabled with the `midi` feature.
 
+// #[cfg(feature = "midi")]
 use midly::{
     num::{u4, u7},
     Format, Header, MetaMessage, Smf, Timing, Track, TrackEvent, TrackEventKind,
 };
 
+/// Generate a MIDI file from [Chord](chord/struct.Chord.html).
+/// # Arguments
+/// * `chord_notes` - The notes of the chord in MIDI codes.
+/// * `name` - The name of the file.
+/// * `bpm` - Beats per minute.
+/// * `beats` - Duration in beats.
 // #[cfg(feature = "midi")]
-pub fn to_midi(chord_notes: &[u8], name: &str) {
-    // Define the notes for the chord (C major chord: C, E, G)
-
-    // Define the velocity and duration for the notes
-    let velocity = u7::new(64); // Note velocity
-    let note_duration = 3200; // Double the duration
-
+pub fn to_midi_file(chord_notes: &[u8], name: &str, bpm: u32, beats: u16) {
     // Create the track events for the chord
+    let mc_x_beat = 60 * 1_000_000 / bpm;
+    let ticks_per_beat: u16 = 500;
+    let ticks_per_quarter = ticks_per_beat * beats;
+    let velocity = u7::new(64);
+    let note_duration = ticks_per_quarter;
     let mut events = vec![];
+    let tempo = midly::MetaMessage::Tempo(mc_x_beat.into());
+    events.push(TrackEvent {
+        delta: 0.into(),
+        kind: TrackEventKind::Meta(tempo),
+    });
 
-    // Add note-on events
+    // Start chord
     for (i, &note) in chord_notes.iter().enumerate() {
         events.push(TrackEvent {
             delta: 0.into(), // No delay between note-on events
@@ -30,14 +42,14 @@ pub fn to_midi(chord_notes: &[u8], name: &str) {
         });
     }
 
-    // Add note-off events after the note duration
+    // Stop chord after duration
     for (i, &note) in chord_notes.iter().enumerate() {
         events.push(TrackEvent {
             delta: if i == 0 {
-                note_duration.into()
+                (note_duration as u32).into()
             } else {
                 0.into()
-            }, // Delay only for the first note-off event
+            },
             kind: TrackEventKind::Midi {
                 channel: u4::new(0),
                 message: midly::MidiMessage::NoteOff {
@@ -48,32 +60,23 @@ pub fn to_midi(chord_notes: &[u8], name: &str) {
         });
     }
 
-    // Add an end-of-track meta event
     events.push(TrackEvent {
         delta: 0.into(),
         kind: TrackEventKind::Meta(MetaMessage::EndOfTrack),
     });
 
-    // Create the track
     let mut track = Track::new();
-    let tempo = midly::MetaMessage::Tempo(1000.into());
     for event in events {
         track.push(event);
     }
-    track.push(TrackEvent {
-        delta: 0.into(),
-        kind: TrackEventKind::Meta(tempo),
-    });
-    // Create the SMF (Standard MIDI File) with one track
     let smf = Smf {
         header: Header {
             format: Format::SingleTrack,
-            timing: Timing::Metrical(midly::num::u15::new(800)), // 480 ticks per beat
+            timing: Timing::Metrical(midly::num::u15::new(ticks_per_beat)),
         },
         tracks: vec![track],
     };
 
-    // Write the SMF to a file
     let mut name = name.to_string();
     name.push_str(".mid");
     let mut file = std::fs::File::create(name).unwrap();
