@@ -64,26 +64,26 @@ fn test_notes(i: &str, expected: Vec<&str>) {
     let res = parser.parse(i);
     let notes = vec![
         Note::new(NoteLiteral::C, Some(Modifier::Flat)),
-        // Note::new(NoteLiteral::C, Some(Modifier::Sharp)),
-        // Note::new(NoteLiteral::D, Some(Modifier::Flat)),
-        // Note::new(NoteLiteral::D, None),
-        // Note::new(NoteLiteral::D, Some(Modifier::Sharp)),
-        // Note::new(NoteLiteral::E, Some(Modifier::Flat)),
-        // Note::new(NoteLiteral::E, None),
-        // Note::new(NoteLiteral::E, Some(Modifier::Sharp)),
-        // Note::new(NoteLiteral::F, Some(Modifier::Flat)),
-        // Note::new(NoteLiteral::F, None),
-        // Note::new(NoteLiteral::F, Some(Modifier::Sharp)),
-        // Note::new(NoteLiteral::G, Some(Modifier::Flat)),
-        // Note::new(NoteLiteral::G, None),
-        // Note::new(NoteLiteral::G, Some(Modifier::Sharp)),
-        // Note::new(NoteLiteral::A, Some(Modifier::Flat)),
-        // Note::new(NoteLiteral::A, None),
-        // Note::new(NoteLiteral::A, Some(Modifier::Flat)),
-        // Note::new(NoteLiteral::B, None),
-        // Note::new(NoteLiteral::B, Some(Modifier::Flat)),
-        // Note::new(NoteLiteral::A, Some(Modifier::Sharp)),
-        // Note::new(NoteLiteral::B, Some(Modifier::Sharp)),
+        Note::new(NoteLiteral::C, Some(Modifier::Sharp)),
+        Note::new(NoteLiteral::D, Some(Modifier::Flat)),
+        Note::new(NoteLiteral::D, None),
+        Note::new(NoteLiteral::D, Some(Modifier::Sharp)),
+        Note::new(NoteLiteral::E, Some(Modifier::Flat)),
+        Note::new(NoteLiteral::E, None),
+        Note::new(NoteLiteral::E, Some(Modifier::Sharp)),
+        Note::new(NoteLiteral::F, Some(Modifier::Flat)),
+        Note::new(NoteLiteral::F, None),
+        Note::new(NoteLiteral::F, Some(Modifier::Sharp)),
+        Note::new(NoteLiteral::G, Some(Modifier::Flat)),
+        Note::new(NoteLiteral::G, None),
+        Note::new(NoteLiteral::G, Some(Modifier::Sharp)),
+        Note::new(NoteLiteral::A, Some(Modifier::Flat)),
+        Note::new(NoteLiteral::A, None),
+        Note::new(NoteLiteral::A, Some(Modifier::Flat)),
+        Note::new(NoteLiteral::B, None),
+        Note::new(NoteLiteral::B, Some(Modifier::Flat)),
+        Note::new(NoteLiteral::A, Some(Modifier::Sharp)),
+        Note::new(NoteLiteral::B, Some(Modifier::Sharp)),
     ];
     match res {
         Ok(chord) => {
@@ -92,7 +92,6 @@ fn test_notes(i: &str, expected: Vec<&str>) {
             assert_eq!(literals, &expected);
             for n in notes {
                 let t = chord.transpose_to_root(&n);
-                dbg!(&t.to_json());
                 assert_eq!(chord.real_intervals, t.real_intervals);
             }
         }

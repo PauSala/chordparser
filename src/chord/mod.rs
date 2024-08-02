@@ -6,7 +6,7 @@ use serde_json;
 
 use note::Note;
 
-pub mod chord_ir;
+pub(crate) mod chord_ir;
 pub mod intervals;
 pub mod note;
 

@@ -15,7 +15,7 @@ use test_case::test_case;
 #[test_case("Cma6(b5)", vec!["C", "E", "Gb", "A"])]
 #[test_case("Cma69", vec!["C", "E", "G", "A", "D"])]
 #[test_case("Cma6(#5)", vec!["C", "E", "G#", "A"])]
-#[test_case("Cmano3", vec!["C", "G"]; "Major no3 is power chord")]
+#[test_case("Cmano3", vec!["C", "G"])]
 #[test_case("CMaj", vec!["C", "E", "G" ])]
 fn should_error(i: &str, _expected: Vec<&str>) {
     let mut parser = Parser::new();
@@ -23,14 +23,7 @@ fn should_error(i: &str, _expected: Vec<&str>) {
     match res {
         Ok(chord) => panic!("Expected an error, got {:?}", chord),
         Err(e) => {
-            let a = e.errors.iter().fold("".to_owned(), |acc, e| {
-                if acc.is_empty() {
-                    e.to_string()
-                } else {
-                    format!("{acc} {e}")
-                }
-            });
-            dbg!(a);
+            assert!(e.errors.len() > 0);
         }
     }
 }
