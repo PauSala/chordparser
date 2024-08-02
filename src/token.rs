@@ -13,6 +13,7 @@ pub enum TokenType {
     Sus,
     Minor,
     Maj,
+    Maj7,
     Slash,
     LParent,
     RParent,
@@ -23,7 +24,9 @@ impl TokenType {
     //TODO: Add support for M (major) and m (minor). This implies not converting i to uppercase and put here every case sepparetely
     pub fn from_string(i: &str) -> Option<TokenType> {
         match i {
-            "MAJ" | "Maj" | "maj" | "MAJOR" | "Major" | "major" | "MA" | "Ma" | "ma" | "M"  => Some(TokenType::Maj),
+            "MAJ" | "Maj" | "maj" | "MAJOR" | "Major" | "major" | "MA" | "Ma" | "ma" | "M" => {
+                Some(TokenType::Maj)
+            }
             "MIN" | "Min" | "min" | "MINOR" | "Minor" | "minor" | "MI" | "Mi" | "mi" | "m" => {
                 Some(TokenType::Minor)
             }
@@ -60,6 +63,7 @@ impl Display for TokenType {
             TokenType::Sus => f.write_str("Sus")?,
             TokenType::Minor => f.write_str("-")?,
             TokenType::Maj => f.write_str("△")?,
+            TokenType::Maj7 => f.write_str("△")?,
             TokenType::Slash => f.write_str("/")?,
             TokenType::Alt => f.write_str("Alt")?,
             TokenType::Illegal => f.write_str("ILLEGAL")?,

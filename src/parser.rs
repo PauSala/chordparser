@@ -127,6 +127,7 @@ impl Parser {
         match &token.token_type {
             TokenType::Note(n) => self.process_note(n, token, tokens),
             TokenType::Maj => self.process_maj(token, tokens),
+            TokenType::Maj7 => self.process_maj7(token, tokens),
             TokenType::Minor => self.process_minor(token, tokens),
             TokenType::Sharp => self.process_modifier(token, tokens, Modifier::Sharp),
             TokenType::Flat => self.process_modifier(token, tokens, Modifier::Flat),
@@ -453,6 +454,19 @@ impl Parser {
             ));
         }
     }
+
+    fn process_maj7(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
+        self.ir.notes.push(NoteDescriptor::new(
+            SemInterval::Seventh,
+            Interval::MajorSeventh.st(),
+            token.pos as usize,
+        ));
+        // Ignore the seventh if exists
+        if self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
+            tokens.next();
+        }
+    }
+
     fn process_minor(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
         self.ir.notes.push(NoteDescriptor::new(
             SemInterval::Third,
