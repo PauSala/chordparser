@@ -13,9 +13,6 @@ use test_case::test_case;
 #[test_case("C6(#5)", vec!["C", "E", "G#", "A"])]
 #[test_case("C69", vec!["C", "E", "G", "A", "D"])]
 #[test_case("C69(#11)", vec!["C", "E", "G", "A", "D", "F#"])]
-#[test_case("Cma6(b5)", vec!["C", "E", "Gb", "A"])]
-#[test_case("Cma69", vec!["C", "E", "G", "A", "D"])]
-#[test_case("Cma6(#5)", vec!["C", "E", "G#", "A"])]
 #[test_case("Cma7(b5)", vec!["C", "E", "Gb", "B"])]
 #[test_case("Cma7", vec!["C", "E", "G", "B"])]
 #[test_case("Cma7(#5)", vec!["C", "E", "G#", "B"])]
@@ -26,7 +23,6 @@ use test_case::test_case;
 #[test_case("Cma9", vec!["C", "E", "G", "B", "D"])]
 #[test_case("Cma9(no3)", vec!["C", "G", "B", "D"])]
 #[test_case("Cma9no3", vec!["C", "G", "B", "D"])]
-#[test_case("Cmano3", vec!["C", "G"]; "Major no3 is power chord")]
 #[test_case("Cma9(#11)", vec!["C", "E", "G", "B", "D", "F#"])]
 #[test_case("Cma9(omit3)", vec!["C", "G", "B", "D"])]
 #[test_case("Cma13", vec!["C", "E", "G", "B", "D", "A"])]
@@ -56,7 +52,8 @@ use test_case::test_case;
 #[test_case("Cmi13", vec!["C", "Eb", "G", "Bb", "D", "F", "A"])]
 #[test_case("Csus4(b5#5)", vec!["C", "F", "Gb", "G#"])]
 #[test_case("Bdim7Maj7b13/G", vec!["B", "D", "F", "Ab", "A#", "C#", "E", "G"])]
-#[test_case("CMaj", vec!["C", "E", "G" ])]
+#[test_case("C7", vec!["C", "E", "G", "Bb" ])]
+#[test_case("Cadd2", vec!["C", "E", "G", "D" ])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);

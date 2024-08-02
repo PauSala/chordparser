@@ -36,14 +36,9 @@ pub fn implicit_min_seventh(ir: &mut ChordIr) {
 
     // Implicit seventh is only set when there are tensions not comming from an add modifier
     // and a sixth has not been set.
-    if !t7 && add_len < tensions_len && !ir.has(SemInterval::Sixth) && !ir.has_maj_modifier {
+    if !t7 && add_len < tensions_len && !ir.has(SemInterval::Sixth) {
         ir.notes
             .push(NoteDescriptor::new(SemInterval::Seventh, 10, usize::MAX));
-    }
-
-    if !t7 && add_len < tensions_len && !ir.has(SemInterval::Sixth) && ir.has_maj_modifier {
-        ir.notes
-            .push(NoteDescriptor::new(SemInterval::Seventh, 11, usize::MAX));
     }
 }
 

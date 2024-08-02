@@ -1,4 +1,4 @@
-use std::{iter::Peekable, slice::Iter};
+use std::{iter::Peekable, slice::Iter, vec};
 
 use crate::{
     chord::{
@@ -259,6 +259,7 @@ impl Parser {
                     "9" | "11" | "13" => {
                         self.add_tension(t, token, modifier, true);
                     }
+                    "2" => self.add_tension("9", token, modifier, true),
                     // Looks like add 3 appears in real book, but only as a mijor third
                     "3" => {
                         if let Some(_) = modifier {
@@ -421,16 +422,28 @@ impl Parser {
         self.ir.root = Some(Note::new(literal, modifier));
     }
     fn process_maj(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
-        if self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
-            self.ir.notes.push(NoteDescriptor::new(
-                SemInterval::Seventh,
-                11,
-                token.pos as usize,
+        let extensions = vec!["7", "9", "11", "13"];
+        let mut is_used = false;
+        for e in extensions {
+            if self.expect_peek(TokenType::Extension(e.to_string()), tokens) {
+                is_used = true;
+                self.ir.notes.push(NoteDescriptor::new(
+                    SemInterval::Seventh,
+                    11,
+                    token.pos as usize,
+                ));
+                if e == "7" {
+                    // Skip the tension
+                    tokens.next();
+                }
+                break;
+            }
+        }
+        if !is_used {
+            self.errors.push(format!(
+                "Error: Ma modifier is useless and confusing, use it only with a 7, 11, 9 or 13 at position {}",
+                token.pos
             ));
-            // Skip the seventh
-            tokens.next();
-        } else {
-            self.ir.has_maj_modifier = true;
         }
     }
     fn process_minor(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
