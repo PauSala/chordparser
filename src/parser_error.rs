@@ -1,4 +1,4 @@
-//! # Struct returned when parsing a chord fails
+//! # Error handling for the parser module.
 use std::{error::Error, fmt};
 
 /// Errors that can occur when parsing a chord.  

@@ -1,4 +1,4 @@
-//! Generate MIDI a file from (Chord).
+//! Generate MIDI a file from [Chord](chord/struct.Chord.html).
 
 use midly::{
     num::{u4, u7},
