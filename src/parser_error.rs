@@ -1,5 +1,8 @@
+//! # Struct returned when parsing a chord fails
 use std::{error::Error, fmt};
 
+/// Errors that can occur when parsing a chord.  
+/// Includes a list of string messages with a reason an the position in the input string when possible.
 #[derive(Debug)]
 pub struct ParserErrors {
     pub errors: Vec<String>,

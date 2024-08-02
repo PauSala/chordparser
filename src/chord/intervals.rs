@@ -2,6 +2,7 @@ use serde::ser::{Serialize, Serializer};
 use serde::Deserialize;
 use std::fmt::Display;
 
+/// Enum representing all possible intervals of a chord
 #[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
 pub enum Interval {
     Unison,
@@ -102,6 +103,8 @@ impl Serialize for Interval {
     }
 }
 
+/// Enum representing semantic intervals, meaning that every interval can be any of its possible values.  
+/// It is used mainly to calculate the correct enharmonic notes from root.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum SemInterval {
     Root,

@@ -1,3 +1,4 @@
+//! # Chord representation of a successfully parsed string.
 use std::vec;
 
 use intervals::Interval;
@@ -46,7 +47,7 @@ impl Chord {
 
         let note_literals = notes.iter().map(|a| a.to_string()).collect::<Vec<String>>();
 
-        let mut origin = String::from(transpose_to.to_string());
+        let mut origin = transpose_to.to_string();
         origin.push_str(&self.descriptor);
 
         Chord::builder(&origin, transpose_to.clone())

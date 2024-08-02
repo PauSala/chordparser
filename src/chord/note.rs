@@ -4,6 +4,7 @@ use std::fmt::Display;
 
 use super::intervals::{Interval, SemInterval};
 
+/// All possible note literals.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum NoteLiteral {
     C,
@@ -41,6 +42,13 @@ impl NoteLiteral {
         }
     }
 
+    /// Returns the matcher for given root and interval.  
+    /// It is used to find the enharmonically correct note given an interval and a root
+    /// # Arguments
+    /// * `root` - The root note
+    /// * `interval` - The interval
+    /// # Returns
+    /// A NoteMatcher that contains all possible notes at a distance of interval from root.
     pub(crate) fn get_matcher(&self, root: u8, interval: u8) -> NoteMatcher {
         let interval = (root + interval) % 12;
         let i = interval % 12;
@@ -126,9 +134,11 @@ impl Display for NoteLiteral {
     }
 }
 
+/// All possible matches for a given semitone from a root note.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct NoteMatcher(Vec<(NoteLiteral, Option<Modifier>)>);
 
+/// Represents a note modifier. It can be sharp, flat, double sharp or double flat.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize)]
 pub enum Modifier {
     Sharp,
@@ -148,6 +158,7 @@ impl Display for Modifier {
     }
 }
 
+/// Represents a musical note, splited into its literal and its modifier if any.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Note {
     pub literal: NoteLiteral,
@@ -160,66 +171,80 @@ impl Note {
     }
 
     fn get_difference(&self, to: &Note) -> u8 {
-        let o = self.to_interval();
-        let n = to.to_interval();
+        let o = self.to_semitone();
+        let n = to.to_semitone();
         (n + 12 - o) % 12
     }
 
+    /// Transpose a note to another note taking as refference the distance between `self` and `to`.  
+    /// For example:
+    /// If `self` is C, and `to` is E, `note` D will be transposed to F#.  
+    /// # Arguments
+    /// * `note` - The note to transpose
+    /// * `to` - The note took as refference to calculate the transposing interval
+    /// # Returns
+    /// The transposed note
     pub fn transpose_to(&self, note: &Note, to: &Note) -> Note {
         let diff = self.get_difference(to);
-        let m = self.literal.get_matcher(note.to_interval(), diff);
+        let m = self.literal.get_matcher(note.to_semitone(), diff);
         Note::new(m.0[0].clone().0, m.0[0].clone().1)
     }
 
-    pub fn to_real_interval(semantic_interval: u8, interval: u8) -> Interval {
+    /// Returns the real interval given a semantic interval and a semitone distance from root.
+    /// # Arguments
+    /// * `semantic_interval` - The semantic interval, meaning an interval with no alterations (e.g. 2nd, 3rd, 4th, etc).
+    /// * `interval` - The semitone distance from root
+    /// # Returns
+    /// The real interval
+    pub fn to_real_interval(semantic_interval: u8, st: u8) -> Interval {
         match semantic_interval {
             1 => Interval::Unison,
-            2 => match interval {
+            2 => match st {
                 1 => Interval::MinorSecond,
                 2 => Interval::MajorSecond,
                 _ => panic!("Invalid interval"),
             },
-            3 => match interval {
+            3 => match st {
                 3 => Interval::MinorThird,
                 4 => Interval::MajorThird,
                 _ => panic!("Invalid interval"),
             },
-            4 => match interval {
+            4 => match st {
                 5 => Interval::PerfectFourth,
                 6 => Interval::AugmentedFourth,
                 _ => panic!("Invalid interval"),
             },
-            5 => match interval {
+            5 => match st {
                 6 => Interval::DiminishedFifth,
                 7 => Interval::PerfectFifth,
                 8 => Interval::AugmentedFifth,
                 _ => panic!("Invalid interval"),
             },
-            6 => match interval {
+            6 => match st {
                 8 => Interval::MinorSixth,
                 9 => Interval::MajorSixth,
                 _ => panic!("Invalid interval"),
             },
-            7 => match interval {
+            7 => match st {
                 9 => Interval::DiminishedSeventh,
                 10 => Interval::MinorSeventh,
                 11 => Interval::MajorSeventh,
                 _ => panic!("Invalid interval"),
             },
-            9 => match interval {
+            9 => match st {
                 13 => Interval::FlatNinth,
                 14 => Interval::Ninth,
                 15 => Interval::SharpNinth,
                 _ => panic!("Invalid interval"),
             },
 
-            11 => match interval {
+            11 => match st {
                 17 => Interval::Eleventh,
                 18 => Interval::SharpEleventh,
                 _ => panic!("Invalid interval"),
             },
 
-            13 => match interval {
+            13 => match st {
                 20 => Interval::FlatThirteenth,
                 21 => Interval::Thirteenth,
                 _ => panic!("Invalid interval"),
@@ -228,8 +253,10 @@ impl Note {
         }
     }
 
-    /// Interval relative to 0
-    pub fn to_interval(&self) -> u8 {
+    /// Returns the semitone distance taking C as reference.
+    /// # Returns
+    /// The semitone distance from C
+    pub fn to_semitone(&self) -> u8 {
         match self.literal {
             NoteLiteral::C => match &self.modifier {
                 Some(m) => match m {
@@ -290,8 +317,14 @@ impl Note {
         }
     }
 
-    pub fn get_note(&self, exact_interval: u8, semantic_interval: u8) -> Note {
-        let m = self.literal.get_matcher(self.to_interval(), exact_interval);
+    /// Given a semitone distance from root and a semantic interval, returns the enharmonically correct note.
+    /// # Arguments
+    /// * `semitone` - The semitone distance from root
+    /// * `semantic_interval` - The semantic interval
+    /// # Returns
+    /// The enharmonically correct note relative to root
+    pub fn get_note(&self, semitone: u8, semantic_interval: u8) -> Note {
+        let m = self.literal.get_matcher(self.to_semitone(), semitone);
         let root_index = NoteLiteral::to_int(&self.literal);
         let interval_index = (root_index + (semantic_interval - 1)) % 7;
         let mut f =
@@ -310,6 +343,9 @@ impl Note {
         Note::new(literal, modifier)
     }
 
+    /// Returns the MIDI code of the note.
+    /// # Returns
+    /// The MIDI code of the note centered around central C
     pub fn to_midi_code(&self) -> u8 {
         let central_c = 60;
         let mut code = central_c - 12;
@@ -346,8 +382,14 @@ impl Display for Note {
     }
 }
 
+/// Intermediate representation of a note used by the parser.
+/// It contains the semitone distance from root, the semantic interval and the position in the string input.
+/// # Fields
+/// * `semitone` - The semitone distance from root
+/// * `sem_interval` - The semantic interval with no alterations (e.g. 2nd, 3rd, 4th, etc)
+/// * `pos` - The position in the string input
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct NoteDescriptor {
+pub(crate) struct NoteDescriptor {
     pub sem_interval: SemInterval,
     pub semitone: u8,
     pub pos: usize,

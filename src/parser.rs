@@ -1,3 +1,5 @@
+//! [&str] to [Chord] parser.
+
 use std::{iter::Peekable, slice::Iter, vec};
 
 use crate::{
@@ -21,6 +23,8 @@ use crate::{
     },
 };
 
+/// The parser is responsible fo reading and parsing the user input, transforming it into a [Chord] struct.  
+/// Every time a chord is parsed the parser is cleared, so its recommended to rehuse the parser instead of creating new ones.  
 pub struct Parser {
     scanner: Lexer,
     errors: Vec<String>,
@@ -54,6 +58,30 @@ impl Parser {
             ],
         }
     }
+
+    /// Parses a chord from a string.
+    ///   
+    /// # Arguments
+    /// * `input` - A string slice that holds the chord to be parsed.
+    /// # Returns
+    /// * A Result containing a [Chord] if the parsing was successful, otherwise a [ParserErrors] struct.
+    ///   
+    /// # Rules
+    /// There is a set of semantic and syntactic rules to ensure chord's consistency, for now the parser will reject a chord if:  
+    /// - There are multiple roots.
+    /// - There are duplicate basses (like C/E/Eb).
+    /// - There are two thirds.
+    /// - There are two fifths (except for (b5, #5) which is allowed).
+    /// - M | Ma | Maj modifier is used without a 7, 9, 11 or 13. This not includes the △ modifier, which is allowed to be used alone.
+    /// - There are contradictory sevenths (like m7 and Maj7) or multiple ones.
+    /// - There are illegal alterations (like #2, b4, #6).
+    /// - An alteration has no target.
+    /// - There are duplicate tensions, like 11, #11 (except for (b9, #9), which is allowed).
+    /// - A sus modifier is not sus2, susb2, sus4 or sus#4.
+    /// - An add3 is sharp or flat.
+    /// - An Omit modifier has no target (this includes wrong targets: any target which is not a 3 or 5).
+    /// - There are more than one sus modifier.
+    /// - Slash notation is used for anything other than 9 and 11.
     pub fn parse(&mut self, input: &str) -> Result<Chord, ParserErrors> {
         input.clone_into(&mut self.ir.name);
         let binding = self.scanner.scan_tokens(input);
@@ -71,7 +99,7 @@ impl Parser {
         let mut res = self.ir.clone();
         res.sort_by_semitone();
         self.clean_up();
-        Ok(res.to_chord())
+        Ok(res.create_chord())
     }
 
     fn transform(&mut self) {

@@ -1,3 +1,5 @@
+//! Generate MIDI a file from (Chord).
+
 use midly::{
     num::{u4, u7},
     Format, Header, MetaMessage, Smf, Timing, Track, TrackEvent, TrackEventKind,

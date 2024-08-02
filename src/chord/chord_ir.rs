@@ -23,6 +23,7 @@ impl Default for Omit {
     }
 }
 
+/// Intermediate representation of a chord used by the parser
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) struct ChordIr {
     pub name: String,
@@ -59,6 +60,7 @@ impl ChordIr {
     pub(crate) fn has(&self, int: SemInterval) -> bool {
         self.notes.iter().any(|n| n.sem_interval == int)
     }
+
     pub(crate) fn has_add(&self, int: SemInterval) -> bool {
         self.adds.iter().any(|n| *n == int)
     }
@@ -67,6 +69,7 @@ impl ChordIr {
         self.notes.sort_by(|a, b| a.semitone.cmp(&b.semitone))
     }
 
+    /// Get the notes of the chord
     pub(crate) fn get_notes(&mut self) -> Vec<Note> {
         let mut notes = Vec::new();
         self.sort_by_semitone();
@@ -79,7 +82,7 @@ impl ChordIr {
         notes
     }
 
-    pub(crate) fn to_chord(&mut self) -> Chord {
+    pub(crate) fn create_chord(&mut self) -> Chord {
         self.sort_by_semitone();
         let mut semitones = Vec::new();
         let mut semantic_intervals = Vec::new();
