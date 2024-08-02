@@ -5,7 +5,7 @@
 ChordParser is a library for parsing musical chords from a human readable string representation.  
 It is inspired by chordSymbol: <https://www.npmjs.com/package/chord-symbol.>  
 Said that, it implements its own rules and conventions, which can change in the future since this it is a work in progress project.  
-For now, the scope of the library is to parse chords from Pop, Rock, and Jazz music in English _relatively standard_ notation.  
+For now, the scope of the library is to parse chords from Pop, Rock, and Jazz music in _relatively standard_[^1] English notation.  
 Classical notation, as well as Latin or German notation, is not supported.
 
 # [Chord struct](#chord_struct)
@@ -53,3 +53,5 @@ As said, this is a work in progress project and the rules can change in the futu
 Checkout the example usage at the examples folder running:
 
 - `cargo run --example parse-chord `
+
+[^1]: A thorough analysis is necessary to precisely determine what is supported and the reasons behind it. Currently, the criteria are largely based both on my professional experience as a musician and my academic background.
