@@ -429,6 +429,8 @@ impl Parser {
             ));
             // Skip the seventh
             tokens.next();
+        } else {
+            self.ir.has_maj_modifier = true;
         }
     }
     fn process_minor(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {

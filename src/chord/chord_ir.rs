@@ -31,6 +31,7 @@ pub struct ChordIr {
     pub adds: Vec<SemInterval>,
     pub omits: Omit,
     pub is_sus: bool,
+    pub has_maj_modifier: bool,
 }
 
 impl ChordIr {
@@ -43,6 +44,7 @@ impl ChordIr {
             adds: Vec::new(),
             omits: Omit::new(),
             is_sus: false,
+            has_maj_modifier: false,
         }
     }
 

@@ -1,7 +1,4 @@
-use chordparser::{
-    chord::semantics::{Modifier, Note, NoteLiteral},
-    parser::Parser,
-};
+use chordparser::parser::Parser;
 
 use test_case::test_case;
 
@@ -26,14 +23,14 @@ use test_case::test_case;
 #[test_case("Cadd9(no3)", vec!["C", "G", "D"])]
 #[test_case("Cadd9", vec!["C", "E", "G", "D"])]
 #[test_case("C(add9)", vec!["C", "E", "G", "D"])]
-#[test_case("Cma9", vec!["C", "E", "G", "Bb", "D"])]
-#[test_case("Cma9(no3)", vec!["C", "G", "Bb", "D"])]
-#[test_case("Cma9no3", vec!["C", "G", "Bb", "D"])]
-#[test_case("Cmano3", vec!["C", "G"])]
-#[test_case("Cma9(#11)", vec!["C", "E", "G", "Bb", "D", "F#"])]
-#[test_case("Cma9(omit3)", vec!["C", "G", "Bb", "D"])]
-#[test_case("Cma13", vec!["C", "E", "G", "Bb", "D", "A"])]
-#[test_case("Cma13(#11)", vec!["C", "E", "G", "Bb", "D", "F#", "A"])]
+#[test_case("Cma9", vec!["C", "E", "G", "B", "D"])]
+#[test_case("Cma9(no3)", vec!["C", "G", "B", "D"])]
+#[test_case("Cma9no3", vec!["C", "G", "B", "D"])]
+#[test_case("Cmano3", vec!["C", "G"]; "Major no3 is power chord")]
+#[test_case("Cma9(#11)", vec!["C", "E", "G", "B", "D", "F#"])]
+#[test_case("Cma9(omit3)", vec!["C", "G", "B", "D"])]
+#[test_case("Cma13", vec!["C", "E", "G", "B", "D", "A"])]
+#[test_case("Cma13(#11)", vec!["C", "E", "G", "B", "D", "F#", "A"])]
 #[test_case("C°", vec!["C", "Eb", "Gb"]; "C° is dim")]
 #[test_case("Cmi", vec!["C", "Eb", "G"])]
 #[test_case("Cmi add9", vec!["C", "Eb", "G", "D"]; "Cmi add9 is minor")]
@@ -66,11 +63,11 @@ fn test_notes(i: &str, expected: Vec<&str>) {
     match res {
         Ok(chord) => {
             //dbg!(&chord);
-            let t = chord.transpose_to_root(&Note::new(NoteLiteral::E, Some(Modifier::Flat)));
-            dbg!(t);
-            dbg!(&chord.note_literals);
-            dbg!(&chord.real_intervals);
-            dbg!(chord.to_json());
+            // let t = chord.transpose_to_root(&Note::new(NoteLiteral::E, Some(Modifier::Flat)));
+            // dbg!(t);
+            // dbg!(&chord.note_literals);
+            // dbg!(&chord.real_intervals);
+            //dbg!(chord.to_json());
             let literals = chord.note_literals;
             assert_eq!(literals, expected);
         }
