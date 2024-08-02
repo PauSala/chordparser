@@ -1,4 +1,7 @@
-use crate::chord::{chord_ir::ChordIr, intervals::SemInterval};
+use crate::chord::{
+    chord_ir::ChordIr,
+    intervals::{Interval, SemInterval},
+};
 
 pub type Validator = fn(&mut ChordIr, &mut Vec<String>);
 
@@ -7,10 +10,10 @@ pub fn no_minor_and_major_thirds(chord: &mut ChordIr, errors: &mut Vec<String>) 
     let mut majthirds = (false, 0);
     for note in &chord.notes {
         if note.sem_interval == SemInterval::Third {
-            if note.semitone == 3 {
+            if note.semitone == Interval::MinorThird.st() {
                 minthirds = (true, note.pos);
             }
-            if note.semitone == 4 {
+            if note.semitone == Interval::MajorThird.st() {
                 majthirds = (true, note.pos);
             }
         }
@@ -28,7 +31,7 @@ pub fn no_perfect_fifth_and_altered_fifth(chord: &mut ChordIr, errors: &mut Vec<
     let mut a5 = (false, 0);
     for note in &chord.notes {
         if note.sem_interval == SemInterval::Fifth {
-            if note.semitone == 7 {
+            if note.semitone == Interval::PerfectFifth.st() {
                 p5 = (true, note.pos);
             } else {
                 a5 = (true, note.pos);
@@ -49,13 +52,13 @@ pub fn no_duplicate_seventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut dim7 = 0;
     for note in &chord.notes {
         if note.sem_interval == SemInterval::Seventh {
-            if note.semitone == 9 {
+            if note.semitone == Interval::DiminishedSeventh.st() {
                 dim7 += 1;
             }
-            if note.semitone == 10 {
+            if note.semitone == Interval::MinorSeventh.st() {
                 m7 += 1;
             }
-            if note.semitone == 11 {
+            if note.semitone == Interval::MajorSeventh.st() {
                 maj7 += 1;
             }
         }
@@ -76,10 +79,10 @@ pub fn no_minor_and_major_seventh(chord: &mut ChordIr, errors: &mut Vec<String>)
     let mut maj7 = (false, 0);
     for note in &chord.notes {
         if note.sem_interval == SemInterval::Seventh {
-            if note.semitone == 10 {
+            if note.semitone == Interval::MinorSeventh.st() {
                 m7 = (true, note.pos);
             }
-            if note.semitone == 11 {
+            if note.semitone == Interval::MajorSeventh.st() {
                 maj7 = (true, note.pos);
             }
         }
