@@ -37,7 +37,7 @@ As said, this is a work in progress project and the rules can change in the futu
 
 # Limitations
 
-- There are currently around 1300 tests, including both failing an accepted cases, this will be improved.
+- There are currently around 2300 tests, including both failing an accepted cases, this will be improved.
 - No string representation of the chord is supported yet beyond the input string.
 - Bass symbol is not supported yet.
 - Parsed chord notes have enharmonically correct names when possible. For example, a `B#9` chord will have `C𝄪` as the ninth instead of D. Said that,
