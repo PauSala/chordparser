@@ -26,7 +26,7 @@ use crate::{
 /// The parser is responsible fo reading and parsing the user input, transforming it into a [Chord] struct.  
 /// Every time a chord is parsed the parser is cleared, so its recommended to rehuse the parser instead of creating new ones.  
 pub struct Parser {
-    scanner: Lexer,
+    lexer: Lexer,
     errors: Vec<String>,
     ir: ChordIr,
     transformers: Vec<Transformer>,
@@ -36,7 +36,7 @@ pub struct Parser {
 impl Parser {
     pub fn new() -> Parser {
         Parser {
-            scanner: Lexer::new(),
+            lexer: Lexer::new(),
             errors: Vec::new(),
             ir: ChordIr::new(),
             transformers: vec![
@@ -84,7 +84,7 @@ impl Parser {
     /// - Slash notation is used for anything other than 9 and 11.
     pub fn parse(&mut self, input: &str) -> Result<Chord, ParserErrors> {
         input.clone_into(&mut self.ir.name);
-        let binding = self.scanner.scan_tokens(input);
+        let binding = self.lexer.scan_tokens(input);
         let mut tokens = binding.iter().peekable();
 
         self.read_tokens(&mut tokens);
