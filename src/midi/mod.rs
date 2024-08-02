@@ -1,5 +1,4 @@
 //! Generate a MIDI file from [Chord](chord/struct.Chord.html).
-//! Enabled with the `midi` feature.
 
 // #[cfg(feature = "midi")]
 use midly::{
