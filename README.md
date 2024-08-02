@@ -1,6 +1,6 @@
 # chordparser
 
-# [Overview](#overview)
+# Overview
 
 ChordParser is a library for parsing musical chords from a human readable string representation.  
 It is inspired by chordSymbol: <https://www.npmjs.com/package/chord-symbol.>  
@@ -23,7 +23,7 @@ This includes:
 
 The Chord is also serializable into JSON and MIDI and allows transposition from one key to another.
 
-# [Parsing rules](#parsing_rules)
+# Parsing rules
 
 Since there isn't a full consensus on how chords should be written, any chord parser is by definition opinionated.  
 The current rules and conventions maybe are too much restrictive, but it should allways be a way to express a chord in a way that the parser (and a human) can understand.  
@@ -35,7 +35,7 @@ As another example, the symbol `Δ` can be used to express a `maj7` chord, regar
 So in this case we are more permissive since both are common interpretations.
 As said, this is a work in progress project and the rules can change in the future.
 
-# [Limitations](#limitations)
+# Limitations
 
 - There are currently around 1300 tests, including both failing an accepted cases, this will be improved.
 - No string representation of the chord is supported yet beyond the input string.
@@ -48,7 +48,7 @@ As said, this is a work in progress project and the rules can change in the futu
   - Include or remove sets of allowed symbols.
   - Maybe allow other notations like Latin or German.
 
-# [Examples](#examples)
+# Examples
 
 Checkout the example usage at the examples folder running:
 
