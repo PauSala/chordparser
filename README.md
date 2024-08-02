@@ -8,9 +8,9 @@ Said that, it implements its own rules and conventions, which can change in the 
 For now, the scope of the library is to parse chords from Pop, Rock, and Jazz music in _relatively standard_[^1] English notation.  
 Classical notation, as well as Latin or German notation, is not supported.
 
-# [Chord struct](#chord_struct)
+# Chord struct
 
-Once parsed the [Chord](chord/struct.Chord.html) struct can be used to get information about the chord.  
+Once parsed the Chord struct can be used to get information about the chord.  
 This includes:
 
 - Root note of the chord
@@ -21,7 +21,7 @@ This includes:
 - Semitones relative to root note
 - Whether the chord is a sus chord
 
-The [Chord](chord/struct.Chord.html) is also serializable into JSON and MIDI and allows transposition from one key to another.
+The Chord is also serializable into JSON and MIDI and allows transposition from one key to another.
 
 # [Parsing rules](#parsing_rules)
 
