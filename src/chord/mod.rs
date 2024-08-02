@@ -11,6 +11,7 @@ pub mod note;
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Chord {
     pub origin: String,
+    pub descriptor: String,
     pub root: Note,
     pub bass: Option<Note>,
     pub notes: Vec<Note>,
@@ -47,6 +48,7 @@ impl Chord {
 
         Chord {
             origin,
+            descriptor: self.descriptor.clone(),
             root: transpose_to.clone(),
             bass,
             notes,
@@ -69,6 +71,7 @@ impl Chord {
 
 pub struct ChordBuilder {
     origin: String,
+    descriptor: String,
     root: Note,
     bass: Option<Note>,
     notes: Vec<Note>,
@@ -83,6 +86,7 @@ impl ChordBuilder {
     pub fn new(origin: &str, root: Note) -> ChordBuilder {
         ChordBuilder {
             origin: origin.to_string(),
+            descriptor: String::new(),
             root,
             bass: None,
             notes: Vec::new(),
@@ -129,9 +133,15 @@ impl ChordBuilder {
         self
     }
 
+    pub fn descriptor(mut self, descriptor: &str) -> ChordBuilder {
+        self.descriptor = descriptor.to_string();
+        self
+    }
+
     pub fn build(self) -> Chord {
         Chord {
             origin: self.origin,
+            descriptor: self.descriptor,
             root: self.root,
             bass: self.bass,
             notes: self.notes,

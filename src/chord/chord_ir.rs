@@ -94,6 +94,7 @@ impl ChordIr {
         }
 
         Chord::builder(&self.name, self.root.clone().unwrap())
+            .descriptor(&self.descriptor)
             .bass(self.bass.clone())
             .notes(notes)
             .note_literals(note_literals)

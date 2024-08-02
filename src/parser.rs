@@ -398,11 +398,6 @@ impl Parser {
     }
 
     fn process_note(&mut self, n: &str, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
-        self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Root,
-            0,
-            token.pos as usize,
-        ));
         if self.ir.root.is_some() {
             self.errors.push(format!(
                 "Error: multiple root ({}) at line {}",
@@ -410,6 +405,11 @@ impl Parser {
             ));
             return;
         }
+        self.ir.notes.push(NoteDescriptor::new(
+            SemInterval::Root,
+            0,
+            token.pos as usize,
+        ));
         let literal = NoteLiteral::from_string(n);
         let mut modifier = None;
 
@@ -420,6 +420,14 @@ impl Parser {
             tokens.next();
             modifier = Some(Modifier::Sharp);
         }
+        let modifier_str = match &modifier {
+            Some(m) => m.to_string(),
+            None => "".to_string(),
+        };
+        self.ir.descriptor = self
+            .ir
+            .name
+            .replace(&format!("{}{}", n.to_string(), modifier_str), "");
         self.ir.root = Some(Note::new(literal, modifier));
     }
     fn process_maj(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
