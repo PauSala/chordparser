@@ -96,7 +96,7 @@ pub fn remove_omits(ir: &mut ChordIr) {
         ir.notes = ir
             .notes
             .iter()
-            .filter(|n| n.semitone != 7)
+            .filter(|n| n.semitone != Interval::PerfectFifth.st())
             .cloned()
             .collect()
     }
@@ -104,7 +104,9 @@ pub fn remove_omits(ir: &mut ChordIr) {
         ir.notes = ir
             .notes
             .iter()
-            .filter(|n| n.semitone != 4 && n.semitone != 3)
+            .filter(|n| {
+                n.semitone != Interval::MajorThird.st() && n.semitone != Interval::MinorThird.st()
+            })
             .cloned()
             .collect();
     }

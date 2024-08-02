@@ -263,7 +263,7 @@ impl Parser {
                     "2" => self.add_tension("9", token, modifier, true),
                     // Looks like add 3 appears in real book, but only as a mijor third
                     "3" => {
-                        if let Some(_) = modifier {
+                        if modifier.is_some() {
                             self.errors.push(format!(
                                 "Error: Add 3 cannot be sharp or flat at pos {}",
                                 token.pos

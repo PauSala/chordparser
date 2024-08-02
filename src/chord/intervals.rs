@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum Interval {
@@ -56,7 +57,7 @@ impl Interval {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    pub fn to_human_readable(&self) -> String {
         match self {
             Interval::Unison => "1".to_string(),
             Interval::MinorSecond => "b2".to_string(),
@@ -82,6 +83,12 @@ impl Interval {
             Interval::FlatThirteenth => "b13".to_string(),
             Interval::Thirteenth => "13".to_string(),
         }
+    }
+}
+
+impl Display for Interval {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_human_readable())
     }
 }
 

@@ -6,16 +6,13 @@ pub fn no_minor_and_major_thirds(chord: &mut ChordIr, errors: &mut Vec<String>) 
     let mut minthirds = (false, 0);
     let mut majthirds = (false, 0);
     for note in &chord.notes {
-        match note.sem_interval {
-            SemInterval::Third => {
-                if note.semitone == 3 {
-                    minthirds = (true, note.pos);
-                }
-                if note.semitone == 4 {
-                    majthirds = (true, note.pos);
-                }
+        if note.sem_interval == SemInterval::Third {
+            if note.semitone == 3 {
+                minthirds = (true, note.pos);
             }
-            _ => {}
+            if note.semitone == 4 {
+                majthirds = (true, note.pos);
+            }
         }
     }
     if minthirds.0 && majthirds.0 {
@@ -30,15 +27,12 @@ pub fn no_perfect_fifth_and_altered_fifth(chord: &mut ChordIr, errors: &mut Vec<
     let mut p5 = (false, 0);
     let mut a5 = (false, 0);
     for note in &chord.notes {
-        match note.sem_interval {
-            SemInterval::Fifth => {
-                if note.semitone == 7 {
-                    p5 = (true, note.pos);
-                } else {
-                    a5 = (true, note.pos);
-                }
+        if note.sem_interval == SemInterval::Fifth {
+            if note.semitone == 7 {
+                p5 = (true, note.pos);
+            } else {
+                a5 = (true, note.pos);
             }
-            _ => {}
         }
     }
     if p5.0 && a5.0 {
@@ -54,35 +48,26 @@ pub fn no_duplicate_seventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut maj7 = 0;
     let mut dim7 = 0;
     for note in &chord.notes {
-        match note.sem_interval {
-            SemInterval::Seventh => {
-                if note.semitone == 9 {
-                    dim7 += 1;
-                }
-                if note.semitone == 10 {
-                    m7 += 1;
-                }
-                if note.semitone == 11 {
-                    maj7 += 1;
-                }
+        if note.sem_interval == SemInterval::Seventh {
+            if note.semitone == 9 {
+                dim7 += 1;
             }
-            _ => {}
+            if note.semitone == 10 {
+                m7 += 1;
+            }
+            if note.semitone == 11 {
+                maj7 += 1;
+            }
         }
     }
     if m7 > 1 {
-        errors.push(format!(
-            "Error: A chord cannot have multiple minor sevenths"
-        ));
+        errors.push("Error: A chord cannot have multiple minor sevenths".to_string());
     }
     if dim7 > 1 {
-        errors.push(format!(
-            "Error: A chord cannot have multiple diminished sevenths"
-        ));
+        errors.push("Error: A chord cannot have multiple diminished sevenths".to_string());
     }
     if maj7 > 1 {
-        errors.push(format!(
-            "Error: A chord cannot have multiple major sevenths"
-        ));
+        errors.push("Error: A chord cannot have multiple major sevenths".to_string());
     }
 }
 
@@ -90,16 +75,13 @@ pub fn no_minor_and_major_seventh(chord: &mut ChordIr, errors: &mut Vec<String>)
     let mut m7 = (false, 0);
     let mut maj7 = (false, 0);
     for note in &chord.notes {
-        match note.sem_interval {
-            SemInterval::Seventh => {
-                if note.semitone == 10 {
-                    m7 = (true, note.pos);
-                }
-                if note.semitone == 11 {
-                    maj7 = (true, note.pos);
-                }
+        if note.sem_interval == SemInterval::Seventh {
+            if note.semitone == 10 {
+                m7 = (true, note.pos);
             }
-            _ => {}
+            if note.semitone == 11 {
+                maj7 = (true, note.pos);
+            }
         }
     }
     if m7.0 && maj7.0 {
@@ -115,14 +97,13 @@ pub fn no_natural_and_altered_nine(chord: &mut ChordIr, errors: &mut Vec<String>
     let mut n = (false, 0);
     let mut s = (false, 0);
     for note in &chord.notes {
-        match note.sem_interval {
-            SemInterval::Ninth => match note.semitone {
+        if note.sem_interval == SemInterval::Ninth {
+            match note.semitone {
                 13 => f = (true, note.pos),
                 14 => n = (true, note.pos),
                 15 => s = (true, note.pos),
                 _ => {}
-            },
-            _ => {}
+            }
         }
     }
     if n.0 && f.0 {
@@ -144,13 +125,12 @@ pub fn no_double_eleventh(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut n = (false, 0);
     let mut s = (false, 0);
     for note in &chord.notes {
-        match note.sem_interval {
-            SemInterval::Eleventh => match note.semitone {
+        if note.sem_interval == SemInterval::Eleventh {
+            match note.semitone {
                 17 => n = (true, note.pos),
                 18 => s = (true, note.pos),
                 _ => {}
-            },
-            _ => {}
+            }
         }
     }
     if n.0 && s.0 {
@@ -165,13 +145,12 @@ pub fn no_double_thirteenth(chord: &mut ChordIr, errors: &mut Vec<String>) {
     let mut f = (false, 0);
     let mut n = (false, 0);
     for note in &chord.notes {
-        match note.sem_interval {
-            SemInterval::Thirteenth => match note.semitone {
+        if note.sem_interval == SemInterval::Thirteenth {
+            match note.semitone {
                 20 => f = (true, note.pos),
                 21 => n = (true, note.pos),
                 _ => {}
-            },
-            _ => {}
+            }
         }
     }
     if n.0 && f.0 {
