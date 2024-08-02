@@ -34,7 +34,7 @@ As another example, the symbol `Δ` can be used to express a `maj7` chord, regar
 So in this case we are more permissive since both are common interpretations.
 As said, this is a work in progress project and the rules can change in the future.
 
-# [Limitations and Todos](#limitations)
+# [Limitations](#limitations)
 
 - Bass symbol is not supported yet.
 - Parsed chord notes have enharmonically correct names when possible. For example, a `B#9` chord will have `C𝄪` as the ninth instead of D. Said that,
