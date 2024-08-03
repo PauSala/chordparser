@@ -14,16 +14,26 @@ pub mod note;
 /// Chord representation of a successfully parsed string.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Chord {
+    /// The string that originated the chord.
     pub origin: String,
+    /// The descriptor of the chord (all beyond its root).
     pub descriptor: String,
+    /// The root note of the chord.
     pub root: Note,
+    /// The bass note of the chord if any is added with a slash.
     pub bass: Option<Note>,
+    /// The notes of the chord.
     pub notes: Vec<Note>,
+    /// The notes of the chord as string literals.
     pub note_literals: Vec<String>,
+    /// The semitones of the notes relative to root.
     pub semitones: Vec<u8>,
+    /// The semantic intervals of the notes, meaning non altered intervals.
     pub semantic_intervals: Vec<u8>,
+    /// The real intervals of the notes, the actual intervals.
     pub real_intervals: Vec<Interval>,
     pub is_sus: bool,
+    /// Intervals added through the add modifier.
     pub adds: Vec<Interval>,
 }
 
