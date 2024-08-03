@@ -31,7 +31,7 @@ pub(crate) struct ChordIr {
     pub bass: Option<Note>,
     pub root: Option<Note>,
     pub notes: Vec<NoteDescriptor>,
-    pub adds: Vec<SemInterval>,
+    pub adds: Vec<Interval>,
     pub omits: Omit,
     pub is_sus: bool,
 }
@@ -61,7 +61,7 @@ impl ChordIr {
         self.notes.iter().any(|n| n.sem_interval == int)
     }
 
-    pub(crate) fn has_add(&self, int: SemInterval) -> bool {
+    pub(crate) fn has_add(&self, int: Interval) -> bool {
         self.adds.iter().any(|n| *n == int)
     }
 

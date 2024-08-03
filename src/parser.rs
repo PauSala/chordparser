@@ -661,37 +661,41 @@ impl Parser {
         is_add: bool,
     ) {
         match tension {
-            "9" => {
-                match modifier {
-                    Some(m) => match m {
-                        Modifier::Sharp => {
-                            self.ir.notes.push(NoteDescriptor::new(
-                                SemInterval::Ninth,
-                                Interval::SharpNinth.st(),
-                                token.pos as usize,
-                            ));
-                        }
-                        Modifier::Flat => {
-                            self.ir.notes.push(NoteDescriptor::new(
-                                SemInterval::Ninth,
-                                Interval::FlatNinth.st(),
-                                token.pos as usize,
-                            ));
-                        }
-                        _ => (),
-                    },
-                    None => {
+            "9" => match modifier {
+                Some(m) => match m {
+                    Modifier::Sharp => {
                         self.ir.notes.push(NoteDescriptor::new(
                             SemInterval::Ninth,
-                            Interval::Ninth.st(),
+                            Interval::SharpNinth.st(),
                             token.pos as usize,
                         ));
+                        if is_add {
+                            self.ir.adds.push(Interval::SharpNinth);
+                        }
+                    }
+                    Modifier::Flat => {
+                        self.ir.notes.push(NoteDescriptor::new(
+                            SemInterval::Ninth,
+                            Interval::FlatNinth.st(),
+                            token.pos as usize,
+                        ));
+                        if is_add {
+                            self.ir.adds.push(Interval::FlatNinth);
+                        }
+                    }
+                    _ => (),
+                },
+                None => {
+                    self.ir.notes.push(NoteDescriptor::new(
+                        SemInterval::Ninth,
+                        Interval::Ninth.st(),
+                        token.pos as usize,
+                    ));
+                    if is_add {
+                        self.ir.adds.push(Interval::Ninth);
                     }
                 }
-                if is_add {
-                    self.ir.adds.push(SemInterval::Ninth);
-                }
-            }
+            },
             "11" => {
                 if let Some(m) = &modifier {
                     match m {
@@ -702,7 +706,7 @@ impl Parser {
                                 token.pos as usize,
                             ));
                             if is_add {
-                                self.ir.adds.push(SemInterval::Eleventh);
+                                self.ir.adds.push(Interval::SharpEleventh);
                             }
                         }
                         Modifier::Flat => {
@@ -721,7 +725,7 @@ impl Parser {
                         self.ir.is_sus = true;
                     }
                     if is_add {
-                        self.ir.adds.push(SemInterval::Eleventh);
+                        self.ir.adds.push(Interval::Eleventh);
                     }
                 }
             }
@@ -735,7 +739,7 @@ impl Parser {
                                 token.pos as usize,
                             ));
                             if is_add {
-                                self.ir.adds.push(SemInterval::Thirteenth);
+                                self.ir.adds.push(Interval::FlatThirteenth);
                             }
                         }
                         Modifier::Sharp => {
@@ -753,7 +757,7 @@ impl Parser {
                         token.pos as usize,
                     ));
                     if is_add {
-                        self.ir.adds.push(SemInterval::Thirteenth);
+                        self.ir.adds.push(Interval::Thirteenth);
                     }
                 }
             }

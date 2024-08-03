@@ -24,6 +24,7 @@ pub struct Chord {
     pub semantic_intervals: Vec<u8>,
     pub real_intervals: Vec<Interval>,
     pub is_sus: bool,
+    pub adds: Vec<Interval>,
 }
 
 impl Chord {
@@ -104,6 +105,7 @@ pub struct ChordBuilder {
     semantic_intervals: Vec<u8>,
     real_intervals: Vec<Interval>,
     is_sus: bool,
+    adds: Vec<Interval>,
 }
 
 impl ChordBuilder {
@@ -119,6 +121,7 @@ impl ChordBuilder {
             semantic_intervals: Vec::new(),
             real_intervals: Vec::new(),
             is_sus: false,
+            adds: Vec::new(),
         }
     }
 
@@ -162,6 +165,11 @@ impl ChordBuilder {
         self
     }
 
+    pub fn adds(mut self, adds: Vec<Interval>) -> ChordBuilder {
+        self.adds = adds;
+        self
+    }
+
     pub fn build(self) -> Chord {
         Chord {
             origin: self.origin,
@@ -174,6 +182,7 @@ impl ChordBuilder {
             real_intervals: self.real_intervals,
             is_sus: self.is_sus,
             semitones: self.semitones,
+            adds: self.adds,
         }
     }
 }
