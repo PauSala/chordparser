@@ -1,5 +1,7 @@
 //! Generate a MIDI file from [Chord](chord/struct.Chord.html).
 
+use std::path::Path;
+
 // #[cfg(feature = "midi")]
 use midly::{
     num::{u4, u7},
@@ -13,7 +15,7 @@ use midly::{
 /// * `bpm` - Beats per minute.
 /// * `beats` - Duration in beats.
 // #[cfg(feature = "midi")]
-pub fn to_midi_file(chord_notes: &[u8], name: &str, bpm: u32, beats: u16) {
+pub fn to_midi_file(chord_notes: &[u8], name: &Path, bpm: u32, beats: u16) {
     // Create the track events for the chord
     let mc_x_beat = 60 * 1_000_000 / bpm;
     let ticks_per_beat: u16 = 500;
@@ -76,8 +78,7 @@ pub fn to_midi_file(chord_notes: &[u8], name: &str, bpm: u32, beats: u16) {
         tracks: vec![track],
     };
 
-    let mut name = name.to_string();
-    name.push_str(".mid");
+    name.with_extension("mid");
     let mut file = std::fs::File::create(name).unwrap();
     smf.write_std(&mut file).unwrap();
 }

@@ -519,7 +519,7 @@ impl Parser {
         }
         if !is_used {
             self.errors.push(format!(
-                "Error: Ma modifier is useless and confusing, use it only with a 7, 11, 9 or 13 at position {}",
+                "Error: Maj and its varians alone are not allowed. Use it only with a 7, 11, 9 or 13 at position {}",
                 token.pos
             ));
         }

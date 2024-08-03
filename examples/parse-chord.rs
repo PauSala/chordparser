@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use chordparser::{midi::to_midi_file, parser::Parser};
 /// Parse a chord and generate a both json-string representation and the  MIDI file.
 pub fn main() {
@@ -7,7 +9,12 @@ pub fn main() {
         Ok(chord) => {
             dbg!(&chord);
             dbg!(&chord.to_json());
-            to_midi_file(&chord.to_midi_codes(), "midi_files/Abmaj7#11", 120, 4);
+            to_midi_file(
+                &chord.to_midi_codes(),
+                Path::new("midi_files/Ab°7(Maj7,9)"),
+                120,
+                4,
+            );
         }
         Err(e) => {
             dbg!(e);
