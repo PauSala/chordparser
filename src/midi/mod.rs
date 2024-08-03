@@ -11,7 +11,7 @@ use midly::{
 /// Generate a MIDI file from [Chord](chord/struct.Chord.html).
 /// # Arguments
 /// * `chord_notes` - The notes of the chord in MIDI codes.
-/// * `name` - The name of the file.
+/// * `name` - The path of the file to save without extension.
 /// * `bpm` - Beats per minute.
 /// * `beats` - Duration in beats.
 // #[cfg(feature = "midi")]
@@ -78,7 +78,7 @@ pub fn to_midi_file(chord_notes: &[u8], name: &Path, bpm: u32, beats: u16) {
         tracks: vec![track],
     };
 
-    name.with_extension("mid");
-    let mut file = std::fs::File::create(name).unwrap();
+    let path = name.with_extension("mid");
+    let mut file = std::fs::File::create(path).unwrap();
     smf.write_std(&mut file).unwrap();
 }
