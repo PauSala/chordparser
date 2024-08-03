@@ -63,7 +63,7 @@ impl Chord {
             .build()
     }
 
-    /// Returns the MIDI codes for the chord.
+    /// Returns the MIDI codes for the chord, centered around central C (60 midi code).
     /// # Arguments
     /// * `self` - The chord to get the MIDI codes from.
     /// # Returns
