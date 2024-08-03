@@ -24,10 +24,11 @@ use test_case::test_case;
 #[test_case("CMinb13", Quality::Minor)]
 #[test_case("C-Maj7", Quality::Minor)]
 #[test_case("CMaj7-", Quality::Minor)]
-#[test_case("C-b5", Quality::SemiDiminished)]
+#[test_case("C-b5", Quality::Diminished)]
 #[test_case("C-7b5", Quality::SemiDiminished)]
 #[test_case("Cdim7", Quality::Diminished)]
 #[test_case("Cdim7Maj7", Quality::Diminished)]
+#[test_case("CdimMaj7", Quality::Diminished)]
 fn test_qualities(input: &str, expected: Quality) {
     let mut parser = Parser::new();
     let res = parser.parse(input);

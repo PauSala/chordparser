@@ -12,6 +12,7 @@ pub(crate) mod chord_ir;
 pub mod intervals;
 pub mod note;
 pub mod quality;
+pub mod render;
 
 /// Chord representation of a successfully parsed string.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
@@ -112,7 +113,7 @@ impl Chord {
         }
     }
 
-    pub fn has(&self, int: Interval) -> bool {
+    pub(crate) fn has(&self, int: Interval) -> bool {
         self.real_intervals.iter().any(|n| *n == int)
     }
 }

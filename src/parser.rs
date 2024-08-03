@@ -331,7 +331,7 @@ impl Parser {
             if let TokenType::Extension(t) = &next.token_type {
                 match t.as_str() {
                     "2" => self.add_tension("9", token, modifier, true),
-                    // Looks like add 3 appears in real book, but only as a mijor third
+                    // Looks like add 3 appears in real book, but only as a major third
                     "3" => {
                         if modifier.is_some() {
                             self.errors.push(format!(
@@ -368,9 +368,7 @@ impl Parser {
             ));
             return;
         }
-        self.ir.is_sus = true;
         if self.expect_peek(TokenType::Sharp, tokens) {
-            tokens.next();
             if self.expect_peek(TokenType::Extension("4".to_string()), tokens) {
                 tokens.next();
                 self.ir.notes.push(NoteDescriptor::new(
@@ -378,36 +376,15 @@ impl Parser {
                     Interval::AugmentedFourth.st(),
                     token.pos as usize,
                 ));
-                return;
-            }
-            self.errors.push(format!(
-                "Error: Sus should be sus2, susb2, sus4 or sus#4 at pos {}",
-                token.pos
-            ));
-            return;
-        }
-        if self.expect_peek(TokenType::Flat, tokens) {
-            tokens.next();
-            if self.expect_peek(TokenType::Extension("2".to_string()), tokens) {
                 tokens.next();
-                self.ir.notes.push(NoteDescriptor::new(
-                    SemInterval::Second,
-                    Interval::MinorSecond.st(),
-                    token.pos as usize,
-                ));
                 return;
             }
-            self.errors.push(format!(
-                "Error: Sus should be sus2, susb2, sus4 or sus#4 at pos {}",
-                token.pos
-            ));
-            return;
         }
         if self.expect_peek(TokenType::Extension("2".to_string()), tokens) {
             tokens.next();
             self.ir.notes.push(NoteDescriptor::new(
-                SemInterval::Second,
-                Interval::MajorSecond.st(),
+                SemInterval::Ninth,
+                Interval::Ninth.st(),
                 token.pos as usize,
             ));
             return;
@@ -419,6 +396,7 @@ impl Parser {
                 Interval::PerfectFourth.st(),
                 token.pos as usize,
             ));
+            self.ir.is_sus = true;
             return;
         }
         self.ir.notes.push(NoteDescriptor::new(
@@ -426,6 +404,7 @@ impl Parser {
             Interval::PerfectFourth.st(),
             token.pos as usize,
         ));
+        self.ir.is_sus = true;
     }
 
     fn process_dim(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
@@ -722,7 +701,7 @@ impl Parser {
                         Interval::Eleventh.st(),
                         token.pos as usize,
                     ));
-                    if !self.ir.has_minor_third() {
+                    if !self.ir.has_minor_third() && !is_add {
                         self.ir.is_sus = true;
                     }
                     if is_add {

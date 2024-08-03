@@ -27,7 +27,7 @@ impl Quality {
         let p4 = chord.has(Interval::PerfectFourth);
 
         if min3 {
-            if dim5 && dim7 {
+            if dim5 && (dim7 || !min7) {
                 return Quality::Diminished;
             } else if dim5 {
                 return Quality::SemiDiminished;
