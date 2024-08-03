@@ -105,6 +105,7 @@ impl ChordIr {
             .semantic_intervals(semantic_intervals)
             .real_intervals(real_intervals)
             .is_sus(self.is_sus)
+            .adds(self.adds.clone())
             .build()
     }
 }

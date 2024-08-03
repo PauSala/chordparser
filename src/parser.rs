@@ -206,12 +206,13 @@ impl Parser {
         while tokens.peek().is_some() {
             let token = tokens.next().unwrap();
             match token.token_type {
-                TokenType::RParent => return,
+                TokenType::RParent => break,
                 TokenType::Eof => {
                     self.errors.push(format!(
                         "Error: Missing closing parenthesis at position {}",
                         token.pos
                     ));
+                    break;
                 }
                 _ => (),
             }
