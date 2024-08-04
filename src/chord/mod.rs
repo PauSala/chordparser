@@ -250,26 +250,26 @@ pub fn normalize(ch: &Chord) -> String {
             }
             return _normalize(ch, res);
         }
-        Quality::Minor7 => {
+        Quality::Minor7 | Quality::SemiDiminished => {
             res.push_str("min");
             let mmod = get_main_mod(ch).unwrap();
-            let to_str = {
-                if mmod == Interval::MinorSeventh {
-                    "7".to_string()
-                } else {
-                    mmod.to_string()
-                }
-            };
-            res.push_str(&to_str);
+            res.push_str(&mmod.to_string());
             return _normalize(ch, res);
         }
-        Quality::MinorMaj7 => todo!(),
-        Quality::Minor => todo!(),
-        Quality::Dominant => todo!(),
-        Quality::SemiDiminished => todo!(),
+        Quality::MinorMaj7 => {
+            res.push_str("min");
+            let mmod = get_main_mod(ch).unwrap();
+            if mmod != Interval::MinorSeventh {
+                res.push_str("Maj");
+            }
+            res.push_str(&mmod.to_string());
+            return _normalize(ch, res);
+        }
         Quality::Diminished => todo!(),
-        Quality::Augmented => todo!(),
+        Quality::Minor => todo!(),
         Quality::Major => todo!(),
+        Quality::Dominant => todo!(),
+        Quality::Augmented => todo!(),
     }
     res
 }
@@ -360,7 +360,7 @@ fn get_main_mod(ch: &Chord) -> Option<Interval> {
             }
             Some(Interval::MajorSeventh)
         }
-        Quality::Minor7 => {
+        Quality::Minor7 | Quality::MinorMaj7 | Quality::SemiDiminished => {
             if ch.has(Interval::Thirteenth)
                 && ch
                     .semantic_intervals
@@ -384,7 +384,10 @@ fn get_main_mod(ch: &Chord) -> Option<Interval> {
             if ch.has(Interval::Ninth) {
                 return Some(Interval::Ninth);
             }
-            Some(Interval::MinorSeventh)
+            if ch.quality == Quality::Minor7 {
+                return Some(Interval::MinorSeventh);
+            }
+            return Some(Interval::MajorSeventh);
         }
         _ => None,
     }
@@ -410,8 +413,9 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
             }
             adds
         }
-        Quality::Minor7 => {
+        Quality::Minor7 | Quality::MinorMaj7 | Quality::SemiDiminished => {
             if ch.has(Interval::Thirteenth)
+                && !ch.has(Interval::MajorSixth)
                 && (!ch.real_intervals.iter().any(|i| *i == Interval::Eleventh)
                     || !ch.real_intervals.iter().any(|i| *i == Interval::Ninth))
             {
@@ -422,19 +426,23 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
             {
                 adds.push(Interval::Eleventh);
             }
+            if ch.has(Interval::MajorSixth) {
+                adds.push(Interval::MajorSixth);
+            }
             adds
         }
         Quality::Major6 | Quality::Minor6 => {
             if ch.has(Interval::Eleventh) {
                 adds.push(Interval::Eleventh);
             }
+            if ch.has(Interval::MajorSeventh) {
+                adds.push(Interval::MajorSeventh);
+            }
             adds
         }
         Quality::Major => todo!(),
         Quality::Minor => todo!(),
-        Quality::MinorMaj7 => todo!(),
         Quality::Dominant => todo!(),
-        Quality::SemiDiminished => todo!(),
         Quality::Diminished => todo!(),
         Quality::Augmented => todo!(),
     }
@@ -463,7 +471,7 @@ fn get_alt_notes(ch: &Chord) -> Vec<Interval> {
         .collect();
     match ch.quality {
         Quality::Power => res,
-        Quality::SemiDiminished | Quality::Diminished => ch
+        Quality::Diminished => ch
             .real_intervals
             .iter()
             .filter(|i| dim.contains(i))
@@ -492,7 +500,7 @@ mod test {
     fn shoudl_work() {
         let mut parser = Parser::new();
         // let res = parser.parse("CMaj7add13b5");
-        let res = parser.parse("C-9add11add13");
+        let res = parser.parse("C-9b513");
         match res {
             Ok(c) => {
                 dbg!(&c);

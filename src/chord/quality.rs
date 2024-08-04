@@ -35,9 +35,9 @@ impl Quality {
         if min3 {
             if dim5 && (dim7 || !min7) {
                 return Quality::Diminished;
-            } else if dim5 {
+            } else if dim5 && !maj7 {
                 return Quality::SemiDiminished;
-            } else if maj7 {
+            } else if maj7 && !maj6 {
                 return Quality::MinorMaj7;
             } else if min7 {
                 return Quality::Minor7;

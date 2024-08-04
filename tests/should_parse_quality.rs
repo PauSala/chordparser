@@ -34,6 +34,7 @@ use test_case::test_case;
 #[test_case("Cdim7", Quality::Diminished)]
 #[test_case("Cdim7Maj7", Quality::Diminished)]
 #[test_case("CdimMaj7", Quality::Diminished)]
+#[test_case("CdimMaj9", Quality::Diminished)]
 fn test_qualities(input: &str, expected: Quality) {
     let mut parser = Parser::new();
     let res = parser.parse(input);
