@@ -4,7 +4,7 @@ use chordparser::{midi::to_midi_file, parser::Parser};
 /// Parse a chord and generate a both json-string representation and the  MIDI file.
 pub fn main() {
     let mut parser = Parser::new();
-    let result = parser.parse("Ab°7(Maj7,9)");
+    let result = parser.parse("Ab°7(Maj7,add9)");
     match result {
         Ok(chord) => {
             dbg!(&chord);

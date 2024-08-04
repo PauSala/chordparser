@@ -2,6 +2,7 @@
 use std::vec;
 
 use intervals::Interval;
+use quality::Quality;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
@@ -10,20 +11,35 @@ use note::Note;
 pub(crate) mod chord_ir;
 pub mod intervals;
 pub mod note;
+pub mod quality;
+pub mod render;
 
 /// Chord representation of a successfully parsed string.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Chord {
+    /// The string that originated the chord.
     pub origin: String,
+    /// The descriptor of the chord (all beyond its root).
     pub descriptor: String,
+    /// The root note of the chord.
     pub root: Note,
+    /// The bass note of the chord if any is added with a slash.
     pub bass: Option<Note>,
+    /// The quality of the chord.
+    pub quality: Quality,
+    /// The notes of the chord.
     pub notes: Vec<Note>,
+    /// The notes of the chord as string literals.
     pub note_literals: Vec<String>,
+    /// The semitones of the notes relative to root.
     pub semitones: Vec<u8>,
+    /// The semantic intervals of the notes, meaning non altered intervals.
     pub semantic_intervals: Vec<u8>,
+    /// The real intervals of the notes, the actual intervals.
     pub real_intervals: Vec<Interval>,
     pub is_sus: bool,
+    /// Intervals added through the add modifier.
+    pub adds: Vec<Interval>,
 }
 
 impl Chord {
@@ -59,11 +75,12 @@ impl Chord {
             .semitones(semitones)
             .semantic_intervals(semantic_intervals)
             .real_intervals(self.real_intervals.clone())
+            .adds(self.adds.clone())
             .is_sus(self.is_sus)
             .build()
     }
 
-    /// Returns the MIDI codes for the chord.
+    /// Returns the MIDI codes for the chord, centered around central C (60 midi code).
     /// # Arguments
     /// * `self` - The chord to get the MIDI codes from.
     /// # Returns
@@ -83,12 +100,21 @@ impl Chord {
         codes
     }
 
+    /// Returns the JSON representation of the chord.
+    /// # Arguments
+    /// * `self` - The chord to get the JSON representation from.
+    /// # Returns
+    /// * A JSON string.
     pub fn to_json(&self) -> String {
         let a = serde_json::to_string(self);
         match a {
             Ok(v) => v,
             Err(_) => "{{}}".to_string(),
         }
+    }
+
+    pub(crate) fn has(&self, int: Interval) -> bool {
+        self.real_intervals.iter().any(|n| *n == int)
     }
 }
 
@@ -98,12 +124,14 @@ pub struct ChordBuilder {
     descriptor: String,
     root: Note,
     bass: Option<Note>,
+    quality: Quality,
     notes: Vec<Note>,
     note_literals: Vec<String>,
     semitones: Vec<u8>,
     semantic_intervals: Vec<u8>,
     real_intervals: Vec<Interval>,
     is_sus: bool,
+    adds: Vec<Interval>,
 }
 
 impl ChordBuilder {
@@ -113,12 +141,14 @@ impl ChordBuilder {
             descriptor: String::new(),
             root,
             bass: None,
+            quality: Quality::Major,
             notes: Vec::new(),
             note_literals: Vec::new(),
             semitones: Vec::new(),
             semantic_intervals: Vec::new(),
             real_intervals: Vec::new(),
             is_sus: false,
+            adds: Vec::new(),
         }
     }
 
@@ -162,18 +192,27 @@ impl ChordBuilder {
         self
     }
 
+    pub fn adds(mut self, adds: Vec<Interval>) -> ChordBuilder {
+        self.adds = adds;
+        self
+    }
+
     pub fn build(self) -> Chord {
-        Chord {
+        let mut chord = Chord {
             origin: self.origin,
             descriptor: self.descriptor,
             root: self.root,
             bass: self.bass,
+            quality: self.quality,
             notes: self.notes,
             note_literals: self.note_literals,
             semantic_intervals: self.semantic_intervals,
             real_intervals: self.real_intervals,
             is_sus: self.is_sus,
             semitones: self.semitones,
-        }
+            adds: self.adds,
+        };
+        chord.quality = Quality::from_chord(&chord);
+        chord
     }
 }

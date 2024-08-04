@@ -21,7 +21,7 @@
 //!
 //! # [Parsing rules](#parsing_rules)
 //! Since there isn't a full consensus on how chords should be written, any chord parser is by definition opinionated.  
-//! The current  rules and conventions maybe are too much restrictive, but it should allways be  a way to express a chord in a way that the parser (and a human) can understand.  
+//! The current  rules and conventions maybe are too much restrictive, but it should always be  a way to express a chord in a way that the parser (and a human) can understand.  
 //! The main spirit for now is to reject non-standard representations rather than attempting to interpret everything and to focus on parsing the most standarized forms.  
 //!  
 //! For example,  we decided to ban the use of `M | Ma | | MA | Maj` or any similar variant (except `Δ`) if is not followed by a 7th or a tension (9, 11, 13, etc. ) because it leads to

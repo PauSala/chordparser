@@ -206,12 +206,13 @@ impl Parser {
         while tokens.peek().is_some() {
             let token = tokens.next().unwrap();
             match token.token_type {
-                TokenType::RParent => return,
+                TokenType::RParent => break,
                 TokenType::Eof => {
                     self.errors.push(format!(
                         "Error: Missing closing parenthesis at position {}",
                         token.pos
                     ));
+                    break;
                 }
                 _ => (),
             }
@@ -330,7 +331,7 @@ impl Parser {
             if let TokenType::Extension(t) = &next.token_type {
                 match t.as_str() {
                     "2" => self.add_tension("9", token, modifier, true),
-                    // Looks like add 3 appears in real book, but only as a mijor third
+                    // Looks like add 3 appears in real book, but only as a major third
                     "3" => {
                         if modifier.is_some() {
                             self.errors.push(format!(
@@ -367,9 +368,7 @@ impl Parser {
             ));
             return;
         }
-        self.ir.is_sus = true;
         if self.expect_peek(TokenType::Sharp, tokens) {
-            tokens.next();
             if self.expect_peek(TokenType::Extension("4".to_string()), tokens) {
                 tokens.next();
                 self.ir.notes.push(NoteDescriptor::new(
@@ -377,36 +376,15 @@ impl Parser {
                     Interval::AugmentedFourth.st(),
                     token.pos as usize,
                 ));
-                return;
-            }
-            self.errors.push(format!(
-                "Error: Sus should be sus2, susb2, sus4 or sus#4 at pos {}",
-                token.pos
-            ));
-            return;
-        }
-        if self.expect_peek(TokenType::Flat, tokens) {
-            tokens.next();
-            if self.expect_peek(TokenType::Extension("2".to_string()), tokens) {
                 tokens.next();
-                self.ir.notes.push(NoteDescriptor::new(
-                    SemInterval::Second,
-                    Interval::MinorSecond.st(),
-                    token.pos as usize,
-                ));
                 return;
             }
-            self.errors.push(format!(
-                "Error: Sus should be sus2, susb2, sus4 or sus#4 at pos {}",
-                token.pos
-            ));
-            return;
         }
         if self.expect_peek(TokenType::Extension("2".to_string()), tokens) {
             tokens.next();
             self.ir.notes.push(NoteDescriptor::new(
-                SemInterval::Second,
-                Interval::MajorSecond.st(),
+                SemInterval::Ninth,
+                Interval::Ninth.st(),
                 token.pos as usize,
             ));
             return;
@@ -418,6 +396,7 @@ impl Parser {
                 Interval::PerfectFourth.st(),
                 token.pos as usize,
             ));
+            self.ir.is_sus = true;
             return;
         }
         self.ir.notes.push(NoteDescriptor::new(
@@ -425,6 +404,7 @@ impl Parser {
             Interval::PerfectFourth.st(),
             token.pos as usize,
         ));
+        self.ir.is_sus = true;
     }
 
     fn process_dim(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
@@ -661,37 +641,41 @@ impl Parser {
         is_add: bool,
     ) {
         match tension {
-            "9" => {
-                match modifier {
-                    Some(m) => match m {
-                        Modifier::Sharp => {
-                            self.ir.notes.push(NoteDescriptor::new(
-                                SemInterval::Ninth,
-                                Interval::SharpNinth.st(),
-                                token.pos as usize,
-                            ));
-                        }
-                        Modifier::Flat => {
-                            self.ir.notes.push(NoteDescriptor::new(
-                                SemInterval::Ninth,
-                                Interval::FlatNinth.st(),
-                                token.pos as usize,
-                            ));
-                        }
-                        _ => (),
-                    },
-                    None => {
+            "9" => match modifier {
+                Some(m) => match m {
+                    Modifier::Sharp => {
                         self.ir.notes.push(NoteDescriptor::new(
                             SemInterval::Ninth,
-                            Interval::Ninth.st(),
+                            Interval::SharpNinth.st(),
                             token.pos as usize,
                         ));
+                        if is_add {
+                            self.ir.adds.push(Interval::SharpNinth);
+                        }
+                    }
+                    Modifier::Flat => {
+                        self.ir.notes.push(NoteDescriptor::new(
+                            SemInterval::Ninth,
+                            Interval::FlatNinth.st(),
+                            token.pos as usize,
+                        ));
+                        if is_add {
+                            self.ir.adds.push(Interval::FlatNinth);
+                        }
+                    }
+                    _ => (),
+                },
+                None => {
+                    self.ir.notes.push(NoteDescriptor::new(
+                        SemInterval::Ninth,
+                        Interval::Ninth.st(),
+                        token.pos as usize,
+                    ));
+                    if is_add {
+                        self.ir.adds.push(Interval::Ninth);
                     }
                 }
-                if is_add {
-                    self.ir.adds.push(SemInterval::Ninth);
-                }
-            }
+            },
             "11" => {
                 if let Some(m) = &modifier {
                     match m {
@@ -702,7 +686,7 @@ impl Parser {
                                 token.pos as usize,
                             ));
                             if is_add {
-                                self.ir.adds.push(SemInterval::Eleventh);
+                                self.ir.adds.push(Interval::SharpEleventh);
                             }
                         }
                         Modifier::Flat => {
@@ -717,11 +701,11 @@ impl Parser {
                         Interval::Eleventh.st(),
                         token.pos as usize,
                     ));
-                    if !self.ir.has_minor_third() {
+                    if !self.ir.has_minor_third() && !is_add {
                         self.ir.is_sus = true;
                     }
                     if is_add {
-                        self.ir.adds.push(SemInterval::Eleventh);
+                        self.ir.adds.push(Interval::Eleventh);
                     }
                 }
             }
@@ -735,7 +719,7 @@ impl Parser {
                                 token.pos as usize,
                             ));
                             if is_add {
-                                self.ir.adds.push(SemInterval::Thirteenth);
+                                self.ir.adds.push(Interval::FlatThirteenth);
                             }
                         }
                         Modifier::Sharp => {
@@ -753,7 +737,7 @@ impl Parser {
                         token.pos as usize,
                     ));
                     if is_add {
-                        self.ir.adds.push(SemInterval::Thirteenth);
+                        self.ir.adds.push(Interval::Thirteenth);
                     }
                 }
             }

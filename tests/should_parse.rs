@@ -145,6 +145,7 @@ fn test_notes(i: &str, expected: Vec<&str>) {
     ];
     match res {
         Ok(chord) => {
+            dbg!(&chord.quality);
             let literals = &chord.note_literals;
             assert_eq!(literals, &expected);
             for n in notes {
