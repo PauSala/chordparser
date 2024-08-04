@@ -184,19 +184,9 @@ impl Parser {
         if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
             tokens.next();
             self.ir.omits.five = true;
-            // omit 5,3
-            if self.expect_peek(TokenType::Extension("3".to_string()), tokens) {
-                tokens.next();
-                self.ir.omits.third = true;
-            }
         } else if self.expect_peek(TokenType::Extension("3".to_string()), tokens) {
             tokens.next();
             self.ir.omits.third = true;
-            // omit 3,5
-            if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
-                tokens.next();
-                self.ir.omits.five = true;
-            }
         } else {
             self.errors.push(format!(
                 "Error: Omit has no target at position {}",
@@ -206,6 +196,7 @@ impl Parser {
     }
 
     fn process_lparent(&mut self, tokens: &mut Peekable<Iter<Token>>) {
+        self.parent_stack += 1;
         while tokens.peek().is_some() {
             let token = tokens.next().unwrap();
             match token.token_type {
@@ -228,7 +219,7 @@ impl Parser {
         self.parent_stack -= 1;
         if self.parent_stack != 0 {
             self.errors.push(format!(
-                "Error: Unmatchet parenthesis at position {}",
+                "Error: Unmatched parenthesis at position {}",
                 token.pos
             ));
         }
@@ -330,7 +321,6 @@ impl Parser {
             if let TokenType::Extension(t) = &next.token_type {
                 match t.as_str() {
                     "2" => self.add_tension("9", token, modifier, true),
-                    // Looks like add 3 appears in real book, but only as a major third
                     "3" => {
                         if modifier.is_some() {
                             self.errors.push(format!(
@@ -341,6 +331,19 @@ impl Parser {
                         }
                         self.ir.notes.push(NoteDescriptor::new(
                             Interval::MajorThird,
+                            token.pos as usize,
+                        ));
+                    }
+                    "4" => {
+                        if modifier.is_some() {
+                            self.errors.push(format!(
+                                "Error: Add 4 cannot be sharp or flat at pos {}",
+                                token.pos
+                            ));
+                            return;
+                        }
+                        self.ir.notes.push(NoteDescriptor::new(
+                            Interval::PerfectFourth,
                             token.pos as usize,
                         ));
                     }
