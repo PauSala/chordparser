@@ -1,7 +1,7 @@
 //! # Chords, notes and intervals
 use std::vec;
 
-use intervals::Interval;
+use intervals::{Interval, SemInterval};
 use quality::Quality;
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -221,8 +221,7 @@ pub fn normalize(ch: &Chord) -> String {
     match ch.quality {
         Quality::Major7 => {
             let mut ext = Vec::new();
-            let (main_t, other) = get_this_thing(ch);
-            dbg!(&main_t, &other);
+            let (main_t, other, t) = get_this_thing(ch);
             res.push_str("Maj");
             if let Some(t) = main_t {
                 if t == Interval::Eleventh {
@@ -239,6 +238,9 @@ pub fn normalize(ch: &Chord) -> String {
             if ch.has(Interval::DiminishedFifth) {
                 ext.push("b5".to_owned())
             }
+            for e in t {
+                ext.push(e.to_human_readable());
+            }
             for (i, e) in other.into_iter().enumerate() {
                 let mut s = String::from("");
                 if i == 0 {
@@ -247,6 +249,17 @@ pub fn normalize(ch: &Chord) -> String {
                 s.push_str(&e.to_human_readable());
                 ext.push(s);
             }
+
+            let omits = get_omits(ch);
+            for (i, e) in omits.iter().enumerate() {
+                let mut st = String::new();
+                if i == 0 {
+                    st.push_str("omit")
+                }
+                st.push_str(e);
+                ext.push(st);
+            }
+
             if !ext.is_empty() {
                 res.push('(');
                 res.push_str(&ext.join(","));
@@ -256,6 +269,24 @@ pub fn normalize(ch: &Chord) -> String {
         Quality::Power => {
             res.push('5');
         }
+        Quality::Minor6 => {
+            //let mut ext = Vec::new();
+            let (main_t, other, t) = get_this_thing(ch);
+            dbg!(main_t, other, t);
+            res.push_str("m6");
+            // if let Some(t) = main_t {
+            //     if t == Interval::Eleventh {
+            //         res.push_str("9sus")
+            //     } else if ch.is_sus {
+            //         res.push_str(&t.to_human_readable());
+            //         res.push_str("sus");
+            //     } else {
+            //         res.push_str(&t.to_human_readable());
+            //     }
+            // }
+        }
+        Quality::Minor7 => todo!(),
+        Quality::MinorMaj7 => todo!(),
         Quality::Minor => todo!(),
         Quality::Dominant => todo!(),
         Quality::SemiDiminished => todo!(),
@@ -267,16 +298,41 @@ pub fn normalize(ch: &Chord) -> String {
     res
 }
 
-fn get_this_thing(ch: &Chord) -> (Option<Interval>, Vec<Interval>) {
+fn get_omits(ch: &Chord) -> Vec<String> {
+    let mut res = Vec::new();
+    if !ch
+        .semantic_intervals
+        .iter()
+        .any(|i| *i == SemInterval::Third.numeric())
+        && !ch
+            .semantic_intervals
+            .iter()
+            .any(|i| *i == SemInterval::Fourth.numeric())
+    {
+        res.push("3".to_string());
+    }
+    if !ch
+        .semantic_intervals
+        .iter()
+        .any(|i| *i == SemInterval::Fifth.numeric())
+    {
+        res.push("5".to_string());
+    }
+    res
+}
+
+fn get_this_thing(ch: &Chord) -> (Option<Interval>, Vec<Interval>, Vec<Interval>) {
     let mut master = Vec::new();
     let mut other = Vec::new();
+    let mut t = Vec::new();
 
     for i in &ch.real_intervals {
         match i {
-            Interval::FlatNinth
+            Interval::MinorSixth
+            | Interval::FlatNinth
             | Interval::SharpNinth
             | Interval::SharpEleventh
-            | Interval::FlatThirteenth => master.push(*i),
+            | Interval::FlatThirteenth => t.push(*i),
             Interval::Ninth => master.push(*i),
             Interval::Eleventh => {
                 if ch.real_intervals.contains(&Interval::Ninth)
@@ -319,26 +375,25 @@ fn get_this_thing(ch: &Chord) -> (Option<Interval>, Vec<Interval>) {
     for i in master {
         other.push(i)
     }
-
     other.sort_by_key(|a| a.st());
-    (high, other)
+    (high, other, t)
 }
 
 #[cfg(test)]
 mod test {
     use crate::{chord::normalize, parser::Parser};
 
-    #[test]
-    fn shoudl_work() {
-        let mut parser = Parser::new();
-        let res = parser.parse("Cmaj9b5add13add11");
-        match res {
-            Ok(c) => {
-                dbg!(&c);
-                let adds = normalize(&c);
-                dbg!(adds);
-            }
-            Err(_) => todo!(),
-        }
-    }
+    // #[test]
+    // fn shoudl_work() {
+    //     let mut parser = Parser::new();
+    //     let res = parser.parse("C-613");
+    //     match res {
+    //         Ok(c) => {
+    //             dbg!(&c);
+    //             let adds = normalize(&c);
+    //             dbg!(adds);
+    //         }
+    //         Err(_) => todo!(),
+    //     }
+    // }
 }

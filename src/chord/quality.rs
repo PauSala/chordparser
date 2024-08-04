@@ -10,6 +10,9 @@ pub enum Quality {
     Major6,
     Major7,
     Minor,
+    Minor6,
+    Minor7,
+    MinorMaj7,
     Dominant,
     SemiDiminished,
     Diminished,
@@ -34,6 +37,12 @@ impl Quality {
                 return Quality::Diminished;
             } else if dim5 {
                 return Quality::SemiDiminished;
+            } else if maj7 {
+                return Quality::MinorMaj7;
+            } else if min7 {
+                return Quality::Minor7;
+            } else if maj6 {
+                return Quality::Minor6;
             }
             return Quality::Minor;
         } else if aug5 {

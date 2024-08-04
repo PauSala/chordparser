@@ -24,17 +24,16 @@ pub(crate) fn implicit_fifth(ir: &mut ChordIr) {
 }
 
 pub(crate) fn implicit_min_seventh(ir: &mut ChordIr) {
-    let tensions_len = ir
+    let tensions = ir
         .notes
         .iter()
         .filter(|n| {
             matches!(
                 n.interval,
-                Interval::Ninth | Interval::Eleventh | Interval::Thirteenth | Interval::MajorSixth
+                Interval::Ninth | Interval::Eleventh | Interval::Thirteenth
             ) && !ir.adds.contains(&n.interval)
         })
-        .collect::<Vec<&NoteDescriptor>>()
-        .len();
+        .collect::<Vec<&NoteDescriptor>>();
     let t7 = ir.has_sem_int(SemInterval::Seventh);
     let is_add_6 = !ir
         .adds
@@ -43,9 +42,16 @@ pub(crate) fn implicit_min_seventh(ir: &mut ChordIr) {
         .collect::<Vec<_>>()
         .is_empty();
 
+    if tensions.len() == 1
+        && tensions[0].interval == Interval::Ninth
+        && (ir.has_int(Interval::MajorSixth) && !is_add_6)
+    {
+        return;
+    }
+
     // Implicit seventh is only set when there are natural tensions not comming from an add modifier
     // and a sixth has not been set or is not an add.
-    if !t7 && tensions_len > 0 && (!ir.has_sem_int(SemInterval::Sixth) || is_add_6) {
+    if !t7 && !tensions.is_empty() {
         ir.notes
             .push(NoteDescriptor::new(Interval::MinorSeventh, usize::MAX));
     }

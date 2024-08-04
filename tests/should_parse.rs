@@ -41,6 +41,8 @@ use test_case::test_case;
 #[test_case("C-6", vec!["C", "Eb", "G", "A"])]
 #[test_case("C-69", vec!["C", "Eb", "G", "A", "D"])]
 #[test_case("Cminor69", vec!["C", "Eb", "G", "A", "D"])]
+#[test_case("Cminor611", vec!["C", "Eb", "G", "A", "Bb", "D", "F"])]
+#[test_case("Cminor613", vec!["C", "Eb", "G", "A", "Bb", "D", "F", "A"])]
 #[test_case("C-6/9", vec!["C", "Eb", "G", "A", "D"])]
 #[test_case("Cmi69add11", vec!["C", "Eb", "G", "A", "D", "F"])]
 #[test_case("Cmi(#5)", vec!["C", "Eb", "G#"])]

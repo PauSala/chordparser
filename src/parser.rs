@@ -391,16 +391,22 @@ impl Parser {
                             Modifier::Sharp => self
                                 .errors
                                 .push(format!("Error: A 6 cannot be sharp at pos {}", token.pos)),
-                            Modifier::Flat => self.ir.notes.push(NoteDescriptor::new(
-                                Interval::MinorSixth,
-                                token.pos as usize,
-                            )),
+                            Modifier::Flat => {
+                                self.ir.adds.push(Interval::MinorSixth);
+                                self.ir.notes.push(NoteDescriptor::new(
+                                    Interval::MinorSixth,
+                                    token.pos as usize,
+                                ))
+                            }
                             _ => (),
                         },
-                        None => self.ir.notes.push(NoteDescriptor::new(
-                            Interval::MajorSixth,
-                            token.pos as usize,
-                        )),
+                        None => {
+                            self.ir.adds.push(Interval::MajorSixth);
+                            self.ir.notes.push(NoteDescriptor::new(
+                                Interval::MajorSixth,
+                                token.pos as usize,
+                            ))
+                        }
                     },
                     "9" | "11" | "13" => {
                         self.add_tension(t, token, modifier, true);

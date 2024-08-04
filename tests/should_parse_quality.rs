@@ -21,10 +21,13 @@ use test_case::test_case;
 #[test_case("C7#5", Quality::Dominant)]
 #[test_case("C7(#5,b5)", Quality::Dominant)]
 #[test_case("C13(#5,b5)", Quality::Dominant)]
-#[test_case("CMin13", Quality::Minor)]
+#[test_case("CMin13", Quality::Minor7)]
 #[test_case("CMinb13", Quality::Minor)]
-#[test_case("C-Maj7", Quality::Minor)]
-#[test_case("CMaj7-", Quality::Minor)]
+#[test_case("C-Maj7", Quality::MinorMaj7)]
+#[test_case("CMaj7-", Quality::MinorMaj7)]
+#[test_case("C-7add6", Quality::Minor7)]
+#[test_case("C-69", Quality::Minor6)]
+#[test_case("C-11add6", Quality::Minor7)]
 #[test_case("C-b5", Quality::Diminished)]
 #[test_case("C-7b5", Quality::SemiDiminished)]
 #[test_case("Cdim13", Quality::SemiDiminished)]
@@ -36,6 +39,7 @@ fn test_qualities(input: &str, expected: Quality) {
     let res = parser.parse(input);
     match res {
         Ok(chord) => {
+            dbg!(&chord);
             assert_eq!(chord.quality, expected)
         }
         Err(e) => {
