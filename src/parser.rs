@@ -424,16 +424,16 @@ impl Parser {
             ));
             return;
         }
-        if self.expect_peek(TokenType::Sharp, tokens) {
-            if self.expect_peek(TokenType::Extension("4".to_string()), tokens) {
-                tokens.next();
-                self.ir.notes.push(NoteDescriptor::new(
-                    Interval::AugmentedFourth,
-                    token.pos as usize,
-                ));
-                tokens.next();
-                return;
-            }
+        if self.expect_peek(TokenType::Sharp, tokens)
+            && self.expect_peek(TokenType::Extension("4".to_string()), tokens)
+        {
+            tokens.next();
+            self.ir.notes.push(NoteDescriptor::new(
+                Interval::AugmentedFourth,
+                token.pos as usize,
+            ));
+            tokens.next();
+            return;
         }
         if self.expect_peek(TokenType::Extension("2".to_string()), tokens) {
             tokens.next();
@@ -654,7 +654,6 @@ impl Parser {
                     "Error: Illegal alteration at position {}",
                     token.pos
                 ));
-                return;
             }
             "5" => {
                 if self.context == Context::Omit(true) {

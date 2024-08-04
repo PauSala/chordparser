@@ -7,6 +7,8 @@ use super::{intervals::Interval, Chord};
 pub enum Quality {
     Power,
     Major,
+    Major6,
+    Major7,
     Minor,
     Dominant,
     SemiDiminished,
@@ -25,6 +27,7 @@ impl Quality {
         let min7 = chord.has(Interval::MinorSeventh);
         let maj7 = chord.has(Interval::MajorSeventh);
         let p4 = chord.has(Interval::PerfectFourth);
+        let maj6 = chord.has(Interval::MajorSixth);
 
         if min3 {
             if dim5 && (dim7 || !min7) {
@@ -40,7 +43,11 @@ impl Quality {
             return Quality::Augmented;
         } else if min7 {
             return Quality::Dominant;
-        } else if maj3 || maj7 || p4 {
+        } else if maj6 {
+            return Quality::Major6;
+        } else if maj7 {
+            return Quality::Major7;
+        } else if maj3 || p4 {
             return Quality::Major;
         }
         Quality::Power

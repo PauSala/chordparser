@@ -116,7 +116,7 @@ pub(crate) fn no_natural_and_altered_nine(chord: &mut ChordIr, errors: &mut Vec<
     }
 
     if n.2 > 1 || f.2 > 1 || s.2 > 1 {
-        errors.push(format!("Error: A chord cannot have multiple 9, b9 or #9"));
+        errors.push("Error: A chord cannot have multiple 9, b9 or #9".to_string());
     }
 }
 
@@ -140,7 +140,7 @@ pub(crate) fn no_double_eleventh(chord: &mut ChordIr, errors: &mut Vec<String>) 
     }
 
     if n.2 > 1 || s.2 > 1 {
-        errors.push(format!("Error: A chord cannot have multiple 11 or #11"));
+        errors.push("Error: A chord cannot have multiple 11 or #11".to_string());
     }
 }
 
@@ -163,6 +163,6 @@ pub(crate) fn no_double_thirteenth(chord: &mut ChordIr, errors: &mut Vec<String>
         ));
     }
     if f.2 > 1 || n.2 > 1 {
-        errors.push(format!("Error: A chord cannot have multiple 13 or b13"));
+        errors.push("Error: A chord cannot have multiple 13 or b13".to_string());
     }
 }

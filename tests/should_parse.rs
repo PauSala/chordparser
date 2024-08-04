@@ -121,7 +121,7 @@ use test_case::test_case;
 #[test_case("C(add2,13)", vec!["C", "E", "G", "D", "A"])]
 #[test_case("C(add2 13)", vec!["C", "E", "G", "Bb", "D", "A"])]
 #[test_case("C7(omit5,3 add9,13)", vec!["C", "Bb", "D", "A"])]
-#[test_case("C7omit5,9", vec!["C", "E", "Bb", "D"])] //Cb7(omit5,3 add9,13)\
+#[test_case("C7omit5,9", vec!["C", "E", "Bb", "D"])] //Cmaj7+b13
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);

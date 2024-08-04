@@ -36,13 +36,12 @@ pub(crate) fn implicit_min_seventh(ir: &mut ChordIr) {
         .collect::<Vec<&NoteDescriptor>>()
         .len();
     let t7 = ir.has_sem_int(SemInterval::Seventh);
-    let is_add_6 = ir
+    let is_add_6 = !ir
         .adds
         .iter()
         .filter(|a| a.to_semantic_interval() == SemInterval::Sixth)
         .collect::<Vec<_>>()
-        .len()
-        > 0;
+        .is_empty();
 
     // Implicit seventh is only set when there are natural tensions not comming from an add modifier
     // and a sixth has not been set or is not an add.
