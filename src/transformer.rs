@@ -11,6 +11,7 @@ pub(crate) fn implicit_third(ir: &mut ChordIr) {
         ir.notes.push(NoteDescriptor::new(
             SemInterval::Third,
             Interval::MajorThird.st(),
+            Interval::MajorThird,
             usize::MAX,
         ));
     }
@@ -21,6 +22,7 @@ pub(crate) fn implicit_fifth(ir: &mut ChordIr) {
         ir.notes.push(NoteDescriptor::new(
             SemInterval::Fifth,
             Interval::PerfectFifth.st(),
+            Interval::PerfectFifth,
             usize::MAX,
         ));
     }
@@ -47,6 +49,7 @@ pub(crate) fn implicit_min_seventh(ir: &mut ChordIr) {
         ir.notes.push(NoteDescriptor::new(
             SemInterval::Seventh,
             Interval::MinorSeventh.st(),
+            Interval::MinorSeventh,
             usize::MAX,
         ));
     }
@@ -63,6 +66,7 @@ pub(crate) fn implicit_ninth(ir: &mut ChordIr) {
         ir.notes.push(NoteDescriptor::new(
             SemInterval::Ninth,
             Interval::Ninth.st(),
+            Interval::Ninth,
             usize::MAX,
         ))
     }
@@ -72,6 +76,7 @@ pub(crate) fn implicit_ninth(ir: &mut ChordIr) {
         ir.notes.push(NoteDescriptor::new(
             SemInterval::Ninth,
             Interval::Ninth.st(),
+            Interval::Ninth,
             usize::MAX,
         ))
     }
@@ -86,6 +91,7 @@ pub(crate) fn implicit_eleventh(ir: &mut ChordIr) {
         ir.notes.push(NoteDescriptor::new(
             SemInterval::Eleventh,
             Interval::Eleventh.st(),
+            Interval::Eleventh,
             usize::MAX,
         ))
     }

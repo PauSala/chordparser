@@ -393,15 +393,22 @@ impl Display for Note {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) struct NoteDescriptor {
     pub sem_interval: SemInterval,
+    pub interval: Interval,
     pub semitone: u8,
     pub pos: usize,
 }
 
 impl NoteDescriptor {
-    pub(crate) fn new(sem_interval: SemInterval, semitone: u8, pos: usize) -> NoteDescriptor {
+    pub(crate) fn new(
+        sem_interval: SemInterval,
+        semitone: u8,
+        interval: Interval,
+        pos: usize,
+    ) -> NoteDescriptor {
         NoteDescriptor {
             sem_interval,
             semitone,
+            interval,
             pos,
         }
     }
