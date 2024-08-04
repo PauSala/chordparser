@@ -97,7 +97,7 @@ impl ChordIr {
             real_intervals.push(e.interval)
         }
 
-        Chord::builder(&self.name, self.root.clone().unwrap())
+        let chord = Chord::builder(&self.name, self.root.clone().unwrap())
             .descriptor(&self.descriptor)
             .bass(self.bass.clone())
             .notes(notes)
@@ -107,7 +107,8 @@ impl ChordIr {
             .real_intervals(real_intervals)
             .is_sus(self.is_sus)
             .adds(self.adds.clone())
-            .build()
+            .build();
+        chord
     }
 }
 

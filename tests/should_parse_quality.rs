@@ -40,7 +40,6 @@ fn test_qualities(input: &str, expected: Quality) {
     let res = parser.parse(input);
     match res {
         Ok(chord) => {
-            dbg!(&chord);
             assert_eq!(chord.quality, expected)
         }
         Err(e) => {
