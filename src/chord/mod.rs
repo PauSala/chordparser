@@ -233,7 +233,13 @@ pub fn normalize(ch: &Chord) -> String {
         Quality::Major7 => {
             res.push_str("Maj");
             let mut mmod = get_main_mod(ch).unwrap();
-            if mmod == Interval::Eleventh && ch.is_sus {
+            if mmod == Interval::Eleventh
+                && ch.is_sus
+                && !ch
+                    .semantic_intervals
+                    .iter()
+                    .any(|i| *i == SemInterval::Ninth.numeric())
+            {
                 mmod = Interval::Ninth;
             }
             res.push_str(&mmod.to_string());
@@ -274,9 +280,26 @@ pub fn normalize(ch: &Chord) -> String {
             res.push_str(&mmod.to_string());
             return _normalize(ch, res);
         }
+        Quality::Dominant => {
+            res.push_str("");
+            let mut mmod = get_main_mod(ch).unwrap();
+            if mmod == Interval::Eleventh
+                && ch.is_sus
+                && !ch
+                    .semantic_intervals
+                    .iter()
+                    .any(|i| *i == SemInterval::Ninth.numeric())
+            {
+                mmod = Interval::Ninth;
+            }
+            res.push_str(&mmod.to_string());
+            if ch.is_sus {
+                res.push_str("sus");
+            }
+            return _normalize(ch, res);
+        }
         Quality::Minor => todo!(),
         Quality::Major => todo!(),
-        Quality::Dominant => todo!(),
         Quality::Augmented => todo!(),
     }
     res
@@ -346,7 +369,7 @@ fn get_main_mod(ch: &Chord) -> Option<Interval> {
             }
             None
         }
-        Quality::Major7 => {
+        Quality::Major7 | Quality::Dominant => {
             if ch.has(Interval::Thirteenth)
                 && ch
                     .semantic_intervals
@@ -366,7 +389,10 @@ fn get_main_mod(ch: &Chord) -> Option<Interval> {
             if ch.has(Interval::Ninth) {
                 return Some(Interval::Ninth);
             }
-            Some(Interval::MajorSeventh)
+            if ch.quality == Quality::Major7 {
+                return Some(Interval::MajorSeventh);
+            }
+            return Some(Interval::MinorSeventh);
         }
         Quality::Minor7 | Quality::MinorMaj7 | Quality::SemiDiminished | Quality::Diminished => {
             if ch.has(Interval::Thirteenth)
@@ -405,7 +431,7 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
     let mut adds = Vec::new();
     match ch.quality {
         Quality::Power => adds,
-        Quality::Major7 => {
+        Quality::Major7 | Quality::Dominant => {
             if ch.has(Interval::Thirteenth)
                 && !ch
                     .real_intervals
@@ -416,6 +442,7 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
             }
             if ch.has(Interval::Eleventh)
                 && !ch.real_intervals.iter().any(|i| *i == Interval::Ninth)
+                && !ch.is_sus
             {
                 adds.push(Interval::Eleventh);
             }
@@ -450,7 +477,6 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
         }
         Quality::Major => todo!(),
         Quality::Minor => todo!(),
-        Quality::Dominant => todo!(),
         Quality::Augmented => todo!(),
     }
 }
@@ -507,7 +533,8 @@ mod test {
     fn shoudl_work() {
         let mut parser = Parser::new();
         // let res = parser.parse("CMaj7add13b5");
-        let res = parser.parse("Cdimmaj79b13add11");
+        // C7sus(b9,b13)
+        let res = parser.parse("Cmaj7911");
         match res {
             Ok(c) => {
                 dbg!(&c);
