@@ -192,69 +192,6 @@ impl Note {
         Note::new(m.0[0].clone().0, m.0[0].clone().1)
     }
 
-    /// Returns the real interval given a semantic interval and a semitone distance from root.
-    /// # Arguments
-    /// * `semantic_interval` - The semantic interval, meaning an interval with no alterations (e.g. 2nd, 3rd, 4th, etc).
-    /// * `interval` - The semitone distance from root
-    /// # Returns
-    /// The real interval
-    pub fn to_real_interval(semantic_interval: u8, st: u8) -> Interval {
-        match semantic_interval {
-            1 => Interval::Unison,
-            2 => match st {
-                1 => Interval::MinorSecond,
-                2 => Interval::MajorSecond,
-                _ => panic!("Invalid interval"),
-            },
-            3 => match st {
-                3 => Interval::MinorThird,
-                4 => Interval::MajorThird,
-                _ => panic!("Invalid interval"),
-            },
-            4 => match st {
-                5 => Interval::PerfectFourth,
-                6 => Interval::AugmentedFourth,
-                _ => panic!("Invalid interval"),
-            },
-            5 => match st {
-                6 => Interval::DiminishedFifth,
-                7 => Interval::PerfectFifth,
-                8 => Interval::AugmentedFifth,
-                _ => panic!("Invalid interval"),
-            },
-            6 => match st {
-                8 => Interval::MinorSixth,
-                9 => Interval::MajorSixth,
-                _ => panic!("Invalid interval"),
-            },
-            7 => match st {
-                9 => Interval::DiminishedSeventh,
-                10 => Interval::MinorSeventh,
-                11 => Interval::MajorSeventh,
-                _ => panic!("Invalid interval"),
-            },
-            9 => match st {
-                13 => Interval::FlatNinth,
-                14 => Interval::Ninth,
-                15 => Interval::SharpNinth,
-                _ => panic!("Invalid interval"),
-            },
-
-            11 => match st {
-                17 => Interval::Eleventh,
-                18 => Interval::SharpEleventh,
-                _ => panic!("Invalid interval"),
-            },
-
-            13 => match st {
-                20 => Interval::FlatThirteenth,
-                21 => Interval::Thirteenth,
-                _ => panic!("Invalid interval"),
-            },
-            _ => panic!("Invalid interval"),
-        }
-    }
-
     /// Returns the semitone distance taking C as reference.
     /// # Returns
     /// The semitone distance from C
@@ -385,10 +322,9 @@ impl Display for Note {
 }
 
 /// Intermediate representation of a note used by the parser.
-/// It contains the semitone distance from root, the semantic interval and the position in the string input.
+/// It contains the interval and the position in the string input.
 /// # Fields
-/// * `semitone` - The semitone distance from root
-/// * `sem_interval` - The semantic interval with no alterations (e.g. 2nd, 3rd, 4th, etc)
+/// * `interval` - The interval from root
 /// * `pos` - The position in the string input
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) struct NoteDescriptor {

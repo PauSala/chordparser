@@ -23,6 +23,13 @@ use crate::{
     },
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Context {
+    Omit(bool),
+    Add(bool),
+    None,
+}
+
 /// The parser is responsible fo reading and parsing the user input, transforming it into a [Chord] struct.  
 /// Every time a chord is parsed the parser is cleared, so its recommended to rehuse the parser instead of creating new ones.  
 pub struct Parser {
@@ -32,6 +39,7 @@ pub struct Parser {
     transformers: Vec<Transformer>,
     validators: Vec<Validator>,
     parent_stack: i16,
+    context: Context,
 }
 
 impl Parser {
@@ -58,6 +66,7 @@ impl Parser {
                 no_double_thirteenth,
             ],
             parent_stack: 0,
+            context: Context::None,
         }
     }
 
@@ -177,10 +186,22 @@ impl Parser {
                 .errors
                 .push(format!("Illegal character at position {}", token.pos)),
             TokenType::Eof => (),
+            TokenType::Comma => self.process_comma(),
+        }
+    }
+
+    fn process_comma(&mut self) {
+        match self.context {
+            Context::Omit(_) => self.context = Context::Omit(true),
+            Context::Add(_) => self.context = Context::Add(true),
+            Context::None => (),
         }
     }
 
     fn process_omit(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
+        if self.parent_stack > 0 {
+            self.context = Context::Omit(false);
+        }
         if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
             tokens.next();
             self.ir.omits.five = true;
@@ -201,6 +222,12 @@ impl Parser {
             let token = tokens.next().unwrap();
             match token.token_type {
                 TokenType::RParent => break,
+                TokenType::LParent => {
+                    self.errors.push(format!(
+                        "Error: More than one parenthesis group at position {}",
+                        token.pos
+                    ));
+                }
                 TokenType::Eof => {
                     self.errors.push(format!(
                         "Error: Missing closing parenthesis at position {}",
@@ -217,6 +244,7 @@ impl Parser {
 
     fn process_rparent(&mut self, token: &Token) {
         self.parent_stack -= 1;
+        self.context = Context::None;
         if self.parent_stack != 0 {
             self.errors.push(format!(
                 "Error: Unmatched parenthesis at position {}",
@@ -297,6 +325,9 @@ impl Parser {
     }
 
     fn process_add(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
+        if self.parent_stack > 0 {
+            self.context = Context::Add(false);
+        }
         let mut modifier = None;
         if self.expect_peek(TokenType::Flat, tokens) {
             tokens.next();
@@ -590,8 +621,45 @@ impl Parser {
     }
 
     fn process_extension(&mut self, token: &Token, ext: &str) {
+        if self.context == Context::Omit(true) && ext != "5" && ext != "3" {
+            self.errors.push(format!(
+                "Error: Illegal Omit target at position {}",
+                token.pos
+            ));
+            return;
+        }
         match ext {
+            "3" => {
+                if self.context == Context::Omit(true) {
+                    self.ir.omits.third = true;
+                    return;
+                }
+                if self.context == Context::Add(true) {
+                    self.ir.notes.push(NoteDescriptor::new(
+                        Interval::MajorThird,
+                        token.pos as usize,
+                    ));
+                    self.ir.adds.push(Interval::MajorThird);
+                    return;
+                }
+                self.errors.push(format!(
+                    "Error: Illegal alteration at position {}",
+                    token.pos
+                ));
+                return;
+            }
             "5" => {
+                if self.context == Context::Omit(true) {
+                    self.ir.omits.five = true;
+                    return;
+                }
+                if self.context == Context::Add(true) {
+                    self.errors.push(format!(
+                        "Error: Illegal add target at position {}",
+                        token.pos
+                    ));
+                    return;
+                }
                 // This is the case for power chords, where the third is omited.
                 // TODO: Since a power chord is just I + V, maybe we should error if next_token is anything or if this token is not following root
                 self.ir.notes.push(NoteDescriptor::new(
@@ -606,18 +674,35 @@ impl Parser {
                         .push(format!("Error: Duplicate 6th at position {}", token.pos));
                     return;
                 }
+                if self.context == Context::Add(true) {
+                    self.ir.adds.push(Interval::MajorSixth);
+                    return;
+                }
                 self.ir.notes.push(NoteDescriptor::new(
                     Interval::MajorSixth,
                     token.pos as usize,
                 ));
             }
             "7" => {
+                if self.context == Context::Add(true) {
+                    self.errors.push(format!(
+                        "Error: Illegal add target at position {}",
+                        token.pos
+                    ));
+                    return;
+                }
                 self.ir.notes.push(NoteDescriptor::new(
                     Interval::MinorSeventh,
                     token.pos as usize,
                 ));
             }
-            "9" | "11" | "13" => self.add_tension(ext, token, None, false),
+            "9" | "11" | "13" => {
+                let mut add = false;
+                if self.context == Context::Add(true) {
+                    add = true;
+                }
+                self.add_tension(ext, token, None, add);
+            }
             _ => {
                 self.errors.push(format!(
                     "Error: Illegal alteration at position {}",
@@ -728,8 +813,6 @@ impl Parser {
             _ => (),
         }
     }
-
-    //pub
 }
 
 impl Default for Parser {

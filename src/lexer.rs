@@ -59,7 +59,7 @@ impl Lexer {
                 '/' => self.add_token(TokenType::Slash, self.current),
                 '+' => self.add_token(TokenType::Aug, self.current),
                 ' ' => (),
-                ',' => (),
+                ',' => self.add_token(TokenType::Comma, self.current),
                 '(' => self.add_token(TokenType::LParent, self.current),
                 ')' => self.add_token(TokenType::RParent, self.current),
                 c => {

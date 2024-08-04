@@ -17,6 +17,7 @@ pub enum TokenType {
     Slash,
     LParent,
     RParent,
+    Comma,
     Illegal,
     Eof,
 }
@@ -71,6 +72,7 @@ impl Display for TokenType {
             TokenType::LParent => f.write_str("(")?,
             TokenType::RParent => f.write_str(")")?,
             TokenType::Omit => f.write_str("Omit")?,
+            TokenType::Comma => f.write_str(",")?,
         }
         Ok(())
     }
