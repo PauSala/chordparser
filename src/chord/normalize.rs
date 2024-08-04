@@ -254,9 +254,10 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
         Quality::Power => adds,
         Quality::Major7 | Quality::Dominant => {
             if ch.has(Interval::Thirteenth)
-                && !ch.semantic_intervals.iter().any(|i| {
-                    *i == SemInterval::Ninth.numeric() || *i == SemInterval::Eleventh.numeric()
-                })
+                && !ch
+                    .semantic_intervals
+                    .iter()
+                    .any(|i| *i == SemInterval::Ninth.numeric())
             {
                 adds.push(Interval::Thirteenth);
             }
@@ -355,7 +356,7 @@ mod test {
         let mut parser = Parser::new();
         // let res = parser.parse("CMaj7add13b5");
         // C7sus(b9,b13)
-        let res = parser.parse("Cdim79b1311");
+        let res = parser.parse("C7sus9add13");
         match res {
             Ok(c) => {
                 dbg!(&c);
