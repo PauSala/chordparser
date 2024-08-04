@@ -242,7 +242,7 @@ pub fn normalize(ch: &Chord) -> String {
             {
                 mmod = Interval::Ninth;
             }
-            res.push_str(&mmod.to_string());
+            res.push_str(&mmod.to_string().replace("Maj", ""));
             if ch.is_sus {
                 res.push_str("sus");
             }
@@ -300,7 +300,6 @@ pub fn normalize(ch: &Chord) -> String {
         }
         Quality::Minor => todo!(),
         Quality::Major => todo!(),
-        Quality::Augmented => todo!(),
     }
     res
 }
@@ -423,7 +422,6 @@ fn get_main_mod(ch: &Chord) -> Option<Interval> {
             }
             return Some(Interval::MajorSeventh);
         }
-        _ => None,
     }
 }
 
@@ -477,7 +475,6 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
         }
         Quality::Major => todo!(),
         Quality::Minor => todo!(),
-        Quality::Augmented => todo!(),
     }
 }
 
@@ -492,11 +489,6 @@ fn get_alt_notes(ch: &Chord) -> Vec<Interval> {
         Interval::SharpEleventh,
         Interval::FlatThirteenth,
     ];
-    let aug: Vec<Interval> = altered
-        .iter()
-        .filter(|i| *i != &Interval::AugmentedFifth)
-        .cloned()
-        .collect();
     let dim: Vec<Interval> = altered
         .iter()
         .filter(|i| *i != &Interval::DiminishedFifth)
@@ -508,12 +500,6 @@ fn get_alt_notes(ch: &Chord) -> Vec<Interval> {
             .real_intervals
             .iter()
             .filter(|i| dim.contains(i))
-            .cloned()
-            .collect(),
-        Quality::Augmented => ch
-            .real_intervals
-            .iter()
-            .filter(|i| aug.contains(i))
             .cloned()
             .collect(),
         _ => ch
@@ -534,7 +520,7 @@ mod test {
         let mut parser = Parser::new();
         // let res = parser.parse("CMaj7add13b5");
         // C7sus(b9,b13)
-        let res = parser.parse("Cmaj7911");
+        let res = parser.parse("C-7#5");
         match res {
             Ok(c) => {
                 dbg!(&c);

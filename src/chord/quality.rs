@@ -16,7 +16,6 @@ pub enum Quality {
     Dominant,
     SemiDiminished,
     Diminished,
-    Augmented,
 }
 
 impl Quality {
@@ -25,7 +24,6 @@ impl Quality {
         let maj3 = chord.has(Interval::MajorThird);
         let min3 = chord.has(Interval::MinorThird);
         let dim5 = chord.has(Interval::DiminishedFifth);
-        let aug5 = chord.has(Interval::AugmentedFifth);
         let dim7 = chord.has(Interval::DiminishedSeventh);
         let min7 = chord.has(Interval::MinorSeventh);
         let maj7 = chord.has(Interval::MajorSeventh);
@@ -45,11 +43,6 @@ impl Quality {
                 return Quality::Minor6;
             }
             return Quality::Minor;
-        } else if aug5 {
-            if min7 {
-                return Quality::Dominant;
-            }
-            return Quality::Augmented;
         } else if min7 {
             return Quality::Dominant;
         } else if maj6 {
