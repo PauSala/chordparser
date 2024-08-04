@@ -223,14 +223,10 @@ impl Parser {
 
     fn process_aug(&mut self, token: &Token) {
         self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Third,
-            4,
             Interval::MajorThird,
             token.pos as usize,
         ));
         self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Fifth,
-            8,
             Interval::AugmentedFifth,
             token.pos as usize,
         ));
@@ -276,42 +272,24 @@ impl Parser {
     }
 
     fn process_alt(&mut self) {
-        self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Fifth,
-            Interval::DiminishedFifth.st(),
-            Interval::DiminishedFifth,
-            0,
-        ));
-        self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Seventh,
-            Interval::MinorSeventh.st(),
-            Interval::MinorSeventh,
-            0,
-        ));
-        self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Ninth,
-            Interval::FlatNinth.st(),
-            Interval::FlatNinth,
-            0,
-        ));
-        self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Ninth,
-            Interval::SharpNinth.st(),
-            Interval::SharpNinth,
-            0,
-        ));
-        self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Eleventh,
-            Interval::SharpEleventh.st(),
-            Interval::SharpEleventh,
-            0,
-        ));
-        self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Thirteenth,
-            Interval::FlatThirteenth.st(),
-            Interval::FlatThirteenth,
-            0,
-        ));
+        self.ir
+            .notes
+            .push(NoteDescriptor::new(Interval::DiminishedFifth, 0));
+        self.ir
+            .notes
+            .push(NoteDescriptor::new(Interval::MinorSeventh, 0));
+        self.ir
+            .notes
+            .push(NoteDescriptor::new(Interval::FlatNinth, 0));
+        self.ir
+            .notes
+            .push(NoteDescriptor::new(Interval::SharpNinth, 0));
+        self.ir
+            .notes
+            .push(NoteDescriptor::new(Interval::SharpEleventh, 0));
+        self.ir
+            .notes
+            .push(NoteDescriptor::new(Interval::FlatThirteenth, 0));
     }
 
     fn process_add(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
@@ -349,8 +327,6 @@ impl Parser {
                             return;
                         }
                         self.ir.notes.push(NoteDescriptor::new(
-                            SemInterval::Third,
-                            Interval::MajorThird.st(),
                             Interval::MajorThird,
                             token.pos as usize,
                         ));
@@ -381,8 +357,6 @@ impl Parser {
             if self.expect_peek(TokenType::Extension("4".to_string()), tokens) {
                 tokens.next();
                 self.ir.notes.push(NoteDescriptor::new(
-                    SemInterval::Fourth,
-                    Interval::AugmentedFourth.st(),
                     Interval::AugmentedFourth,
                     token.pos as usize,
                 ));
@@ -392,19 +366,14 @@ impl Parser {
         }
         if self.expect_peek(TokenType::Extension("2".to_string()), tokens) {
             tokens.next();
-            self.ir.notes.push(NoteDescriptor::new(
-                SemInterval::Ninth,
-                Interval::Ninth.st(),
-                Interval::Ninth,
-                token.pos as usize,
-            ));
+            self.ir
+                .notes
+                .push(NoteDescriptor::new(Interval::Ninth, token.pos as usize));
             return;
         }
         if self.expect_peek(TokenType::Extension("4".to_string()), tokens) {
             tokens.next();
             self.ir.notes.push(NoteDescriptor::new(
-                SemInterval::Fourth,
-                Interval::PerfectFourth.st(),
                 Interval::PerfectFourth,
                 token.pos as usize,
             ));
@@ -412,8 +381,6 @@ impl Parser {
             return;
         }
         self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Fourth,
-            Interval::PerfectFourth.st(),
             Interval::PerfectFourth,
             token.pos as usize,
         ));
@@ -422,22 +389,16 @@ impl Parser {
 
     fn process_dim(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
         self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Fifth,
-            Interval::DiminishedFifth.st(),
             Interval::DiminishedFifth,
             token.pos as usize,
         ));
         self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Third,
-            Interval::MinorThird.st(),
             Interval::MinorThird,
             token.pos as usize,
         ));
         if self.expect_peek(TokenType::Extension("7".to_owned()), tokens) {
             tokens.next();
             self.ir.notes.push(NoteDescriptor::new(
-                SemInterval::Seventh,
-                Interval::DiminishedSeventh.st(),
                 Interval::DiminishedSeventh,
                 token.pos as usize,
             ));
@@ -446,22 +407,16 @@ impl Parser {
 
     fn process_halfdim(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
         self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Fifth,
-            Interval::DiminishedFifth.st(),
             Interval::DiminishedFifth,
             token.pos as usize,
         ));
         self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Third,
-            Interval::MinorThird.st(),
             Interval::MinorThird,
             token.pos as usize,
         ));
         if self.expect_peek(TokenType::Extension("7".to_owned()), tokens) {
             tokens.next();
             self.ir.notes.push(NoteDescriptor::new(
-                SemInterval::Seventh,
-                Interval::MinorSeventh.st(),
                 Interval::MinorSeventh,
                 token.pos as usize,
             ));
@@ -476,12 +431,9 @@ impl Parser {
             ));
             return;
         }
-        self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Root,
-            Interval::Unison.st(),
-            Interval::Unison,
-            token.pos as usize,
-        ));
+        self.ir
+            .notes
+            .push(NoteDescriptor::new(Interval::Unison, token.pos as usize));
         let literal = NoteLiteral::from_string(n);
         let mut modifier = None;
 
@@ -506,8 +458,6 @@ impl Parser {
             if self.expect_peek(TokenType::Extension(e.to_string()), tokens) {
                 is_used = true;
                 self.ir.notes.push(NoteDescriptor::new(
-                    SemInterval::Seventh,
-                    Interval::MajorSeventh.st(),
                     Interval::MajorSeventh,
                     token.pos as usize,
                 ));
@@ -528,8 +478,6 @@ impl Parser {
 
     fn process_maj7(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
         self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Seventh,
-            Interval::MajorSeventh.st(),
             Interval::MajorSeventh,
             token.pos as usize,
         ));
@@ -541,16 +489,12 @@ impl Parser {
 
     fn process_minor(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
         self.ir.notes.push(NoteDescriptor::new(
-            SemInterval::Third,
-            Interval::MinorThird.st(),
             Interval::MinorThird,
             token.pos as usize,
         ));
         if self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
             tokens.next();
             self.ir.notes.push(NoteDescriptor::new(
-                SemInterval::Seventh,
-                Interval::MinorSeventh.st(),
                 Interval::MinorSeventh,
                 token.pos as usize,
             ));
@@ -570,16 +514,12 @@ impl Parser {
                 "5" => match modifier {
                     Modifier::Sharp => {
                         self.ir.notes.push(NoteDescriptor::new(
-                            SemInterval::Fifth,
-                            Interval::AugmentedFifth.st(),
                             Interval::AugmentedFifth,
                             token.pos as usize,
                         ));
                     }
                     Modifier::Flat => {
                         self.ir.notes.push(NoteDescriptor::new(
-                            SemInterval::Fifth,
-                            Interval::DiminishedFifth.st(),
                             Interval::DiminishedFifth,
                             token.pos as usize,
                         ));
@@ -595,8 +535,6 @@ impl Parser {
                     }
                     Modifier::Flat => {
                         self.ir.notes.push(NoteDescriptor::new(
-                            SemInterval::Sixth,
-                            Interval::MinorSixth.st(),
                             Interval::MinorSixth,
                             token.pos as usize,
                         ));
@@ -625,8 +563,6 @@ impl Parser {
                 // This is the case for power chords, where the third is omited.
                 // TODO: Since a power chord is just I + V, maybe we should error if next_token is anything or if this token is not following root
                 self.ir.notes.push(NoteDescriptor::new(
-                    SemInterval::Fifth,
-                    Interval::PerfectFifth.st(),
                     Interval::PerfectFifth,
                     token.pos as usize,
                 ));
@@ -639,16 +575,12 @@ impl Parser {
                     return;
                 }
                 self.ir.notes.push(NoteDescriptor::new(
-                    SemInterval::Sixth,
-                    Interval::MajorSixth.st(),
                     Interval::MajorSixth,
                     token.pos as usize,
                 ));
             }
             "7" => {
                 self.ir.notes.push(NoteDescriptor::new(
-                    SemInterval::Seventh,
-                    Interval::MinorSeventh.st(),
                     Interval::MinorSeventh,
                     token.pos as usize,
                 ));
@@ -675,8 +607,6 @@ impl Parser {
                 Some(m) => match m {
                     Modifier::Sharp => {
                         self.ir.notes.push(NoteDescriptor::new(
-                            SemInterval::Ninth,
-                            Interval::SharpNinth.st(),
                             Interval::SharpNinth,
                             token.pos as usize,
                         ));
@@ -685,12 +615,9 @@ impl Parser {
                         }
                     }
                     Modifier::Flat => {
-                        self.ir.notes.push(NoteDescriptor::new(
-                            SemInterval::Ninth,
-                            Interval::FlatNinth.st(),
-                            Interval::FlatNinth,
-                            token.pos as usize,
-                        ));
+                        self.ir
+                            .notes
+                            .push(NoteDescriptor::new(Interval::FlatNinth, token.pos as usize));
                         if is_add {
                             self.ir.adds.push(Interval::FlatNinth);
                         }
@@ -698,12 +625,9 @@ impl Parser {
                     _ => (),
                 },
                 None => {
-                    self.ir.notes.push(NoteDescriptor::new(
-                        SemInterval::Ninth,
-                        Interval::Ninth.st(),
-                        Interval::Ninth,
-                        token.pos as usize,
-                    ));
+                    self.ir
+                        .notes
+                        .push(NoteDescriptor::new(Interval::Ninth, token.pos as usize));
                     if is_add {
                         self.ir.adds.push(Interval::Ninth);
                     }
@@ -714,8 +638,6 @@ impl Parser {
                     match m {
                         Modifier::Sharp => {
                             self.ir.notes.push(NoteDescriptor::new(
-                                SemInterval::Eleventh,
-                                Interval::SharpEleventh.st(),
                                 Interval::SharpEleventh,
                                 token.pos as usize,
                             ));
@@ -730,12 +652,9 @@ impl Parser {
                         _ => (),
                     }
                 } else {
-                    self.ir.notes.push(NoteDescriptor::new(
-                        SemInterval::Eleventh,
-                        Interval::Eleventh.st(),
-                        Interval::Eleventh,
-                        token.pos as usize,
-                    ));
+                    self.ir
+                        .notes
+                        .push(NoteDescriptor::new(Interval::Eleventh, token.pos as usize));
                     if !self.ir.has_minor_third() && !is_add {
                         self.ir.is_sus = true;
                     }
@@ -749,8 +668,6 @@ impl Parser {
                     match m {
                         Modifier::Flat => {
                             self.ir.notes.push(NoteDescriptor::new(
-                                SemInterval::Thirteenth,
-                                Interval::FlatThirteenth.st(),
                                 Interval::FlatThirteenth,
                                 token.pos as usize,
                             ));
@@ -768,8 +685,6 @@ impl Parser {
                     }
                 } else {
                     self.ir.notes.push(NoteDescriptor::new(
-                        SemInterval::Thirteenth,
-                        Interval::Thirteenth.st(),
                         Interval::Thirteenth,
                         token.pos as usize,
                     ));

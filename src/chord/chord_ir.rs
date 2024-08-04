@@ -51,14 +51,15 @@ impl ChordIr {
     }
 
     pub(crate) fn has_minor_third(&self) -> bool {
-        self.notes.iter().any(|n| match n.sem_interval {
-            SemInterval::Third => n.semitone == Interval::MinorThird.st(),
-            _ => false,
-        })
+        self.notes
+            .iter()
+            .any(|n| n.interval == Interval::MinorThird)
     }
 
     pub(crate) fn has(&self, int: SemInterval) -> bool {
-        self.notes.iter().any(|n| n.sem_interval == int)
+        self.notes
+            .iter()
+            .any(|n| n.interval.to_semantic_interval() == int)
     }
 
     pub(crate) fn has_add(&self, int: Interval) -> bool {
@@ -66,7 +67,8 @@ impl ChordIr {
     }
 
     pub(crate) fn sort_by_semitone(&mut self) {
-        self.notes.sort_by(|a, b| a.semitone.cmp(&b.semitone))
+        self.notes
+            .sort_by(|a, b| a.interval.st().cmp(&b.interval.st()))
     }
 
     /// Get the notes of the chord
@@ -75,7 +77,8 @@ impl ChordIr {
         self.sort_by_semitone();
         if let Some(root) = &self.root {
             for n in &self.notes {
-                let note = root.get_note(n.semitone, n.sem_interval.numeric());
+                let note =
+                    root.get_note(n.interval.st(), n.interval.to_semantic_interval().numeric());
                 notes.push(note);
             }
         }
@@ -91,9 +94,9 @@ impl ChordIr {
         let note_literals = notes.iter().map(|a| a.to_string()).collect::<Vec<String>>();
 
         for e in &self.notes {
-            semitones.push(e.semitone);
-            semantic_intervals.push(e.sem_interval.numeric());
-            real_intervals.push(Note::to_real_interval(e.sem_interval.numeric(), e.semitone))
+            semitones.push(e.interval.st());
+            semantic_intervals.push(e.interval.to_semantic_interval().numeric());
+            real_intervals.push(e.interval)
         }
 
         Chord::builder(&self.name, self.root.clone().unwrap())

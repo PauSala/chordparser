@@ -5,7 +5,7 @@ use serde::Deserialize;
 use std::fmt::Display;
 
 /// Enum representing all possible intervals of a chord
-#[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Deserialize)]
 pub enum Interval {
     Unison,
     MinorSecond,
@@ -63,6 +63,26 @@ impl Interval {
             Interval::SharpEleventh => 18,
             Interval::FlatThirteenth => 20,
             Interval::Thirteenth => 21,
+        }
+    }
+
+    pub fn to_semantic_interval(&self) -> SemInterval {
+        match self {
+            Interval::Unison => SemInterval::Root,
+            Interval::MinorSecond | Interval::MajorSecond => SemInterval::Second,
+            Interval::MinorThird | Interval::MajorThird => SemInterval::Third,
+            Interval::PerfectFourth | Interval::AugmentedFourth => SemInterval::Fourth,
+            Interval::DiminishedFifth | Interval::PerfectFifth | Interval::AugmentedFifth => {
+                SemInterval::Fifth
+            }
+            Interval::MinorSixth | Interval::MajorSixth => SemInterval::Sixth,
+            Interval::DiminishedSeventh | Interval::MinorSeventh | Interval::MajorSeventh => {
+                SemInterval::Seventh
+            }
+            Interval::Octave => SemInterval::Root,
+            Interval::FlatNinth | Interval::Ninth | Interval::SharpNinth => SemInterval::Ninth,
+            Interval::Eleventh | Interval::SharpEleventh => SemInterval::Eleventh,
+            Interval::FlatThirteenth | Interval::Thirteenth => SemInterval::Thirteenth,
         }
     }
 

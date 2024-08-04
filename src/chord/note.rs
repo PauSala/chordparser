@@ -4,7 +4,7 @@ use core::panic;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-use super::intervals::{Interval, SemInterval};
+use super::intervals::Interval;
 
 /// All possible note literals.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
@@ -392,24 +392,12 @@ impl Display for Note {
 /// * `pos` - The position in the string input
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) struct NoteDescriptor {
-    pub sem_interval: SemInterval,
     pub interval: Interval,
-    pub semitone: u8,
     pub pos: usize,
 }
 
 impl NoteDescriptor {
-    pub(crate) fn new(
-        sem_interval: SemInterval,
-        semitone: u8,
-        interval: Interval,
-        pos: usize,
-    ) -> NoteDescriptor {
-        NoteDescriptor {
-            sem_interval,
-            semitone,
-            interval,
-            pos,
-        }
+    pub(crate) fn new(interval: Interval, pos: usize) -> NoteDescriptor {
+        NoteDescriptor { interval, pos }
     }
 }

@@ -9,11 +9,11 @@ pub(crate) fn no_minor_and_major_thirds(chord: &mut ChordIr, errors: &mut Vec<St
     let mut minthirds = (false, 0);
     let mut majthirds = (false, 0);
     for note in &chord.notes {
-        if note.sem_interval == SemInterval::Third {
-            if note.semitone == Interval::MinorThird.st() {
+        if note.interval.to_semantic_interval() == SemInterval::Third {
+            if note.interval == Interval::MinorThird {
                 minthirds = (true, note.pos);
             }
-            if note.semitone == Interval::MajorThird.st() {
+            if note.interval == Interval::MajorThird {
                 majthirds = (true, note.pos);
             }
         }
@@ -30,8 +30,8 @@ pub(crate) fn no_perfect_fifth_and_altered_fifth(chord: &mut ChordIr, errors: &m
     let mut p5 = (false, 0);
     let mut a5 = (false, 0);
     for note in &chord.notes {
-        if note.sem_interval == SemInterval::Fifth {
-            if note.semitone == Interval::PerfectFifth.st() {
+        if note.interval.to_semantic_interval() == SemInterval::Fifth {
+            if note.interval == Interval::PerfectFifth {
                 p5 = (true, note.pos);
             } else {
                 a5 = (true, note.pos);
@@ -51,14 +51,14 @@ pub(crate) fn no_duplicate_seventh(chord: &mut ChordIr, errors: &mut Vec<String>
     let mut maj7 = 0;
     let mut dim7 = 0;
     for note in &chord.notes {
-        if note.sem_interval == SemInterval::Seventh {
-            if note.semitone == Interval::DiminishedSeventh.st() {
+        if note.interval.to_semantic_interval() == SemInterval::Seventh {
+            if note.interval == Interval::DiminishedSeventh {
                 dim7 += 1;
             }
-            if note.semitone == Interval::MinorSeventh.st() {
+            if note.interval == Interval::MinorSeventh {
                 m7 += 1;
             }
-            if note.semitone == Interval::MajorSeventh.st() {
+            if note.interval == Interval::MajorSeventh {
                 maj7 += 1;
             }
         }
@@ -78,11 +78,11 @@ pub(crate) fn no_minor_and_major_seventh(chord: &mut ChordIr, errors: &mut Vec<S
     let mut m7 = (false, 0);
     let mut maj7 = (false, 0);
     for note in &chord.notes {
-        if note.sem_interval == SemInterval::Seventh {
-            if note.semitone == Interval::MinorSeventh.st() {
+        if note.interval.to_semantic_interval() == SemInterval::Seventh {
+            if note.interval == Interval::MinorSeventh {
                 m7 = (true, note.pos);
             }
-            if note.semitone == Interval::MajorSeventh.st() {
+            if note.interval == Interval::MajorSeventh {
                 maj7 = (true, note.pos);
             }
         }
@@ -100,8 +100,8 @@ pub(crate) fn no_natural_and_altered_nine(chord: &mut ChordIr, errors: &mut Vec<
     let mut n = (false, 0, 0);
     let mut s = (false, 0, 0);
     for note in &chord.notes {
-        if note.sem_interval == SemInterval::Ninth {
-            match note.semitone {
+        if note.interval.to_semantic_interval() == SemInterval::Ninth {
+            match note.interval.st() {
                 13 => f = (true, note.pos, f.2 + 1),
                 14 => n = (true, note.pos, n.2 + 1),
                 15 => s = (true, note.pos, s.2 + 1),
@@ -132,8 +132,8 @@ pub(crate) fn no_double_eleventh(chord: &mut ChordIr, errors: &mut Vec<String>) 
     let mut n = (false, 0, 0);
     let mut s = (false, 0, 0);
     for note in &chord.notes {
-        if note.sem_interval == SemInterval::Eleventh {
-            match note.semitone {
+        if note.interval.to_semantic_interval() == SemInterval::Eleventh {
+            match note.interval.st() {
                 17 => n = (true, note.pos, n.2 + 1),
                 18 => s = (true, note.pos, s.2 + 1),
                 _ => {}
@@ -156,8 +156,8 @@ pub(crate) fn no_double_thirteenth(chord: &mut ChordIr, errors: &mut Vec<String>
     let mut f = (false, 0, 0);
     let mut n = (false, 0, 0);
     for note in &chord.notes {
-        if note.sem_interval == SemInterval::Thirteenth {
-            match note.semitone {
+        if note.interval.to_semantic_interval() == SemInterval::Thirteenth {
+            match note.interval.st() {
                 20 => f = (true, note.pos, f.2 + 1),
                 21 => n = (true, note.pos, f.2 + 1),
                 _ => {}
