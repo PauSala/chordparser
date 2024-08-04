@@ -87,7 +87,7 @@ pub fn normalize(ch: &Chord) -> String {
         }
         Quality::Major | Quality::Minor => {
             if ch.quality == Quality::Minor {
-                res.push_str("-");
+                res.push_str("min");
             }
             if ch.is_sus {
                 res.push_str("sus");
