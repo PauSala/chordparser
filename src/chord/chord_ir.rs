@@ -50,16 +50,14 @@ impl ChordIr {
         }
     }
 
-    pub(crate) fn has_minor_third(&self) -> bool {
-        self.notes
-            .iter()
-            .any(|n| n.interval == Interval::MinorThird)
-    }
-
-    pub(crate) fn has(&self, int: SemInterval) -> bool {
+    pub(crate) fn has_sem_int(&self, int: SemInterval) -> bool {
         self.notes
             .iter()
             .any(|n| n.interval.to_semantic_interval() == int)
+    }
+
+    pub(crate) fn has_int(&self, int: Interval) -> bool {
+        self.notes.iter().any(|n| n.interval == int)
     }
 
     pub(crate) fn has_add(&self, int: Interval) -> bool {

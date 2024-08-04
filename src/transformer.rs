@@ -7,37 +7,46 @@ use crate::chord::{
 pub(crate) type Transformer = fn(&mut ChordIr);
 
 pub(crate) fn implicit_third(ir: &mut ChordIr) {
-    if !ir.is_sus && !ir.omits.third && !ir.has(SemInterval::Third) {
+    if !ir.is_sus && !ir.omits.third && !ir.has_sem_int(SemInterval::Third) {
         ir.notes
             .push(NoteDescriptor::new(Interval::MajorThird, usize::MAX));
     }
 }
 
 pub(crate) fn implicit_fifth(ir: &mut ChordIr) {
-    if !ir.omits.five && !ir.has(SemInterval::Fifth) {
+    if !ir.omits.five
+        && !ir.has_sem_int(SemInterval::Fifth)
+        && !ir.has_int(Interval::FlatThirteenth)
+    {
         ir.notes
             .push(NoteDescriptor::new(Interval::PerfectFifth, usize::MAX));
     }
 }
 
 pub(crate) fn implicit_min_seventh(ir: &mut ChordIr) {
-    let add_len = ir.adds.len();
     let tensions_len = ir
         .notes
         .iter()
         .filter(|n| {
             matches!(
-                n.interval.to_semantic_interval(),
-                SemInterval::Ninth | SemInterval::Eleventh | SemInterval::Thirteenth
-            )
+                n.interval,
+                Interval::Ninth | Interval::Eleventh | Interval::Thirteenth | Interval::MajorSixth
+            ) && !ir.adds.contains(&n.interval)
         })
         .collect::<Vec<&NoteDescriptor>>()
         .len();
-    let t7 = ir.has(SemInterval::Seventh);
+    let t7 = ir.has_sem_int(SemInterval::Seventh);
+    let is_add_6 = ir
+        .adds
+        .iter()
+        .filter(|a| a.to_semantic_interval() == SemInterval::Sixth)
+        .collect::<Vec<_>>()
+        .len()
+        > 0;
 
-    // Implicit seventh is only set when there are tensions not comming from an add modifier
-    // and a sixth has not been set.
-    if !t7 && add_len < tensions_len && !ir.has(SemInterval::Sixth) {
+    // Implicit seventh is only set when there are natural tensions not comming from an add modifier
+    // and a sixth has not been set or is not an add.
+    if !t7 && tensions_len > 0 && (!ir.has_sem_int(SemInterval::Sixth) || is_add_6) {
         ir.notes
             .push(NoteDescriptor::new(Interval::MinorSeventh, usize::MAX));
     }
@@ -45,9 +54,9 @@ pub(crate) fn implicit_min_seventh(ir: &mut ChordIr) {
 
 pub(crate) fn implicit_ninth(ir: &mut ChordIr) {
     let add13 = ir.has_add(Interval::Thirteenth) || ir.has_add(Interval::FlatThirteenth);
-    let t13 = ir.has(SemInterval::Thirteenth);
-    let t11 = ir.has(SemInterval::Eleventh);
-    let t9 = ir.has(SemInterval::Ninth);
+    let t13 = ir.has_sem_int(SemInterval::Thirteenth);
+    let t11 = ir.has_sem_int(SemInterval::Eleventh);
+    let t9 = ir.has_sem_int(SemInterval::Ninth);
     let a11 = ir.has_add(Interval::Eleventh) || ir.has_add(Interval::SharpEleventh);
 
     if !add13 && !a11 && t13 && !t9 {
@@ -55,7 +64,7 @@ pub(crate) fn implicit_ninth(ir: &mut ChordIr) {
             .push(NoteDescriptor::new(Interval::Ninth, usize::MAX))
     }
 
-    let t9 = ir.has(SemInterval::Ninth);
+    let t9 = ir.has_sem_int(SemInterval::Ninth);
     if !a11 && t11 && !t9 {
         ir.notes
             .push(NoteDescriptor::new(Interval::Ninth, usize::MAX))
@@ -64,10 +73,10 @@ pub(crate) fn implicit_ninth(ir: &mut ChordIr) {
 
 pub(crate) fn implicit_eleventh(ir: &mut ChordIr) {
     let add13 = ir.has_add(Interval::Thirteenth) || ir.has_add(Interval::FlatThirteenth);
-    let t13 = ir.has(SemInterval::Thirteenth);
-    let t11 = ir.has(SemInterval::Eleventh);
+    let t13 = ir.has_sem_int(SemInterval::Thirteenth);
+    let t11 = ir.has_sem_int(SemInterval::Eleventh);
 
-    if !add13 && t13 && !t11 && ir.has_minor_third() {
+    if !add13 && t13 && !t11 && ir.has_int(Interval::MinorThird) {
         ir.notes
             .push(NoteDescriptor::new(Interval::Eleventh, usize::MAX))
     }

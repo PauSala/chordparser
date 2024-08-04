@@ -69,7 +69,7 @@ use test_case::test_case;
 #[test_case("C7(b5,#5,#9)", vec!["C", "E", "Gb", "G#", "Bb", "D#"])]
 #[test_case("C7(b5,#5,b9,#9)", vec!["C", "E", "Gb", "G#", "Bb", "Db", "D#"])]
 #[test_case("C7b5#5b9#9b13", vec!["C", "E", "Gb", "G#", "Bb", "Db", "D#", "Ab"])]
-#[test_case("C7(b13)", vec!["C", "E", "G", "Bb", "D", "Ab"])]
+#[test_case("C7(b13)", vec!["C", "E", "Bb", "D", "Ab"])]
 #[test_case("C9", vec!["C", "E", "G", "Bb", "D"])]
 #[test_case("C9(13)", vec!["C", "E", "G", "Bb", "D", "A"])]
 #[test_case("C9(add13)", vec!["C", "E", "G", "Bb", "D", "A"])]
@@ -116,7 +116,7 @@ use test_case::test_case;
 #[test_case("Cdim7(add9,b13)", vec!["C", "Eb", "Gb", "B𝄫", "D", "F", "Ab"])]
 #[test_case("Cdim7(add11,13)", vec!["C", "Eb", "Gb", "B𝄫", "F", "A"])]
 #[test_case("Cdim7(add13)", vec!["C", "Eb", "Gb", "B𝄫","A"])]
-
+#[test_case("C-7(add6)", vec!["C", "Eb", "G", "A","Bb"])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);

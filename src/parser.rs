@@ -347,6 +347,22 @@ impl Parser {
                             token.pos as usize,
                         ));
                     }
+                    "6" => match modifier {
+                        Some(m) => match m {
+                            Modifier::Sharp => self
+                                .errors
+                                .push(format!("Error: A 6 cannot be sharp at pos {}", token.pos)),
+                            Modifier::Flat => self.ir.notes.push(NoteDescriptor::new(
+                                Interval::MinorSixth,
+                                token.pos as usize,
+                            )),
+                            _ => (),
+                        },
+                        None => self.ir.notes.push(NoteDescriptor::new(
+                            Interval::MajorSixth,
+                            token.pos as usize,
+                        )),
+                    },
                     "9" | "11" | "13" => {
                         self.add_tension(t, token, modifier, true);
                     }
@@ -585,7 +601,7 @@ impl Parser {
                 self.ir.omits.third = true
             }
             "6" => {
-                if self.ir.has(SemInterval::Sixth) {
+                if self.ir.has_sem_int(SemInterval::Sixth) {
                     self.errors
                         .push(format!("Error: Duplicate 6th at position {}", token.pos));
                     return;
@@ -671,7 +687,7 @@ impl Parser {
                     self.ir
                         .notes
                         .push(NoteDescriptor::new(Interval::Eleventh, token.pos as usize));
-                    if !self.ir.has_minor_third() && !is_add {
+                    if !self.ir.has_int(Interval::MinorThird) && !is_add {
                         self.ir.is_sus = true;
                     }
                     if is_add {
