@@ -23,9 +23,11 @@ use crate::{
     },
 };
 
-/// This is used to handle (Omit/add a,b) cases.
-/// An omit/add modifier inside a parenthesis changes context to Omit(false)/Add(false).
-/// When a comma is encountered, if a context exits it is changed to true.  
+/// This is used to handle X(omit/add a,b) cases.
+/// An omit/add modifier inside a parenthesis changes context to Omit(false)/Add(false).  
+/// When a comma is encountered, if a context exits it is changed to true.    
+/// This allows for handling subsequent tokens assuming this context.  
+/// So in C7(omit3,5), the 5 is assumed as an omit. But in C7(omit3 5) it is not.
 /// When parents are closed the context is reset to None.  
 /// Commas with no context are ignored.  
 #[derive(Debug, Clone, PartialEq, Eq)]
