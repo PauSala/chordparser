@@ -219,83 +219,91 @@ impl ChordBuilder {
 pub fn normalize(ch: &Chord) -> String {
     let mut res = ch.root.to_string();
     match ch.quality {
-        Quality::Major7 => {
-            let mut ext = Vec::new();
-            let (main_t, other, t) = get_this_thing(ch);
-            res.push_str("Maj");
-            if let Some(t) = main_t {
-                if t == Interval::Eleventh {
-                    res.push_str("9sus")
-                } else if ch.is_sus {
-                    res.push_str(&t.to_human_readable());
-                    res.push_str("sus");
-                } else {
-                    res.push_str(&t.to_human_readable());
-                }
-            } else {
-                res.push('7');
-            }
-            if ch.has(Interval::DiminishedFifth) {
-                ext.push("b5".to_owned())
-            }
-            for e in t {
-                ext.push(e.to_human_readable());
-            }
-            for (i, e) in other.into_iter().enumerate() {
-                let mut s = String::from("");
-                if i == 0 {
-                    s.push_str("add");
-                }
-                s.push_str(&e.to_human_readable());
-                ext.push(s);
-            }
-
-            let omits = get_omits(ch);
-            for (i, e) in omits.iter().enumerate() {
-                let mut st = String::new();
-                if i == 0 {
-                    st.push_str("omit")
-                }
-                st.push_str(e);
-                ext.push(st);
-            }
-
-            if !ext.is_empty() {
-                res.push('(');
-                res.push_str(&ext.join(","));
-                res.push(')');
-            }
-        }
         Quality::Power => {
             res.push('5');
         }
-        Quality::Minor6 => {
-            //let mut ext = Vec::new();
-            let (main_t, other, t) = get_this_thing(ch);
-            dbg!(main_t, other, t);
-            res.push_str("m6");
-            // if let Some(t) = main_t {
-            //     if t == Interval::Eleventh {
-            //         res.push_str("9sus")
-            //     } else if ch.is_sus {
-            //         res.push_str(&t.to_human_readable());
-            //         res.push_str("sus");
-            //     } else {
-            //         res.push_str(&t.to_human_readable());
-            //     }
-            // }
+        Quality::Major6 => {
+            res.push_str("6");
+            let mmod = get_main_mod(ch);
+            if let Some(mo) = mmod {
+                res.push_str(&mo.to_string());
+            }
+            return _normalize(ch, res);
         }
-        Quality::Minor7 => todo!(),
+        Quality::Major7 => {
+            res.push_str("Maj");
+            let mut mmod = get_main_mod(ch).unwrap();
+            if mmod == Interval::Eleventh && ch.is_sus {
+                mmod = Interval::Ninth;
+            }
+            res.push_str(&mmod.to_string());
+            if ch.is_sus {
+                res.push_str("sus");
+            }
+            return _normalize(ch, res);
+        }
+        Quality::Minor6 => {
+            res.push_str("min6");
+            let mmod = get_main_mod(ch);
+            if let Some(mo) = mmod {
+                res.push_str(&mo.to_string());
+            }
+            return _normalize(ch, res);
+        }
+        Quality::Minor7 => {
+            res.push_str("min");
+            let mmod = get_main_mod(ch).unwrap();
+            let to_str = {
+                if mmod == Interval::MinorSeventh {
+                    "7".to_string()
+                } else {
+                    mmod.to_string()
+                }
+            };
+            res.push_str(&to_str);
+            return _normalize(ch, res);
+        }
         Quality::MinorMaj7 => todo!(),
         Quality::Minor => todo!(),
         Quality::Dominant => todo!(),
         Quality::SemiDiminished => todo!(),
         Quality::Diminished => todo!(),
         Quality::Augmented => todo!(),
-        Quality::Major6 => todo!(),
         Quality::Major => todo!(),
     }
     res
+}
+
+fn _normalize(ch: &Chord, mut base: String) -> String {
+    let mut ext = Vec::new();
+    let alter = get_alt_notes(ch);
+    for a in alter {
+        ext.push(a.to_human_readable());
+    }
+    let adds = get_adds(ch);
+    for (i, a) in adds.iter().enumerate() {
+        let mut r = String::new();
+        if i == 0 {
+            r.push_str("add");
+        }
+        r.push_str(&a.to_human_readable());
+        ext.push(r);
+    }
+    let omits = get_omits(ch);
+    for (i, o) in omits.iter().enumerate() {
+        let mut r = String::new();
+        if i == 0 {
+            r.push_str("omit");
+        }
+        r.push_str(&o);
+        ext.push(r);
+    }
+    if !ext.is_empty() {
+        base.push('(');
+        base.push_str(&ext.join(","));
+        base.push(')');
+    }
+    base
 }
 
 fn get_omits(ch: &Chord) -> Vec<String> {
@@ -303,11 +311,8 @@ fn get_omits(ch: &Chord) -> Vec<String> {
     if !ch
         .semantic_intervals
         .iter()
-        .any(|i| *i == SemInterval::Third.numeric())
-        && !ch
-            .semantic_intervals
-            .iter()
-            .any(|i| *i == SemInterval::Fourth.numeric())
+        .any(|i| *i == SemInterval::Third.numeric() || *i == SemInterval::Fourth.numeric())
+        && !ch.has(Interval::Eleventh)
     {
         res.push("3".to_string());
     }
@@ -315,85 +320,189 @@ fn get_omits(ch: &Chord) -> Vec<String> {
         .semantic_intervals
         .iter()
         .any(|i| *i == SemInterval::Fifth.numeric())
+        && !ch.has(Interval::FlatThirteenth)
     {
         res.push("5".to_string());
     }
     res
 }
 
-fn get_this_thing(ch: &Chord) -> (Option<Interval>, Vec<Interval>, Vec<Interval>) {
-    let mut master = Vec::new();
-    let mut other = Vec::new();
-    let mut t = Vec::new();
-
-    for i in &ch.real_intervals {
-        match i {
-            Interval::MinorSixth
-            | Interval::FlatNinth
-            | Interval::SharpNinth
-            | Interval::SharpEleventh
-            | Interval::FlatThirteenth => t.push(*i),
-            Interval::Ninth => master.push(*i),
-            Interval::Eleventh => {
-                if ch.real_intervals.contains(&Interval::Ninth)
-                    || ch.real_intervals.contains(&Interval::FlatNinth)
-                    || ch.real_intervals.contains(&Interval::SharpNinth)
-                {
-                    master.retain(|a| *a != Interval::Ninth);
-                    master.push(*i);
-                } else {
-                    other.push(*i)
-                }
+fn get_main_mod(ch: &Chord) -> Option<Interval> {
+    match ch.quality {
+        Quality::Power => None,
+        Quality::Major => None,
+        Quality::Minor => None,
+        Quality::Major6 | Quality::Minor6 => {
+            if ch.has(Interval::Ninth) {
+                return Some(Interval::Ninth);
             }
-            Interval::Thirteenth => {
-                if ch.has(Interval::MinorThird) {
-                    if (ch.real_intervals.contains(&Interval::Ninth)
-                        || ch.real_intervals.contains(&Interval::FlatNinth)
-                        || ch.real_intervals.contains(&Interval::SharpNinth))
-                        && (ch.real_intervals.contains(&Interval::Eleventh)
-                            || ch.real_intervals.contains(&Interval::SharpEleventh))
-                    {
-                        master.push(*i);
-                        master.retain(|a| *a != Interval::Ninth && *a != Interval::Eleventh);
-                    } else {
-                        other.push(*i)
-                    }
-                } else if ch.real_intervals.contains(&Interval::Ninth)
-                    || ch.real_intervals.contains(&Interval::FlatNinth)
-                    || ch.real_intervals.contains(&Interval::SharpNinth)
-                {
-                    master.retain(|a| *a != Interval::Ninth && *a != Interval::Eleventh);
-                    master.push(*i);
-                } else {
-                    other.push(*i)
-                }
-            }
-            _ => (),
+            None
         }
+        Quality::Major7 => {
+            if ch.has(Interval::Thirteenth)
+                && ch
+                    .semantic_intervals
+                    .iter()
+                    .any(|i| i == &SemInterval::Ninth.numeric())
+            {
+                return Some(Interval::Thirteenth);
+            }
+            if ch.has(Interval::Eleventh)
+                && ch
+                    .semantic_intervals
+                    .iter()
+                    .any(|i| i == &SemInterval::Ninth.numeric())
+            {
+                return Some(Interval::Eleventh);
+            }
+            if ch.has(Interval::Ninth) {
+                return Some(Interval::Ninth);
+            }
+            Some(Interval::MajorSeventh)
+        }
+        Quality::Minor7 => {
+            if ch.has(Interval::Thirteenth)
+                && ch
+                    .semantic_intervals
+                    .iter()
+                    .any(|i| i == &SemInterval::Ninth.numeric())
+                && ch
+                    .semantic_intervals
+                    .iter()
+                    .any(|i| i == &SemInterval::Eleventh.numeric())
+            {
+                return Some(Interval::Thirteenth);
+            }
+            if ch.has(Interval::Eleventh)
+                && ch
+                    .semantic_intervals
+                    .iter()
+                    .any(|i| i == &SemInterval::Ninth.numeric())
+            {
+                return Some(Interval::Eleventh);
+            }
+            if ch.has(Interval::Ninth) {
+                return Some(Interval::Ninth);
+            }
+            Some(Interval::MinorSeventh)
+        }
+        _ => None,
     }
-    let high = master.pop();
-    for i in master {
-        other.push(i)
+}
+
+fn get_adds(ch: &Chord) -> Vec<Interval> {
+    let mut adds = Vec::new();
+    match ch.quality {
+        Quality::Power => adds,
+        Quality::Major7 => {
+            if ch.has(Interval::Thirteenth)
+                && !ch
+                    .real_intervals
+                    .iter()
+                    .any(|i| *i == Interval::Eleventh || *i == Interval::Ninth)
+            {
+                adds.push(Interval::Thirteenth);
+            }
+            if ch.has(Interval::Eleventh)
+                && !ch.real_intervals.iter().any(|i| *i == Interval::Ninth)
+            {
+                adds.push(Interval::Eleventh);
+            }
+            adds
+        }
+        Quality::Minor7 => {
+            if ch.has(Interval::Thirteenth)
+                && (!ch.real_intervals.iter().any(|i| *i == Interval::Eleventh)
+                    || !ch.real_intervals.iter().any(|i| *i == Interval::Ninth))
+            {
+                adds.push(Interval::Thirteenth);
+            }
+            if ch.has(Interval::Eleventh)
+                && !ch.real_intervals.iter().any(|i| *i == Interval::Ninth)
+            {
+                adds.push(Interval::Eleventh);
+            }
+            adds
+        }
+        Quality::Major6 | Quality::Minor6 => {
+            if ch.has(Interval::Eleventh) {
+                adds.push(Interval::Eleventh);
+            }
+            adds
+        }
+        Quality::Major => todo!(),
+        Quality::Minor => todo!(),
+        Quality::MinorMaj7 => todo!(),
+        Quality::Dominant => todo!(),
+        Quality::SemiDiminished => todo!(),
+        Quality::Diminished => todo!(),
+        Quality::Augmented => todo!(),
     }
-    other.sort_by_key(|a| a.st());
-    (high, other, t)
+}
+
+fn get_alt_notes(ch: &Chord) -> Vec<Interval> {
+    let res = Vec::new();
+    let altered = [
+        Interval::DiminishedFifth,
+        Interval::AugmentedFifth,
+        Interval::MinorSixth,
+        Interval::FlatNinth,
+        Interval::SharpNinth,
+        Interval::SharpEleventh,
+        Interval::FlatThirteenth,
+    ];
+    let dim: Vec<Interval> = altered
+        .iter()
+        .filter(|i| *i != &Interval::DiminishedFifth)
+        .cloned()
+        .collect();
+    let aug: Vec<Interval> = altered
+        .iter()
+        .filter(|i| *i != &Interval::AugmentedFifth)
+        .cloned()
+        .collect();
+    match ch.quality {
+        Quality::Power => res,
+        Quality::SemiDiminished | Quality::Diminished => ch
+            .real_intervals
+            .iter()
+            .filter(|i| dim.contains(i))
+            .cloned()
+            .collect(),
+        Quality::Augmented => ch
+            .real_intervals
+            .iter()
+            .filter(|i| aug.contains(i))
+            .cloned()
+            .collect(),
+        _ => ch
+            .real_intervals
+            .iter()
+            .filter(|i| altered.contains(i))
+            .cloned()
+            .collect(),
+    }
 }
 
 #[cfg(test)]
 mod test {
     use crate::{chord::normalize, parser::Parser};
 
-    // #[test]
-    // fn shoudl_work() {
-    //     let mut parser = Parser::new();
-    //     let res = parser.parse("C-613");
-    //     match res {
-    //         Ok(c) => {
-    //             dbg!(&c);
-    //             let adds = normalize(&c);
-    //             dbg!(adds);
-    //         }
-    //         Err(_) => todo!(),
-    //     }
-    // }
+    #[test]
+    fn shoudl_work() {
+        let mut parser = Parser::new();
+        // let res = parser.parse("CMaj7add13b5");
+        let res = parser.parse("C-9add11add13");
+        match res {
+            Ok(c) => {
+                dbg!(&c);
+                let adds = normalize(&c);
+                dbg!(adds);
+            }
+            Err(e) => {
+                dbg!(e);
+                panic!();
+            }
+        }
+    }
 }
