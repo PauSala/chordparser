@@ -31,6 +31,7 @@ pub struct Parser {
     ir: ChordIr,
     transformers: Vec<Transformer>,
     validators: Vec<Validator>,
+    parent_stack: i16,
 }
 
 impl Parser {
@@ -56,6 +57,7 @@ impl Parser {
                 no_double_eleventh,
                 no_double_thirteenth,
             ],
+            parent_stack: 0,
         }
     }
 
@@ -117,6 +119,7 @@ impl Parser {
     fn clean_up(&mut self) {
         self.errors.clear();
         self.ir = ChordIr::new();
+        self.parent_stack = 0;
     }
 
     fn read_tokens(&mut self, tokens: &mut Peekable<Iter<Token>>) {
@@ -169,7 +172,7 @@ impl Parser {
             TokenType::Alt => self.process_alt(),
             TokenType::Slash => self.process_slash(token, tokens),
             TokenType::LParent => self.process_lparent(tokens),
-            TokenType::RParent => (),
+            TokenType::RParent => self.process_rparent(token),
             TokenType::Illegal => self
                 .errors
                 .push(format!("Illegal character at position {}", token.pos)),
@@ -218,6 +221,16 @@ impl Parser {
             }
             // This will advance to next token
             self.process_token(token, tokens);
+        }
+    }
+
+    fn process_rparent(&mut self, token: &Token) {
+        self.parent_stack -= 1;
+        if self.parent_stack != 0 {
+            self.errors.push(format!(
+                "Error: Unmatchet parenthesis at position {}",
+                token.pos
+            ));
         }
     }
 
