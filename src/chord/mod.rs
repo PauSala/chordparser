@@ -265,7 +265,15 @@ pub fn normalize(ch: &Chord) -> String {
             res.push_str(&mmod.to_string());
             return _normalize(ch, res);
         }
-        Quality::Diminished => todo!(),
+        Quality::Diminished => {
+            res.push_str("dim");
+            let mmod = get_main_mod(ch).unwrap();
+            if mmod != Interval::MinorSeventh {
+                res.push_str("Maj");
+            }
+            res.push_str(&mmod.to_string());
+            return _normalize(ch, res);
+        }
         Quality::Minor => todo!(),
         Quality::Major => todo!(),
         Quality::Dominant => todo!(),
@@ -360,7 +368,7 @@ fn get_main_mod(ch: &Chord) -> Option<Interval> {
             }
             Some(Interval::MajorSeventh)
         }
-        Quality::Minor7 | Quality::MinorMaj7 | Quality::SemiDiminished => {
+        Quality::Minor7 | Quality::MinorMaj7 | Quality::SemiDiminished | Quality::Diminished => {
             if ch.has(Interval::Thirteenth)
                 && ch
                     .semantic_intervals
@@ -413,7 +421,7 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
             }
             adds
         }
-        Quality::Minor7 | Quality::MinorMaj7 | Quality::SemiDiminished => {
+        Quality::Minor7 | Quality::MinorMaj7 | Quality::SemiDiminished | Quality::Diminished => {
             if ch.has(Interval::Thirteenth)
                 && !ch.has(Interval::MajorSixth)
                 && (!ch.real_intervals.iter().any(|i| *i == Interval::Eleventh)
@@ -443,7 +451,6 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
         Quality::Major => todo!(),
         Quality::Minor => todo!(),
         Quality::Dominant => todo!(),
-        Quality::Diminished => todo!(),
         Quality::Augmented => todo!(),
     }
 }
@@ -459,14 +466,14 @@ fn get_alt_notes(ch: &Chord) -> Vec<Interval> {
         Interval::SharpEleventh,
         Interval::FlatThirteenth,
     ];
-    let dim: Vec<Interval> = altered
-        .iter()
-        .filter(|i| *i != &Interval::DiminishedFifth)
-        .cloned()
-        .collect();
     let aug: Vec<Interval> = altered
         .iter()
         .filter(|i| *i != &Interval::AugmentedFifth)
+        .cloned()
+        .collect();
+    let dim: Vec<Interval> = altered
+        .iter()
+        .filter(|i| *i != &Interval::DiminishedFifth)
         .cloned()
         .collect();
     match ch.quality {
@@ -500,7 +507,7 @@ mod test {
     fn shoudl_work() {
         let mut parser = Parser::new();
         // let res = parser.parse("CMaj7add13b5");
-        let res = parser.parse("C-9b513");
+        let res = parser.parse("Cdimmaj79b13add11");
         match res {
             Ok(c) => {
                 dbg!(&c);
