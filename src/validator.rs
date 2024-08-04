@@ -9,13 +9,11 @@ pub(crate) fn no_minor_and_major_thirds(chord: &mut ChordIr, errors: &mut Vec<St
     let mut minthirds = (false, 0);
     let mut majthirds = (false, 0);
     for note in &chord.notes {
-        if note.interval.to_semantic_interval() == SemInterval::Third {
-            if note.interval == Interval::MinorThird {
-                minthirds = (true, note.pos);
-            }
-            if note.interval == Interval::MajorThird {
-                majthirds = (true, note.pos);
-            }
+        if note.interval == Interval::MinorThird {
+            minthirds = (true, note.pos);
+        }
+        if note.interval == Interval::MajorThird {
+            majthirds = (true, note.pos);
         }
     }
     if minthirds.0 && majthirds.0 {
@@ -51,16 +49,14 @@ pub(crate) fn no_duplicate_seventh(chord: &mut ChordIr, errors: &mut Vec<String>
     let mut maj7 = 0;
     let mut dim7 = 0;
     for note in &chord.notes {
-        if note.interval.to_semantic_interval() == SemInterval::Seventh {
-            if note.interval == Interval::DiminishedSeventh {
-                dim7 += 1;
-            }
-            if note.interval == Interval::MinorSeventh {
-                m7 += 1;
-            }
-            if note.interval == Interval::MajorSeventh {
-                maj7 += 1;
-            }
+        if note.interval == Interval::DiminishedSeventh {
+            dim7 += 1;
+        }
+        if note.interval == Interval::MinorSeventh {
+            m7 += 1;
+        }
+        if note.interval == Interval::MajorSeventh {
+            maj7 += 1;
         }
     }
     if m7 > 1 {
@@ -78,13 +74,11 @@ pub(crate) fn no_minor_and_major_seventh(chord: &mut ChordIr, errors: &mut Vec<S
     let mut m7 = (false, 0);
     let mut maj7 = (false, 0);
     for note in &chord.notes {
-        if note.interval.to_semantic_interval() == SemInterval::Seventh {
-            if note.interval == Interval::MinorSeventh {
-                m7 = (true, note.pos);
-            }
-            if note.interval == Interval::MajorSeventh {
-                maj7 = (true, note.pos);
-            }
+        if note.interval == Interval::MinorSeventh {
+            m7 = (true, note.pos);
+        }
+        if note.interval == Interval::MajorSeventh {
+            maj7 = (true, note.pos);
         }
     }
     if m7.0 && maj7.0 {
@@ -100,13 +94,11 @@ pub(crate) fn no_natural_and_altered_nine(chord: &mut ChordIr, errors: &mut Vec<
     let mut n = (false, 0, 0);
     let mut s = (false, 0, 0);
     for note in &chord.notes {
-        if note.interval.to_semantic_interval() == SemInterval::Ninth {
-            match note.interval.st() {
-                13 => f = (true, note.pos, f.2 + 1),
-                14 => n = (true, note.pos, n.2 + 1),
-                15 => s = (true, note.pos, s.2 + 1),
-                _ => {}
-            }
+        match note.interval {
+            Interval::FlatNinth => f = (true, note.pos, f.2 + 1),
+            Interval::Ninth => n = (true, note.pos, n.2 + 1),
+            Interval::SharpNinth => s = (true, note.pos, s.2 + 1),
+            _ => {}
         }
     }
     if n.0 && f.0 {

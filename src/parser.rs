@@ -136,6 +136,7 @@ impl Parser {
         self.errors.clear();
         self.ir = ChordIr::new();
         self.parent_stack = 0;
+        self.context = Context::None;
     }
 
     fn read_tokens(&mut self, tokens: &mut Peekable<Iter<Token>>) {
