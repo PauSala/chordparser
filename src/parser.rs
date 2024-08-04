@@ -23,6 +23,11 @@ use crate::{
     },
 };
 
+/// This is used to handle (Omit/add a,b) cases.
+/// An omit/add modifier inside a parenthesis changes context to Omit(false)/Add(false).
+/// When a comma is encountered, if a context exits it is changed to true.  
+/// When parents are closed the context is reset to None.  
+/// Commas with no context are ignored.  
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Context {
     Omit(bool),
@@ -194,7 +199,7 @@ impl Parser {
         match self.context {
             Context::Omit(_) => self.context = Context::Omit(true),
             Context::Add(_) => self.context = Context::Add(true),
-            Context::None => (),
+            Context::None => {}
         }
     }
 
@@ -224,7 +229,7 @@ impl Parser {
                 TokenType::RParent => break,
                 TokenType::LParent => {
                     self.errors.push(format!(
-                        "Error: More than one parenthesis group at position {}",
+                        "Error: Nested parenthesis are not allowed at position {}",
                         token.pos
                     ));
                 }
@@ -533,7 +538,7 @@ impl Parser {
         }
         if !is_used {
             self.errors.push(format!(
-                "Error: Maj and its varians alone are not allowed. Use it only with a 7, 11, 9 or 13 at position {}",
+                "Error: Maj and its varians alone are not allowed. Use it only followed by a 7, 11, 9 or 13 at position {}",
                 token.pos
             ));
         }
