@@ -126,6 +126,9 @@ use test_case::test_case;
 #[test_case("C7omit5,9", vec!["C", "E", "Bb", "D"])]
 #[test_case("Cdimmaj7", vec!["C", "Eb", "Gb", "B"])]
 #[test_case("CBass", vec!["C"])]
+// TODO: This should probably be rejected
+#[test_case("C7/9", vec!["C", "E", "G", "Bb", "D"])]
+#[test_case("Cdim7/9", vec!["C", "Eb", "Gb", "B𝄫", "D"])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);
