@@ -113,7 +113,7 @@ fn _normalize(ch: &Chord, mut base: String) -> String {
     let mut ext = Vec::new();
     let alter = get_alt_notes(ch);
     for a in alter {
-        ext.push(a.to_human_readable());
+        ext.push(a.to_chord_notation());
     }
     let adds = get_adds(ch);
     for (i, a) in adds.iter().enumerate() {
@@ -121,7 +121,7 @@ fn _normalize(ch: &Chord, mut base: String) -> String {
         if i == 0 {
             r.push_str("add");
         }
-        r.push_str(&a.to_human_readable());
+        r.push_str(&a.to_chord_notation());
         ext.push(r);
     }
     let omits = get_omits(ch);

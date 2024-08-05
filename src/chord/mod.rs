@@ -34,7 +34,7 @@ pub struct Chord {
     pub note_literals: Vec<String>,
     /// The semitones of the notes relative to root.
     pub semitones: Vec<u8>,
-    /// The real intervals of the notes, the actual intervals.
+    /// The real intervals of the notes.
     pub real_intervals: Vec<Interval>,
     /// The semantic intervals of the notes, meaning non altered intervals.
     #[serde(skip_serializing)]
@@ -61,7 +61,7 @@ impl Chord {
     /// * `transpose_to` - The note to transpose the chord to.
     /// # Returns
     /// * A new chord transposed to the new root note.
-    pub fn transpose_to_root(&self, transpose_to: &Note) -> Chord {
+    pub fn transpose_to(&self, transpose_to: &Note) -> Chord {
         let bass = self
             .bass
             .as_ref()

@@ -159,7 +159,7 @@ fn test_notes(i: &str, expected: Vec<&str>) {
             dbg!(&chord);
             assert_eq!(literals, &expected);
             for n in notes {
-                let t = chord.transpose_to_root(&n);
+                let t = chord.transpose_to(&n);
                 assert_eq!(chord.real_intervals, t.real_intervals);
                 let parsed = parser.parse(&t.origin);
                 match parsed {

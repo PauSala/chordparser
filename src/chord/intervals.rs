@@ -33,7 +33,7 @@ pub enum Interval {
 }
 
 impl Interval {
-    /// Semitone representation of the interval
+    /// Returns the semitone representation of the interval
     /// # Arguments
     /// * `self` - The interval
     /// # Returns
@@ -66,6 +66,11 @@ impl Interval {
         }
     }
 
+    /// Transforms the interval into its semantic form, i.e,. for any interval returns its natural form.
+    /// # Arguments
+    /// * `self` - The interval
+    /// # Returns
+    /// * `SemInterval` - The semantic interval
     pub fn to_semantic_interval(&self) -> SemInterval {
         match self {
             Interval::Unison => SemInterval::Root,
@@ -86,7 +91,12 @@ impl Interval {
         }
     }
 
-    pub fn to_human_readable(&self) -> String {
+    /// Transforms given interval into its chord notation form
+    /// # Arguments
+    /// * `self` - The interval
+    /// # Returns
+    /// * `String` - The chord notation form for this interval
+    pub fn to_chord_notation(&self) -> String {
         match self {
             Interval::Unison => "1".to_string(),
             Interval::MinorSecond => "b2".to_string(),
@@ -117,7 +127,7 @@ impl Interval {
 
 impl Display for Interval {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.to_human_readable())
+        write!(f, "{}", self.to_chord_notation())
     }
 }
 
@@ -126,7 +136,7 @@ impl Serialize for Interval {
     where
         S: Serializer,
     {
-        serializer.serialize_str(self.to_human_readable().as_str())
+        serializer.serialize_str(self.to_chord_notation().as_str())
     }
 }
 
