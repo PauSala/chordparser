@@ -765,96 +765,72 @@ impl Parser {
         modifier: Option<Modifier>,
         is_add: bool,
     ) {
-        match tension {
-            "9" => match modifier {
-                Some(m) => match m {
-                    Modifier::Sharp => {
-                        self.ir.notes.push(NoteDescriptor::new(
-                            Interval::SharpNinth,
-                            token.pos as usize,
-                        ));
-                        if is_add {
-                            self.ir.adds.push(Interval::SharpNinth);
-                        }
-                    }
-                    Modifier::Flat => {
-                        self.ir
-                            .notes
-                            .push(NoteDescriptor::new(Interval::FlatNinth, token.pos as usize));
-                        if is_add {
-                            self.ir.adds.push(Interval::FlatNinth);
-                        }
-                    }
-                    _ => (),
-                },
-                None => {
-                    self.ir
-                        .notes
-                        .push(NoteDescriptor::new(Interval::Ninth, token.pos as usize));
-                    if is_add {
-                        self.ir.adds.push(Interval::Ninth);
-                    }
-                }
-            },
-            "11" => {
-                if let Some(m) = &modifier {
-                    match m {
-                        Modifier::Sharp => {
-                            self.ir.notes.push(NoteDescriptor::new(
-                                Interval::SharpEleventh,
-                                token.pos as usize,
-                            ));
-                            if is_add {
-                                self.ir.adds.push(Interval::SharpEleventh);
-                            }
-                        }
-                        Modifier::Flat => {
-                            self.errors
-                                .push(format!("Error: A 11th cannot be flat at pos {}", token.pos));
-                        }
-                        _ => (),
-                    }
-                } else {
-                    self.ir
-                        .notes
-                        .push(NoteDescriptor::new(Interval::Eleventh, token.pos as usize));
-                    if !self.ir.has_int(Interval::MinorThird) && !is_add {
-                        self.ir.is_sus = true;
-                    }
-                    if is_add {
-                        self.ir.adds.push(Interval::Eleventh);
-                    }
+        fn push_note(ir: &mut ChordIr, interval: Interval, position: usize, is_add: bool) {
+            ir.notes.push(NoteDescriptor::new(interval, position));
+            if is_add {
+                ir.adds.push(interval);
+            }
+        }
+
+        match (tension, modifier) {
+            ("9", Some(Modifier::Sharp)) => {
+                push_note(
+                    &mut self.ir,
+                    Interval::SharpNinth,
+                    token.pos as usize,
+                    is_add,
+                );
+            }
+            ("9", Some(Modifier::Flat)) => {
+                push_note(
+                    &mut self.ir,
+                    Interval::FlatNinth,
+                    token.pos as usize,
+                    is_add,
+                );
+            }
+            ("9", None) => {
+                push_note(&mut self.ir, Interval::Ninth, token.pos as usize, is_add);
+            }
+            ("11", Some(Modifier::Sharp)) => {
+                push_note(
+                    &mut self.ir,
+                    Interval::SharpEleventh,
+                    token.pos as usize,
+                    is_add,
+                );
+            }
+            ("11", Some(Modifier::Flat)) => {
+                self.errors
+                    .push(format!("Error: A 11th cannot be flat at pos {}", token.pos));
+            }
+            ("11", None) => {
+                push_note(&mut self.ir, Interval::Eleventh, token.pos as usize, is_add);
+                if !self.ir.has_int(Interval::MinorThird) && !is_add {
+                    self.ir.is_sus = true;
                 }
             }
-            "13" => {
-                if let Some(m) = &modifier {
-                    match m {
-                        Modifier::Flat => {
-                            self.ir.notes.push(NoteDescriptor::new(
-                                Interval::FlatThirteenth,
-                                token.pos as usize,
-                            ));
-                            if is_add {
-                                self.ir.adds.push(Interval::FlatThirteenth);
-                            }
-                        }
-                        Modifier::Sharp => {
-                            self.errors.push(format!(
-                                "Error: A 13th cannot be sharp at pos {}",
-                                token.pos
-                            ));
-                        }
-                        _ => (),
-                    }
-                } else {
-                    self.ir.notes.push(NoteDescriptor::new(
-                        Interval::Thirteenth,
-                        token.pos as usize,
-                    ));
-                    if is_add {
-                        self.ir.adds.push(Interval::Thirteenth);
-                    }
-                }
+            ("13", Some(Modifier::Flat)) => {
+                push_note(
+                    &mut self.ir,
+                    Interval::FlatThirteenth,
+                    token.pos as usize,
+                    is_add,
+                );
+            }
+            ("13", Some(Modifier::Sharp)) => {
+                self.errors.push(format!(
+                    "Error: A 13th cannot be sharp at pos {}",
+                    token.pos
+                ));
+            }
+            ("13", None) => {
+                push_note(
+                    &mut self.ir,
+                    Interval::Thirteenth,
+                    token.pos as usize,
+                    is_add,
+                );
             }
             _ => (),
         }
