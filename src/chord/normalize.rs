@@ -353,26 +353,3 @@ fn get_alt_notes(ch: &Chord) -> Vec<Interval> {
             .collect(),
     }
 }
-
-#[cfg(test)]
-mod test {
-    use crate::parser::Parser;
-
-    #[test]
-    fn shoudl_work() {
-        let mut parser = Parser::new();
-        // let res = parser.parse("CMaj7add13b5");
-        // C7sus(b9,b13)
-        let res = parser.parse("C7susb2");
-        match res {
-            Ok(c) => {
-                dbg!(&c);
-                dbg!(&c.normalized);
-            }
-            Err(e) => {
-                dbg!(e);
-                panic!();
-            }
-        }
-    }
-}

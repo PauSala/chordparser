@@ -42,6 +42,7 @@ pub(crate) fn implicit_min_seventh(ir: &mut ChordIr) {
         .collect::<Vec<_>>()
         .is_empty();
 
+    // If there is only a nine an a sixth is set is a 6/9 so exit
     if tensions.len() == 1
         && tensions[0].interval == Interval::Ninth
         && (ir.has_int(Interval::MajorSixth) && !is_add_6)
@@ -50,7 +51,6 @@ pub(crate) fn implicit_min_seventh(ir: &mut ChordIr) {
     }
 
     // Implicit seventh is only set when there are natural tensions not comming from an add modifier
-    // and a sixth has not been set or is not an add.
     if !t7 && !tensions.is_empty() {
         ir.notes
             .push(NoteDescriptor::new(Interval::MinorSeventh, usize::MAX));

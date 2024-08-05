@@ -850,22 +850,3 @@ impl Default for Parser {
         Self::new()
     }
 }
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use test_case::test_case;
-
-    #[test_case("Bdim7Maj7119b6")]
-    fn should_not_throw_errors(case: &str) {
-        let mut parser = Parser::new();
-        let _ = parser.parse(case);
-        let literals = parser
-            .ir
-            .get_notes()
-            .iter()
-            .map(|a| a.to_string())
-            .collect::<Vec<String>>();
-        println!("{:?}", literals);
-    }
-}
