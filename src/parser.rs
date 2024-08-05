@@ -45,7 +45,7 @@ pub struct Parser {
     ir: ChordIr,
     transformers: Vec<Transformer>,
     validators: Vec<Validator>,
-    parent_stack: i16,
+    parent_count: i16,
     context: Context,
 }
 
@@ -72,7 +72,7 @@ impl Parser {
                 no_double_eleventh,
                 no_double_thirteenth,
             ],
-            parent_stack: 0,
+            parent_count: 0,
             context: Context::None,
         }
     }
@@ -135,7 +135,7 @@ impl Parser {
     fn clean_up(&mut self) {
         self.errors.clear();
         self.ir = ChordIr::new();
-        self.parent_stack = 0;
+        self.parent_count = 0;
         self.context = Context::None;
     }
 
@@ -201,7 +201,7 @@ impl Parser {
 
     fn process_bass(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
         if !self.expect_peek(TokenType::Eof, tokens)
-            && !(self.expect_peek(TokenType::RParent, tokens) && self.parent_stack == 1)
+            && !(self.expect_peek(TokenType::RParent, tokens) && self.parent_count == 1)
         {
             self.errors.push(format!(
                 "Error: Bass should be the only modifier at position {}",
@@ -220,7 +220,7 @@ impl Parser {
     }
 
     fn process_omit(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
-        if self.parent_stack > 0 {
+        if self.parent_count > 0 {
             self.context = Context::Omit(false);
         }
         if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
@@ -238,12 +238,12 @@ impl Parser {
     }
 
     fn process_lparent(&mut self, tokens: &mut Peekable<Iter<Token>>) {
-        self.parent_stack += 1;
+        self.parent_count += 1;
         while tokens.peek().is_some() {
             let token = tokens.next().unwrap();
             match token.token_type {
                 TokenType::RParent => {
-                    self.parent_stack += 1;
+                    self.parent_count += 1;
                     break;
                 }
                 TokenType::LParent => {
@@ -267,9 +267,9 @@ impl Parser {
     }
 
     fn process_rparent(&mut self, token: &Token) {
-        self.parent_stack -= 1;
+        self.parent_count -= 1;
         self.context = Context::None;
-        if self.parent_stack != 0 {
+        if self.parent_count != 0 {
             self.errors.push(format!(
                 "Error: Unmatched parenthesis at position {}",
                 token.pos
@@ -349,7 +349,7 @@ impl Parser {
     }
 
     fn process_add(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
-        if self.parent_stack > 0 {
+        if self.parent_count > 0 {
             self.context = Context::Add(false);
         }
         let mut modifier = None;
