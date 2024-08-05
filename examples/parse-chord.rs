@@ -1,20 +1,15 @@
 use std::path::Path;
 
 use chordparser::parser::Parser;
-/// Parse a chord and generate a both json-string representation and the  MIDI file.
+/// Parse a chord and generate a both json-string representation and a MIDI file.
 pub fn main() {
     let mut parser = Parser::new();
-    let result = parser.parse("AbMaj7#5sus");
+    let result = parser.parse("AbMaj7#11");
     match result {
         Ok(chord) => {
             dbg!(&chord);
             dbg!(&chord.to_json());
-            to_midi_file(
-                &chord.to_midi_codes(),
-                Path::new("midi_files/Ab°7(Maj7,9)"),
-                120,
-                4,
-            );
+            to_midi_file(&chord.to_midi_codes(), Path::new("my_chord"), 120, 4);
         }
         Err(e) => {
             dbg!(e);
@@ -27,15 +22,13 @@ use midly::{
     Format, Header, MetaMessage, Smf, Timing, Track, TrackEvent, TrackEventKind,
 };
 
-/// Generate a MIDI file from [Chord](chord/struct.Chord.html).
+/// Generate a MIDI file from Chord.
 /// # Arguments
 /// * `chord_notes` - The notes of the chord in MIDI codes.
 /// * `name` - The path of the file to save without extension.
 /// * `bpm` - Beats per minute.
 /// * `beats` - Duration in beats.
-// #[cfg(feature = "midi")]
 pub fn to_midi_file(chord_notes: &[u8], name: &Path, bpm: u32, beats: u16) {
-    // Create the track events for the chord
     let mc_x_beat = 60 * 1_000_000 / bpm;
     let ticks_per_beat: u16 = 500;
     let ticks_per_quarter = ticks_per_beat * beats;

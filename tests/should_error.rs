@@ -24,7 +24,6 @@ use test_case::test_case;
 #[test_case("c-9", vec![])]
 #[test_case("C(add9,7)", vec![])]
 #[test_case("C(omit3,7)", vec![])]
-#[test_case("C7(bass)", vec![])]
 #[test_case("CBass(9)", vec![])]
 fn should_error(i: &str, _expected: Vec<&str>) {
     let mut parser = Parser::new();

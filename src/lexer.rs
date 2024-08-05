@@ -51,7 +51,7 @@ impl Lexer {
             None => (),
             Some(c) => match c {
                 '#' | '♯' => self.add_token(TokenType::Sharp, self.current),
-                'b' | '♭' => self.add_token(TokenType::Flat, self.current),
+                '♭' => self.add_token(TokenType::Flat, self.current),
                 '△' => self.add_token(TokenType::Maj7, self.current),
                 '-' => self.add_token(TokenType::Minor, self.current),
                 '°' => self.add_token(TokenType::Dim, self.current),
@@ -152,7 +152,7 @@ impl Lexer {
     }
 
     fn is_alphabetic(&self, c: &char) -> bool {
-        c.is_ascii_alphabetic() && *c != 'b'
+        c.is_ascii_alphabetic() //&& *c != 'b'
     }
 
     fn add_token(&mut self, token_type: TokenType, pos: usize) {

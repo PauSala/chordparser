@@ -13,7 +13,7 @@ pub(crate) mod chord_ir;
 pub mod intervals;
 pub(crate) mod normalize;
 pub mod note;
-pub mod quality;
+pub(crate) mod quality;
 
 /// Chord representation of a successfully parsed string.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]

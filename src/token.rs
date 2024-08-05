@@ -33,6 +33,7 @@ impl TokenType {
             "MIN" | "Min" | "min" | "MINOR" | "Minor" | "minor" | "MI" | "Mi" | "mi" | "m" => {
                 Some(TokenType::Minor)
             }
+            "b" => Some(TokenType::Flat),
             "SUS" | "Sus" | "sus" => Some(TokenType::Sus),
             "DIM" | "Dim" | "dim" | "diminished" => Some(TokenType::Dim),
             "ALT" | "Alt" | "alt" => Some(TokenType::Alt),
