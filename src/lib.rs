@@ -19,14 +19,13 @@
 //! The [Chord](chord/struct.Chord.html) is also serializable into JSON, can generate MIDI codes for its notes, and allows transposition from one key to another.
 //!
 //!
-//! # [Parsing rules](#parsing_rules)
+//! # [Parser rules](#parsing_rules)
 //! Since there isn't a full consensus on how chords should be written, any chord parser is by definition opinionated.  
 //! The current  rules and conventions maybe are too much restrictive, but it should always be  a way to express a chord in a way that the parser (and a human) can understand.  
 //! The main spirit for now is to reject non-standard representations rather than attempting to interpret everything, and to focus on parsing the most standarized forms.    
 //! Check the test cases in the /test folder to have a grasp of what chords can and cannot be parsed.
 //!
 //! # [Limitations](#limitations)
-//! - Bass symbol is not supported yet.
 //! - Parsed chord notes have enharmonically correct names when possible. For example, a `B#9` chord will have `C𝄪` as the ninth instead of D. Said that,
 //! triple flat/sharps are not suported since they add an unnecesasry complexity for very rare use cases.
 //! - When transposed, slash-bass notes (like C in Ab/C) may not be enharmonically correct.
