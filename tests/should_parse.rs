@@ -113,8 +113,6 @@ use test_case::test_case;
 #[test_case("Cdim7add9", vec!["C", "Eb", "Gb", "B𝄫", "D"])]
 #[test_case("Cdim7add911", vec!["C", "Eb", "Gb", "B𝄫", "D", "F"])]
 #[test_case("Cdim7add911 b13", vec!["C", "Eb", "Gb", "B𝄫", "D", "F", "Ab"])]
-// This is questionable since the 13 could be interpreted as an add, but for now i can leave with that since
-// and the chord could be more explicit about adds and it is possible to achieve the expected result.
 #[test_case("Cdim7(add9,13)", vec!["C", "Eb", "Gb", "B𝄫", "D", "A"])]
 #[test_case("Cdim7(add9,add13)", vec!["C", "Eb", "Gb", "B𝄫", "D", "A"])]
 #[test_case("Cdim7(add9,b13)", vec!["C", "Eb", "Gb", "B𝄫", "D", "Ab"])]
@@ -127,6 +125,7 @@ use test_case::test_case;
 #[test_case("C7(omit5,3 add9,13)", vec!["C", "Bb", "D", "A"])]
 #[test_case("C7omit5,9", vec!["C", "E", "Bb", "D"])]
 #[test_case("Cdimmaj7", vec!["C", "Eb", "Gb", "B"])]
+#[test_case("CBass", vec!["C"])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);
@@ -157,6 +156,7 @@ fn test_notes(i: &str, expected: Vec<&str>) {
         Ok(chord) => {
             let literals = &chord.note_literals;
             println!("{} {}", &chord.origin, &chord.normalized);
+            dbg!(&chord);
             assert_eq!(literals, &expected);
             for n in notes {
                 let t = chord.transpose_to_root(&n);

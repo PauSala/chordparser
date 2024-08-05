@@ -46,6 +46,9 @@ use test_case::test_case;
 #[test_case("CdimMaj7", "Cdim(addMaj7)")]
 #[test_case("CdimMaj9", "Cdim(addMaj7,9)")]
 #[test_case("Csus4#11", "Csus(#11,add9)")]
+#[test_case("C/A", "C/A")]
+#[test_case("Cm6/A", "Cmin6/A")]
+#[test_case("C(bass)", "CBass")]
 fn test_normalize(input: &str, expected: &str) {
     let mut parser = Parser::new();
     let res = parser.parse(input);

@@ -18,6 +18,7 @@ pub enum TokenType {
     LParent,
     RParent,
     Comma,
+    Bass,
     Illegal,
     Eof,
 }
@@ -25,6 +26,7 @@ impl TokenType {
     //TODO: Add support for M (major) and m (minor). This implies not converting i to uppercase and put here every case sepparetely
     pub fn from_string(i: &str) -> Option<TokenType> {
         match i {
+            "BASS" | "Bass" | "bass" => Some(TokenType::Bass),
             "MAJ" | "Maj" | "maj" | "MAJOR" | "Major" | "major" | "MA" | "Ma" | "ma" | "M" => {
                 Some(TokenType::Maj)
             }
@@ -73,6 +75,7 @@ impl Display for TokenType {
             TokenType::RParent => f.write_str(")")?,
             TokenType::Omit => f.write_str("Omit")?,
             TokenType::Comma => f.write_str(",")?,
+            TokenType::Bass => f.write_str("Bass")?,
         }
         Ok(())
     }

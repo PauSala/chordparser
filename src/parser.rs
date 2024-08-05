@@ -99,7 +99,7 @@ impl Parser {
     /// - An add3 is sharp or flat.
     /// - An Omit modifier has no target (this includes wrong targets: any target which is not a 3 or 5).
     /// - There are more than one sus modifier.
-    /// - Slash notation is used for anything other than 9 and 11.
+    /// - Slash notation is used for anything other than 9 (6/9) or bass notation.
     pub fn parse(&mut self, input: &str) -> Result<Chord, ParserErrors> {
         input.clone_into(&mut self.ir.name);
         let binding = self.lexer.scan_tokens(input);
@@ -173,6 +173,7 @@ impl Parser {
 
     fn process_token(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
         match &token.token_type {
+            TokenType::Bass => self.process_bass(token, tokens),
             TokenType::Note(n) => self.process_note(n, token, tokens),
             TokenType::Maj => self.process_maj(token, tokens),
             TokenType::Maj7 => self.process_maj7(token, tokens),
@@ -195,6 +196,18 @@ impl Parser {
                 .push(format!("Illegal character at position {}", token.pos)),
             TokenType::Eof => (),
             TokenType::Comma => self.process_comma(),
+        }
+    }
+
+    fn process_bass(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
+        if !self.expect_peek(TokenType::Eof, tokens)
+            && !(self.expect_peek(TokenType::RParent, tokens) && self.parent_stack == 1)
+        {
+            self.errors.push(format!(
+                "Error: Bass should be the only modifier at position {}",
+                token.pos
+            ));
+            return;
         }
     }
 
@@ -277,7 +290,7 @@ impl Parser {
             let alt = tokens.next().unwrap();
             if let TokenType::Extension(a) = &alt.token_type {
                 match a.as_str() {
-                    "9" | "11" => self.add_tension(a, token, None, false),
+                    "9" => self.add_tension(a, token, None, false),
                     _ => {
                         self.errors
                                  .push(format!("Error: Cannot use slash notation for tensions other than 9 and 11 at position {}", token.pos));

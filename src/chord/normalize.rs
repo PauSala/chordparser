@@ -6,9 +6,14 @@ use super::{
 
 pub fn normalize(ch: &Chord) -> String {
     let mut res = ch.root.to_string();
+    if ch.real_intervals.len() == 1 {
+        res.push_str("Bass");
+        return res;
+    }
     match ch.quality {
         Quality::Power => {
             res.push('5');
+            return res;
         }
         Quality::Major6 => {
             res.push('6');
@@ -98,11 +103,6 @@ pub fn normalize(ch: &Chord) -> String {
             return _normalize(ch, res);
         }
     }
-    if ch.bass.is_some() {
-        res.push('/');
-        res.push_str(&ch.bass.as_ref().unwrap().to_string());
-    }
-    res
 }
 
 fn should_add_sus(ch: &Chord) -> bool {
@@ -138,6 +138,11 @@ fn _normalize(ch: &Chord, mut base: String) -> String {
         base.push_str(&ext.join(","));
         base.push(')');
     }
+    if ch.bass.is_some() {
+        base.push('/');
+        base.push_str(&ch.bass.as_ref().unwrap().to_string());
+    }
+
     base
 }
 

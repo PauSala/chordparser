@@ -7,7 +7,11 @@ use crate::chord::{
 pub(crate) type Transformer = fn(&mut ChordIr);
 
 pub(crate) fn implicit_third(ir: &mut ChordIr) {
-    if !ir.is_sus && !ir.omits.third && !ir.has_sem_int(SemInterval::Third) {
+    if !ir.is_sus
+        && !ir.omits.third
+        && !ir.has_sem_int(SemInterval::Third)
+        && !ir.name.to_lowercase().contains("bass")
+    {
         ir.notes
             .push(NoteDescriptor::new(Interval::MajorThird, usize::MAX));
     }
@@ -17,6 +21,7 @@ pub(crate) fn implicit_fifth(ir: &mut ChordIr) {
     if !ir.omits.five
         && !ir.has_sem_int(SemInterval::Fifth)
         && !ir.has_int(Interval::FlatThirteenth)
+        && !ir.name.to_lowercase().contains("bass")
     {
         ir.notes
             .push(NoteDescriptor::new(Interval::PerfectFifth, usize::MAX));
