@@ -42,7 +42,7 @@ pub(crate) fn implicit_min_seventh(ir: &mut ChordIr) {
         .collect::<Vec<_>>()
         .is_empty();
 
-    // If there is only a nine an a sixth is set is a 6/9 so exit
+    // If there is only a ninth an a sixth is set, it is a 6/9 so exit
     if tensions.len() == 1
         && tensions[0].interval == Interval::Ninth
         && (ir.has_int(Interval::MajorSixth) && !is_add_6)

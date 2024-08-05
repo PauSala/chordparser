@@ -20,29 +20,34 @@ pub mod quality;
 pub struct Chord {
     /// The string that originated the chord.
     pub origin: String,
-    /// Normalized input
-    pub normalized: String,
     /// The descriptor of the chord (all beyond its root).
     pub descriptor: String,
+    /// Normalized input
+    pub normalized: String,
     /// The root note of the chord.
     pub root: Note,
     /// The bass note of the chord if any is added with a slash.
     pub bass: Option<Note>,
-    /// The quality of the chord.
-    pub quality: Quality,
     /// The notes of the chord.
     pub notes: Vec<Note>,
     /// The notes of the chord as string literals.
     pub note_literals: Vec<String>,
     /// The semitones of the notes relative to root.
     pub semitones: Vec<u8>,
-    /// The semantic intervals of the notes, meaning non altered intervals.
-    pub semantic_intervals: Vec<u8>,
     /// The real intervals of the notes, the actual intervals.
     pub real_intervals: Vec<Interval>,
-    pub is_sus: bool,
+    /// The semantic intervals of the notes, meaning non altered intervals.
+    #[serde(skip_serializing)]
+    semantic_intervals: Vec<u8>,
+    /// The quality of the chord.
+    #[serde(skip_serializing)]
+    quality: Quality,
     /// Intervals added through the add modifier.
-    pub adds: Vec<Interval>,
+    #[serde(skip_serializing)]
+    is_sus: bool,
+    /// Sus modifiers comming from input string.
+    #[serde(skip_serializing)]
+    adds: Vec<Interval>,
 }
 
 impl Chord {
@@ -50,6 +55,12 @@ impl Chord {
         ChordBuilder::new(origin, root)
     }
 
+    /// Transposes the chord to a different root note.
+    /// # Arguments
+    /// * `self` - The chord to transpose.
+    /// * `transpose_to` - The note to transpose the chord to.
+    /// # Returns
+    /// * A new chord transposed to the new root note.
     pub fn transpose_to_root(&self, transpose_to: &Note) -> Chord {
         let bass = self
             .bass
