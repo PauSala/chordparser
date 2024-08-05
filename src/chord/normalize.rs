@@ -33,7 +33,7 @@ pub fn normalize(ch: &Chord) -> String {
                 mmod = Interval::MinorSeventh
             }
             res.push_str(&mmod.to_string().replace("Maj", ""));
-            if ch.is_sus {
+            if should_add_sus(ch) {
                 res.push_str("sus");
             }
             return _normalize(ch, res);
@@ -55,14 +55,17 @@ pub fn normalize(ch: &Chord) -> String {
         Quality::MinorMaj7 => {
             res.push_str("min");
             let mmod = get_main_mod(ch).unwrap();
-            if mmod != Interval::MinorSeventh {
+            if mmod != Interval::MajorSeventh {
                 res.push_str("Maj");
             }
             res.push_str(&mmod.to_string());
             return _normalize(ch, res);
         }
         Quality::Diminished => {
-            res.push_str("dim7");
+            res.push_str("dim");
+            if ch.has(Interval::DiminishedSeventh) {
+                res.push_str("7");
+            }
             return _normalize(ch, res);
         }
         Quality::Dominant => {
@@ -80,7 +83,7 @@ pub fn normalize(ch: &Chord) -> String {
                 mmod = Interval::MinorSeventh
             }
             res.push_str(&mmod.to_string());
-            if ch.is_sus {
+            if should_add_sus(ch) {
                 res.push_str("sus");
             }
             return _normalize(ch, res);
@@ -96,6 +99,10 @@ pub fn normalize(ch: &Chord) -> String {
         }
     }
     res
+}
+
+fn should_add_sus(ch: &Chord) -> bool {
+    ch.is_sus && (ch.has(Interval::Eleventh) || ch.has(Interval::PerfectFourth))
 }
 
 fn _normalize(ch: &Chord, mut base: String) -> String {
@@ -136,7 +143,7 @@ fn get_omits(ch: &Chord) -> Vec<String> {
         .semantic_intervals
         .iter()
         .any(|i| *i == SemInterval::Third.numeric() || *i == SemInterval::Fourth.numeric())
-        && !ch.has(Interval::Eleventh)
+        && (!(ch.is_sus && ch.has(Interval::Eleventh)))
     {
         res.push("3".to_string());
     }
@@ -356,7 +363,7 @@ mod test {
         let mut parser = Parser::new();
         // let res = parser.parse("CMaj7add13b5");
         // C7sus(b9,b13)
-        let res = parser.parse("C7sus9add13");
+        let res = parser.parse("C7susb2");
         match res {
             Ok(c) => {
                 dbg!(&c);

@@ -430,22 +430,39 @@ impl Parser {
             ));
             return;
         }
-        if self.expect_peek(TokenType::Sharp, tokens)
-            && self.expect_peek(TokenType::Extension("4".to_string()), tokens)
-        {
+        if self.expect_peek(TokenType::Sharp, tokens) {
             tokens.next();
-            self.ir.notes.push(NoteDescriptor::new(
-                Interval::AugmentedFourth,
-                token.pos as usize,
-            ));
+            if self.expect_peek(TokenType::Extension("4".to_string()), tokens) {
+                self.ir.notes.push(NoteDescriptor::new(
+                    Interval::SharpEleventh,
+                    token.pos as usize,
+                ));
+                tokens.next();
+                self.ir.is_sus = true;
+                return;
+            }
+            self.errors
+                .push(format!("Error: invalid Sus target at pos {}", token.pos));
+        }
+        if self.expect_peek(TokenType::Flat, tokens) {
             tokens.next();
-            return;
+            if self.expect_peek(TokenType::Extension("2".to_string()), tokens) {
+                self.ir
+                    .notes
+                    .push(NoteDescriptor::new(Interval::FlatNinth, token.pos as usize));
+                tokens.next();
+                self.ir.is_sus = true;
+                return;
+            }
+            self.errors
+                .push(format!("Error: invalid Sus target at pos {}", token.pos));
         }
         if self.expect_peek(TokenType::Extension("2".to_string()), tokens) {
             tokens.next();
             self.ir
                 .notes
                 .push(NoteDescriptor::new(Interval::Ninth, token.pos as usize));
+            self.ir.is_sus = true;
             return;
         }
         if self.expect_peek(TokenType::Extension("4".to_string()), tokens) {
