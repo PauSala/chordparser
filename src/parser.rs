@@ -242,7 +242,10 @@ impl Parser {
         while tokens.peek().is_some() {
             let token = tokens.next().unwrap();
             match token.token_type {
-                TokenType::RParent => break,
+                TokenType::RParent => {
+                    self.parent_stack += 1;
+                    break;
+                }
                 TokenType::LParent => {
                     self.errors.push(format!(
                         "Error: Nested parenthesis are not allowed at position {}",
