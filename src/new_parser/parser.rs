@@ -10,10 +10,11 @@ use crate::{
 };
 
 use super::{
-    expression::{Ast, Expresssion},
+    ast::Ast,
+    expression::Exp,
     expressions::{
         AddExp, AltExp, AugExp, BassExp, Dim7Exp, DimExp, ExtensionExp, HalfDimExp, MajExp,
-        MinorExp, OmitExp, SusExp,
+        MinorExp, OmitExp, PowerExp, SusExp,
     },
 };
 
@@ -98,22 +99,22 @@ impl Parser {
             TokenType::Note(_) => self.note(),
             TokenType::Sharp => self.modifier(tokens, Modifier::Sharp),
             TokenType::Flat => self.modifier(tokens, Modifier::Flat),
-            TokenType::Aug => self.ast.expressions.push(Expresssion::Aug(AugExp)),
+            TokenType::Aug => self.ast.expressions.push(Exp::Aug(AugExp)),
             TokenType::Dim => self.dim(tokens),
-            TokenType::HalfDim => self.ast.expressions.push(Expresssion::HalfDim(HalfDimExp)),
+            TokenType::HalfDim => self.ast.expressions.push(Exp::HalfDim(HalfDimExp)),
             TokenType::Extension(ext) => self.extension(ext),
             TokenType::Add => self.add(token, tokens),
             TokenType::Omit => self.omit(token, tokens),
-            TokenType::Alt => self.ast.expressions.push(Expresssion::Alt(AltExp)),
-            TokenType::Sus => self.sus(),
-            TokenType::Minor => self.ast.expressions.push(Expresssion::Minor(MinorExp)),
-            TokenType::Maj => self.ast.expressions.push(Expresssion::Maj(MajExp)),
+            TokenType::Alt => self.ast.expressions.push(Exp::Alt(AltExp)),
+            TokenType::Sus => self.sus(tokens),
+            TokenType::Minor => self.ast.expressions.push(Exp::Minor(MinorExp)),
+            TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
             TokenType::Maj7 => todo!(),
             TokenType::Slash => (),
             TokenType::LParent => self.lparen(tokens),
             TokenType::RParent => self.rparen(),
             TokenType::Comma => self.comma(),
-            TokenType::Bass => self.ast.expressions.push(Expresssion::Bass(BassExp)),
+            TokenType::Bass => self.ast.expressions.push(Exp::Bass(BassExp)),
             TokenType::Illegal => self.errors.push("Illegal token".to_string()),
             TokenType::Eof => (),
         }
@@ -122,10 +123,10 @@ impl Parser {
     fn dim(&mut self, tokens: &mut Peekable<Iter<Token>>) {
         if self.expect_peek(TokenType::Extension("7".to_owned()), tokens) {
             tokens.next();
-            self.ast.expressions.push(Expresssion::Dim7(Dim7Exp));
+            self.ast.expressions.push(Exp::Dim7(Dim7Exp));
             return;
         }
-        self.ast.expressions.push(Expresssion::Dim(DimExp));
+        self.ast.expressions.push(Exp::Dim(DimExp));
     }
 
     fn rparen(&mut self) {
@@ -191,12 +192,12 @@ impl Parser {
             tokens.next();
             self.ast
                 .expressions
-                .push(Expresssion::Omit(OmitExp::new(Interval::PerfectFifth)));
+                .push(Exp::Omit(OmitExp::new(Interval::PerfectFifth)));
         } else if self.expect_peek(TokenType::Extension("3".to_string()), tokens) {
             tokens.next();
             self.ast
                 .expressions
-                .push(Expresssion::Omit(OmitExp::new(Interval::MajorThird)));
+                .push(Exp::Omit(OmitExp::new(Interval::MajorThird)));
         } else {
             self.errors.push(format!(
                 "Error: Omit has no target at position {}",
@@ -220,7 +221,7 @@ impl Parser {
                 id.push_str(t);
                 let interval = Interval::from_chord_notation(&id);
                 if let Some(i) = interval {
-                    self.ast.expressions.push(Expresssion::Add(AddExp::new(i)));
+                    self.ast.expressions.push(Exp::Add(AddExp::new(i)));
                 } else {
                     self.errors.push("Invalid extension".to_string());
                 }
@@ -250,48 +251,54 @@ impl Parser {
     }
 
     fn add_interval(&mut self, int: Interval) {
-        dbg!(&int);
         match self.context {
             Context::Sus => match int {
                 Interval::MinorSecond
                 | Interval::MajorSecond
                 | Interval::PerfectFourth
                 | Interval::AugmentedFourth => {
-                    self.ast
-                        .expressions
-                        .push(Expresssion::Sus(SusExp::new(int)));
+                    self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
                     self.context = Context::None;
                 }
                 _ => {
                     self.context = Context::None;
                     self.ast
                         .expressions
-                        .push(Expresssion::Sus(SusExp::new(Interval::PerfectFourth)));
+                        .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
                     self.ast
                         .expressions
-                        .push(Expresssion::Extension(ExtensionExp::new(int)));
+                        .push(Exp::Extension(ExtensionExp::new(int)));
                 }
             },
-            Context::Omit(true) => self
-                .ast
-                .expressions
-                .push(Expresssion::Omit(OmitExp::new(int))),
-            Context::Add(true) => self
-                .ast
-                .expressions
-                .push(Expresssion::Add(AddExp::new(int))),
+            Context::Omit(true) => self.ast.expressions.push(Exp::Omit(OmitExp::new(int))),
+            Context::Add(true) => self.ast.expressions.push(Exp::Add(AddExp::new(int))),
             _ => self
                 .ast
                 .expressions
-                .push(Expresssion::Extension(ExtensionExp::new(int))),
+                .push(Exp::Extension(ExtensionExp::new(int))),
         }
     }
 
-    fn sus(&mut self) {
+    fn sus(&mut self, tokens: &mut Peekable<Iter<Token>>) {
         self.context = Context::Sus;
+        let next = tokens.peek();
+        match next {
+            Some(t) => match &t.token_type {
+                TokenType::Extension(_) | TokenType::Sharp | TokenType::Flat => (),
+                _ => self
+                    .ast
+                    .expressions
+                    .push(Exp::Sus(SusExp::new(Interval::PerfectFourth))),
+            },
+            None => todo!(),
+        }
     }
 
     fn extension(&mut self, ext: &str) {
+        if ext == "5" {
+            self.ast.expressions.push(Exp::Power(PowerExp));
+            return;
+        }
         let interval = Interval::from_chord_notation(ext);
         if let Some(int) = interval {
             self.add_interval(int);
@@ -317,8 +324,10 @@ mod test {
     #[test]
     fn should_work() {
         let mut parser = Parser::new();
-        parser.parse("C(omit 3,7)");
-        dbg!(parser.ast);
-        dbg!(parser.errors);
+        parser.parse("C7maj7add9");
+        dbg!(&parser.ast);
+        dbg!(&parser.errors);
+        dbg!(&parser.ast.is_valid());
+        parser.ast.intervals();
     }
 }
