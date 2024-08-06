@@ -51,6 +51,21 @@ pub struct SusExp {
 }
 
 impl SusExp {
+    pub fn execute(&self, i: &mut Vec<Interval>) {
+        let interval = match self.interval {
+            Interval::MinorSecond => Interval::FlatNinth,
+            Interval::MajorSecond => Interval::Ninth,
+            Interval::PerfectFourth => Interval::Eleventh,
+            Interval::AugmentedFourth => Interval::SharpEleventh,
+            _ => panic!("Invalid sus interval"),
+        };
+        if !i.contains(&interval) {
+            i.push(interval);
+        }
+    }
+}
+
+impl SusExp {
     pub fn new(interval: Interval) -> Self {
         Self { interval }
     }
@@ -136,6 +151,13 @@ impl MajExp {
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MinorExp;
+impl MinorExp {
+    pub fn execute(&self, i: &mut Vec<Interval>) {
+        if !i.contains(&Interval::MinorThird) {
+            i.push(Interval::MinorThird);
+        }
+    }
+}
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AugExp;
 #[derive(Debug, PartialEq, Eq, Clone)]

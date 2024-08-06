@@ -22,6 +22,8 @@ impl Ast {
                 Exp::Add(add) => add.execute(&mut self.intervals),
                 Exp::Dim7(dim) => dim.execute(&mut self.intervals),
                 Exp::Maj(maj) => maj.execute(&mut self.intervals, &self.expressions),
+                Exp::Sus(sus) => sus.execute(&mut self.intervals),
+                Exp::Minor(min) => min.execute(&mut self.intervals),
                 _ => (),
             }
         }
@@ -41,10 +43,10 @@ impl Ast {
 
     fn validate_extensions(&self) -> bool {
         let mut ext_count = [0; 24];
-        let filtered = self.expressions.iter().filter(|exp| match exp {
-            Exp::Extension(_) => true,
-            _ => false,
-        });
+        let filtered = self
+            .expressions
+            .iter()
+            .filter(|exp| matches!(exp, Exp::Extension(_)));
         for ext in filtered {
             if let Exp::Extension(ext) = ext {
                 let index = ext.interval.st() as usize;
