@@ -200,14 +200,13 @@ impl Parser {
     }
 
     fn process_bass(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
-        if !self.expect_peek(TokenType::Eof, tokens)
-            && !(self.expect_peek(TokenType::RParent, tokens) && self.parent_count == 1)
+        if !(self.expect_peek(TokenType::Eof, tokens)
+            || self.expect_peek(TokenType::RParent, tokens) && self.parent_count == 1)
         {
             self.errors.push(format!(
                 "Error: Bass should be the only modifier at position {}",
                 token.pos
             ));
-            return;
         }
     }
 
