@@ -21,9 +21,11 @@ impl Ast {
             match exp {
                 Exp::Add(add) => add.execute(&mut self.intervals),
                 Exp::Dim7(dim) => dim.execute(&mut self.intervals),
+                Exp::Dim(dim) => dim.execute(&mut self.intervals),
                 Exp::Maj(maj) => maj.execute(&mut self.intervals, &self.expressions),
                 Exp::Sus(sus) => sus.execute(&mut self.intervals),
                 Exp::Minor(min) => min.execute(&mut self.intervals),
+                Exp::Extension(ext) => ext.execute(&mut self.intervals),
                 _ => (),
             }
         }
@@ -50,6 +52,18 @@ impl Ast {
         for ext in filtered {
             if let Exp::Extension(ext) = ext {
                 let index = ext.interval.st() as usize;
+                match ext.interval {
+                    Interval::MinorSecond
+                    | Interval::MajorSecond
+                    | Interval::MinorThird
+                    | Interval::MajorThird
+                    | Interval::DiminishedSeventh
+                    | Interval::MajorSeventh => {
+                        dbg!("Invalid extension");
+                        return false;
+                    }
+                    _ => (),
+                }
                 if ext_count[index] > 0 {
                     dbg!("Duplicate extensions");
                     return false;

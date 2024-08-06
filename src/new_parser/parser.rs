@@ -324,7 +324,7 @@ mod test {
     #[test]
     fn should_work() {
         let mut parser = Parser::new();
-        parser.parse("C-sus4maj6");
+        parser.parse("Cdim7b5Maj76");
         dbg!(&parser.ast);
         dbg!(&parser.errors);
         dbg!(&parser.ast.is_valid());

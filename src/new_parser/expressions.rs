@@ -9,6 +9,36 @@ impl ExtensionExp {
     pub fn new(interval: Interval) -> Self {
         Self { interval }
     }
+    pub fn execute(&self, i: &mut Vec<Interval>) {
+        match self.interval {
+            Interval::PerfectFourth
+            | Interval::AugmentedFourth
+            | Interval::DiminishedFifth
+            | Interval::AugmentedFifth
+            | Interval::MinorSixth
+            | Interval::MajorSixth
+            | Interval::FlatNinth
+            | Interval::SharpNinth
+            | Interval::SharpEleventh
+            | Interval::FlatThirteenth => {
+                if !i.contains(&self.interval) {
+                    i.push(self.interval);
+                }
+            }
+            Interval::MinorSeventh => {
+                if !i.contains(&self.interval)
+                    && !i.contains(&Interval::MajorSeventh)
+                    && !i.contains(&Interval::DiminishedSeventh)
+                {
+                    i.push(self.interval);
+                }
+            }
+            Interval::Ninth => todo!(),
+            Interval::Eleventh => todo!(),
+            Interval::Thirteenth => todo!(),
+            _ => (),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -93,6 +123,16 @@ pub struct BassExp;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct DimExp;
+impl DimExp {
+    pub fn execute(&self, i: &mut Vec<Interval>) {
+        if !i.contains(&Interval::MinorThird) {
+            i.push(Interval::MinorThird);
+        }
+        if !i.contains(&Interval::DiminishedFifth) {
+            i.push(Interval::DiminishedFifth);
+        }
+    }
+}
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Dim7Exp;
 impl Dim7Exp {
