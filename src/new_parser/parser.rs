@@ -226,6 +226,13 @@ impl Parser {
                     self.errors.push("Invalid extension".to_string());
                 }
             }
+        } else if self.expect_peek(TokenType::Maj, tokens) {
+            tokens.next();
+            self.ast
+                .expressions
+                .push(Exp::Add(AddExp::new(Interval::MajorSeventh)));
+            //skip seventh
+            tokens.next();
         } else {
             self.errors
                 .push(format!("Error: No Add target at pos {}", token.pos));
@@ -324,7 +331,7 @@ mod test {
     #[test]
     fn should_work() {
         let mut parser = Parser::new();
-        parser.parse("C-13");
+        parser.parse("C-13(maj)");
         dbg!(&parser.ast);
         dbg!(&parser.errors);
         dbg!(&parser.ast.is_valid());

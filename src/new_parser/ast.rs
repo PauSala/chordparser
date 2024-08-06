@@ -19,13 +19,13 @@ impl Ast {
     pub fn intervals(&mut self) {
         for exp in &self.expressions {
             match exp {
-                Exp::Add(add) => add.execute(&mut self.intervals),
+                Exp::Minor(min) => min.execute(&mut self.intervals),
                 Exp::Dim7(dim) => dim.execute(&mut self.intervals),
                 Exp::Dim(dim) => dim.execute(&mut self.intervals),
-                Exp::Maj(maj) => maj.execute(&mut self.intervals, &self.expressions),
                 Exp::Sus(sus) => sus.execute(&mut self.intervals),
-                Exp::Minor(min) => min.execute(&mut self.intervals),
+                Exp::Maj(maj) => maj.execute(&mut self.intervals, &self.expressions),
                 Exp::Extension(ext) => ext.execute(&mut self.intervals),
+                Exp::Add(add) => add.execute(&mut self.intervals),
                 _ => (),
             }
         }
