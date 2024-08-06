@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 
-use crate::chord::{
-    intervals::Interval,
-    note::{Note, NoteLiteral},
+use crate::{
+    chord::{
+        intervals::Interval,
+        note::{Note, NoteLiteral},
+    },
+    new_parser::expressions::OmitExp,
 };
 
 use super::expression::Exp;
@@ -30,7 +33,42 @@ impl Ast {
                 _ => (),
             }
         }
+        self.add_third();
+        self.add_five();
+        self.intervals.sort_by_key(|i| i.st());
         dbg!(&self.intervals);
+    }
+
+    fn add_third(&mut self) {
+        if !self.intervals.contains(&Interval::MinorThird)
+            && !self.expressions.iter().any(|exp| {
+                matches!(
+                    exp,
+                    Exp::Omit(OmitExp {
+                        interval: Interval::MajorThird
+                    })
+                )
+            })
+        {
+            self.intervals.push(Interval::MajorThird);
+        }
+    }
+
+    pub fn add_five(&mut self) {
+        if !self.intervals.contains(&Interval::DiminishedFifth)
+            && !self.intervals.contains(&Interval::AugmentedFifth)
+            && !self.intervals.contains(&Interval::FlatThirteenth)
+            && !self.expressions.iter().any(|exp| {
+                matches!(
+                    exp,
+                    Exp::Omit(OmitExp {
+                        interval: Interval::PerfectFifth
+                    })
+                )
+            })
+        {
+            self.intervals.push(Interval::PerfectFifth);
+        }
     }
 
     pub fn is_valid(&mut self) -> bool {
@@ -106,7 +144,7 @@ impl Default for Ast {
             root: Note::new(NoteLiteral::C, None),
             bass: None,
             expressions: Vec::new(),
-            intervals: Vec::new(),
+            intervals: vec![Interval::Unison],
         }
     }
 }
