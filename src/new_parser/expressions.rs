@@ -40,12 +40,16 @@ impl ExtensionExp {
             | Interval::DiminishedFifth
             | Interval::AugmentedFifth
             | Interval::MinorSixth
-            | Interval::MajorSixth
             | Interval::FlatNinth
             | Interval::SharpNinth
             | Interval::SharpEleventh
             | Interval::FlatThirteenth => {
                 if !i.contains(&self.interval) {
+                    i.push(self.interval);
+                }
+            }
+            Interval::MajorSixth => {
+                if !i.contains(&self.interval) && !i.contains(&Interval::Thirteenth) {
                     i.push(self.interval);
                 }
             }
@@ -121,6 +125,9 @@ pub struct SusExp {
 }
 
 impl SusExp {
+    pub fn new(interval: Interval) -> Self {
+        Self { interval }
+    }
     pub fn execute(&self, i: &mut Vec<Interval>) {
         let interval = match self.interval {
             Interval::MinorSecond => Interval::FlatNinth,
@@ -132,12 +139,6 @@ impl SusExp {
         if !i.contains(&interval) {
             i.push(interval);
         }
-    }
-}
-
-impl SusExp {
-    pub fn new(interval: Interval) -> Self {
-        Self { interval }
     }
 }
 
@@ -190,6 +191,19 @@ impl Dim7Exp {
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct HalfDimExp;
+impl HalfDimExp {
+    pub fn execute(&self, i: &mut Vec<Interval>) {
+        if !i.contains(&Interval::MinorThird) {
+            i.push(Interval::MinorThird);
+        }
+        if !i.contains(&Interval::DiminishedFifth) {
+            i.push(Interval::DiminishedFifth);
+        }
+        if !i.contains(&Interval::MinorSeventh) {
+            i.push(Interval::MinorSeventh);
+        }
+    }
+}
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MajExp;
 impl MajExp {

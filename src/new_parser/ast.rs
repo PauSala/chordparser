@@ -22,6 +22,7 @@ impl Ast {
                 Exp::Minor(min) => min.execute(&mut self.intervals),
                 Exp::Dim7(dim) => dim.execute(&mut self.intervals),
                 Exp::Dim(dim) => dim.execute(&mut self.intervals),
+                Exp::HalfDim(half) => half.execute(&mut self.intervals),
                 Exp::Sus(sus) => sus.execute(&mut self.intervals),
                 Exp::Maj(maj) => maj.execute(&mut self.intervals, &self.expressions),
                 Exp::Extension(ext) => ext.execute(&mut self.intervals),
