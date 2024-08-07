@@ -341,8 +341,8 @@ mod test {
     #[test]
     fn should_work() {
         let mut parser = Parser::new();
-        parser.parse("Csusadd3");
-        dbg!(&parser.ast);
+        let chord = parser.parse("C7(add9,11)");
+        dbg!(&chord);
         dbg!(&parser.errors);
         dbg!(&parser.ast.is_valid());
     }

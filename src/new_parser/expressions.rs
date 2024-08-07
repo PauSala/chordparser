@@ -254,6 +254,13 @@ impl MinorExp {
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AugExp;
+impl AugExp {
+    pub fn execute(&self, i: &mut Vec<Interval>) {
+        if !i.contains(&Interval::AugmentedFifth) {
+            i.push(Interval::AugmentedFifth);
+        }
+    }
+}
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AltExp;
 

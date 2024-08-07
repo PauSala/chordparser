@@ -35,6 +35,11 @@ impl Ast {
                 Exp::Maj(maj) => maj.execute(&mut self.intervals, &self.expressions),
                 Exp::Extension(ext) => ext.execute(&mut self.intervals),
                 Exp::Add(add) => add.execute(&mut self.intervals),
+                Exp::Aug(aug) => aug.execute(&mut self.intervals),
+                Exp::SlashBass(_) => todo!(),
+                Exp::Bass(_) => todo!(),
+                Exp::Alt(_) => todo!(),
+                Exp::Power(_) => todo!(),
                 _ => (),
             }
         }
