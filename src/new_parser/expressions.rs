@@ -132,7 +132,7 @@ impl SusExp {
         let interval = match self.interval {
             Interval::MinorSecond => Interval::FlatNinth,
             Interval::MajorSecond => Interval::Ninth,
-            Interval::PerfectFourth => Interval::Eleventh,
+            Interval::PerfectFourth => Interval::PerfectFourth,
             Interval::AugmentedFourth => Interval::SharpEleventh,
             _ => panic!("Invalid sus interval"),
         };

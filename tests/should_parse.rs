@@ -1,5 +1,6 @@
 use chordparser::{
     chord::note::{Modifier, Note, NoteLiteral},
+    new_parser::parser::Parser as NewParser,
     parser::Parser,
 };
 
@@ -131,7 +132,9 @@ use test_case::test_case;
 #[test_case("Cdim7/9", vec!["C", "Eb", "Gb", "B𝄫", "D"])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
+    let mut parser2 = NewParser::new();
     let res = parser.parse(i);
+    let res2 = parser2.parse(i);
     let notes = vec![
         Note::new(NoteLiteral::C, Some(Modifier::Flat)),
         Note::new(NoteLiteral::C, Some(Modifier::Sharp)),
@@ -161,6 +164,7 @@ fn test_notes(i: &str, expected: Vec<&str>) {
             println!("{} {}", &chord.origin, &chord.normalized);
             dbg!(&chord);
             assert_eq!(literals, &expected);
+            assert_eq!(&res2.note_literals, literals);
             for n in notes {
                 let t = chord.transpose_to(&n);
                 assert_eq!(chord.real_intervals, t.real_intervals);

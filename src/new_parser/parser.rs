@@ -4,6 +4,7 @@ use crate::{
     chord::{
         intervals::Interval,
         note::{Modifier, Note, NoteLiteral},
+        Chord,
     },
     lexer::Lexer,
     token::{Token, TokenType},
@@ -45,11 +46,21 @@ impl Parser {
         }
     }
 
-    pub fn parse(&mut self, input: &str) {
+    pub fn parse(&mut self, input: &str) -> Chord {
         let binding = self.lexer.scan_tokens(input);
         let mut tokens = binding.iter().peekable();
         self.read_root(&mut tokens);
         self.read_tokens(&mut tokens);
+
+        let chord = self.ast.to_chord(input);
+        chord
+    }
+
+    pub fn cleanup(&mut self) {
+        self.errors.clear();
+        self.ast = Ast::default();
+        self.op_count = 0;
+        self.context = Context::None;
     }
 
     fn read_root(&mut self, tokens: &mut Peekable<Iter<Token>>) {
@@ -331,10 +342,9 @@ mod test {
     #[test]
     fn should_work() {
         let mut parser = Parser::new();
-        parser.parse("Bb-maj7b13");
+        parser.parse("Csusadd3");
         dbg!(&parser.ast);
         dbg!(&parser.errors);
         dbg!(&parser.ast.is_valid());
-        parser.ast.intervals();
     }
 }
