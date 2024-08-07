@@ -51,7 +51,6 @@ impl Parser {
         let mut tokens = binding.iter().peekable();
         self.read_root(&mut tokens);
         self.read_tokens(&mut tokens);
-
         self.ast.to_chord(input)
     }
 
@@ -341,9 +340,10 @@ mod test {
     #[test]
     fn should_work() {
         let mut parser = Parser::new();
-        let chord = parser.parse("C7(add9,11)");
-        dbg!(&chord);
-        dbg!(&parser.errors);
+        let chord = parser.parse("C7(add3,add11)");
         dbg!(&parser.ast.is_valid());
+        dbg!(&chord);
+        dbg!(&parser.ast);
+        dbg!(&parser.errors);
     }
 }

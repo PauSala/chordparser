@@ -18,6 +18,7 @@ pub struct Ast {
     pub expressions: Vec<Exp>,
     pub intervals: Vec<Interval>,
     pub is_sus: bool,
+    pub errors: Vec<String>,
 }
 
 impl Ast {
@@ -92,7 +93,7 @@ impl Ast {
         true
     }
 
-    fn validate_extensions(&self) -> bool {
+    fn validate_extensions(&mut self) -> bool {
         let mut ext_count = [0; 24];
         let filtered = self
             .expressions
@@ -108,13 +109,14 @@ impl Ast {
                     | Interval::MajorThird
                     | Interval::DiminishedSeventh
                     | Interval::MajorSeventh => {
-                        dbg!("Invalid extension");
+                        self.errors
+                            .push(format!("Invalid extension {}", ext.interval));
                         return false;
                     }
                     _ => (),
                 }
                 if ext_count[index] > 0 {
-                    dbg!("Duplicate extensions");
+                    self.errors.push(format!("Duplicate extensions"));
                     return false;
                 }
                 ext_count[index] += 1;
@@ -123,12 +125,13 @@ impl Ast {
         true
     }
 
-    fn validate_expressions(&self) -> bool {
+    fn validate_expressions(&mut self) -> bool {
         let mut is_valid = true;
         let mut counts: HashMap<u32, usize> = HashMap::new();
         for exp in &self.expressions {
             is_valid = exp.validate();
             if !is_valid {
+                self.errors.push(format!("Invalid expression {:?}", exp));
                 return false;
             }
             let key = match exp {
@@ -140,7 +143,7 @@ impl Ast {
 
         for (key, count) in counts {
             if key < u32::MAX && count > 1 {
-                dbg!("Duplicate modifiers");
+                self.errors.push(format!("Duplicate modifiers"));
                 return false;
             }
         }
@@ -199,6 +202,7 @@ impl Default for Ast {
             expressions: Vec::new(),
             intervals: vec![Interval::Unison],
             is_sus: false,
+            errors: Vec::new(),
         }
     }
 }

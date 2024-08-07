@@ -134,7 +134,7 @@ impl SusExp {
             Interval::MajorSecond => Interval::Ninth,
             Interval::PerfectFourth => Interval::PerfectFourth,
             Interval::AugmentedFourth => Interval::SharpEleventh,
-            _ => panic!("Invalid sus interval"),
+            _ => panic!("Invalid sus interval, this should not happen"),
         };
         if !i.contains(&interval) {
             i.push(interval);
