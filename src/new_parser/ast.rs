@@ -43,52 +43,6 @@ impl Ast {
         self.intervals.sort_by_key(|i| i.st());
     }
 
-    /// Get the notes of the chord
-    pub(crate) fn get_notes(&mut self) -> Vec<Note> {
-        let mut notes = Vec::new();
-        for n in &self.intervals {
-            let note = self
-                .root
-                .get_note(n.st(), n.to_semantic_interval().numeric());
-            notes.push(note);
-        }
-        notes
-    }
-
-    pub fn get_descriptor(&mut self, name: &str) -> String {
-        let modifier_str = match &self.root.modifier {
-            Some(m) => m.to_string(),
-            None => "".to_string(),
-        };
-        name.replace(
-            &format!("{}{}", self.root.literal.to_string(), modifier_str),
-            "",
-        )
-    }
-
-    pub fn to_chord(&mut self, name: &str) -> Chord {
-        self.intervals();
-        let notes = self.get_notes();
-        let mut semitones = Vec::new();
-        let mut semantic_intervals = Vec::new();
-        let note_literals = notes.iter().map(|a| a.to_string()).collect::<Vec<String>>();
-        for e in &self.intervals {
-            semitones.push(e.st());
-            semantic_intervals.push(e.to_semantic_interval().numeric());
-        }
-        Chord::builder(name, self.root.clone())
-            .descriptor(&self.get_descriptor(name))
-            .bass(self.bass.clone())
-            .notes(notes)
-            .note_literals(note_literals)
-            .semitones(semitones)
-            .semantic_intervals(semantic_intervals)
-            .real_intervals(self.intervals.clone())
-            .is_sus(self.is_sus)
-            .adds(vec![])
-            .build()
-    }
-
     fn add_third(&mut self) {
         if !self.intervals.contains(&Interval::MinorThird)
             && !self.is_sus
@@ -186,6 +140,49 @@ impl Ast {
             }
         }
         is_valid
+    }
+
+    /// Get the notes of the chord
+    pub(crate) fn get_notes(&mut self) -> Vec<Note> {
+        let mut notes = Vec::new();
+        for n in &self.intervals {
+            let note = self
+                .root
+                .get_note(n.st(), n.to_semantic_interval().numeric());
+            notes.push(note);
+        }
+        notes
+    }
+
+    pub fn get_descriptor(&mut self, name: &str) -> String {
+        let modifier_str = match &self.root.modifier {
+            Some(m) => m.to_string(),
+            None => "".to_string(),
+        };
+        name.replace(&format!("{}{}", self.root.literal, modifier_str), "")
+    }
+
+    pub fn to_chord(&mut self, name: &str) -> Chord {
+        self.intervals();
+        let notes = self.get_notes();
+        let mut semitones = Vec::new();
+        let mut semantic_intervals = Vec::new();
+        let note_literals = notes.iter().map(|a| a.to_string()).collect::<Vec<String>>();
+        for e in &self.intervals {
+            semitones.push(e.st());
+            semantic_intervals.push(e.to_semantic_interval().numeric());
+        }
+        Chord::builder(name, self.root.clone())
+            .descriptor(&self.get_descriptor(name))
+            .bass(self.bass.clone())
+            .notes(notes)
+            .note_literals(note_literals)
+            .semitones(semitones)
+            .semantic_intervals(semantic_intervals)
+            .real_intervals(self.intervals.clone())
+            .is_sus(self.is_sus)
+            .adds(vec![])
+            .build()
     }
 }
 

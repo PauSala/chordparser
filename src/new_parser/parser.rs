@@ -52,8 +52,7 @@ impl Parser {
         self.read_root(&mut tokens);
         self.read_tokens(&mut tokens);
 
-        let chord = self.ast.to_chord(input);
-        chord
+        self.ast.to_chord(input)
     }
 
     pub fn cleanup(&mut self) {
