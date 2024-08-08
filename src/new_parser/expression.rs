@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use super::expressions::{
     AddExp, AltExp, AugExp, BassExp, Dim7Exp, DimExp, ExtensionExp, HalfDimExp, MajExp, MinorExp,
     OmitExp, PowerExp, SlashBassExp, SusExp,
@@ -30,6 +32,25 @@ impl Exp {
         }
     }
 
+    pub fn stringify(&self) -> String {
+        match self {
+            Exp::Extension(_) => "Extension".to_string(),
+            Exp::Add(_) => "Add".to_string(),
+            Exp::Sus(_) => "Sus".to_string(),
+            Exp::Omit(_) => "Omit".to_string(),
+            Exp::SlashBass(_) => "SlashBass".to_string(),
+            Exp::Bass(_) => "Bass".to_string(),
+            Exp::Alt(_) => "Alt".to_string(),
+            Exp::Minor(_) => "Minor".to_string(),
+            Exp::Aug(_) => "Aug".to_string(),
+            Exp::HalfDim(_) => "HalfDim".to_string(),
+            Exp::Dim(_) => "Dim".to_string(),
+            Exp::Dim7(_) => "Dim7".to_string(),
+            Exp::Maj(_) => "Maj".to_string(),
+            Exp::Power(_) => "Power".to_string(),
+        }
+    }
+
     pub fn priority(&self) -> u32 {
         match self {
             Exp::Power(_) => 0,
@@ -47,5 +68,29 @@ impl Exp {
             Exp::Omit(_) => 12,
             Exp::SlashBass(_) => 13,
         }
+    }
+    pub fn from_priority(p: u32) -> String {
+        match p {
+            0 => "5".to_string(),
+            1 => "Alt".to_string(),
+            2 => "Bass".to_string(),
+            3 => "Minor".to_string(),
+            4 => "Dim7".to_string(),
+            5 => "Dim".to_string(),
+            6 => "halfDim".to_string(),
+            7 => "Sus".to_string(),
+            8 => "Maj".to_string(),
+            9 => "Extension".to_string(),
+            10 => "Add".to_string(),
+            11 => "Aug".to_string(),
+            12 => "Omit".to_string(),
+            13 => "SlashBass".to_string(),
+            _ => panic!("Invalid priority"),
+        }
+    }
+}
+impl Display for Exp {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.stringify().fmt(f)
     }
 }

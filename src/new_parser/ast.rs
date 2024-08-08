@@ -37,9 +37,9 @@ impl Ast {
                 Exp::Extension(ext) => ext.execute(&mut self.intervals),
                 Exp::Add(add) => add.execute(&mut self.intervals),
                 Exp::Aug(aug) => aug.execute(&mut self.intervals),
-                Exp::SlashBass(_) => todo!(),
+                Exp::SlashBass(bass) => self.bass = Some(bass.note.clone()),
                 Exp::Bass(_) => todo!(),
-                Exp::Alt(_) => todo!(),
+                Exp::Alt(alt) => alt.execute(&mut self.intervals),
                 Exp::Power(_) => todo!(),
                 _ => (),
             }
@@ -131,11 +131,11 @@ impl Ast {
         for exp in &self.expressions {
             is_valid = exp.validate();
             if !is_valid {
-                self.errors.push(format!("Invalid expression {:?}", exp));
+                self.errors.push(format!("Invalid expression {}", exp));
                 return false;
             }
             let key = match exp {
-                Exp::Extension(_) | Exp::Add(_) | Exp::Sus(_) | Exp::Omit(_) => u32::MAX,
+                Exp::Extension(_) | Exp::Add(_) | Exp::Omit(_) => u32::MAX,
                 _ => exp.priority(),
             };
             *counts.entry(key).or_insert(0) += 1;
@@ -143,7 +143,8 @@ impl Ast {
 
         for (key, count) in counts {
             if key < u32::MAX && count > 1 {
-                self.errors.push(format!("Duplicate modifiers"));
+                self.errors
+                    .push(format!("Duplicate '{}' modifier", Exp::from_priority(key)));
                 return false;
             }
         }

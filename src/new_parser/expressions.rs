@@ -159,6 +159,11 @@ impl OmitExp {
 pub struct SlashBassExp {
     pub note: Note,
 }
+impl SlashBassExp {
+    pub fn new(note: Note) -> Self {
+        Self { note }
+    }
+}
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct BassExp;
 
@@ -263,6 +268,15 @@ impl AugExp {
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AltExp;
+impl AltExp {
+    pub fn execute(&self, i: &mut Vec<Interval>) {
+        i.push(Interval::MinorSeventh);
+        i.push(Interval::FlatNinth);
+        i.push(Interval::SharpNinth);
+        i.push(Interval::SharpEleventh);
+        i.push(Interval::FlatThirteenth);
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PowerExp;

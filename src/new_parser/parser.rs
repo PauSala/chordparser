@@ -15,7 +15,7 @@ use super::{
     expression::Exp,
     expressions::{
         AddExp, AltExp, AugExp, BassExp, Dim7Exp, DimExp, ExtensionExp, HalfDimExp, MajExp,
-        MinorExp, OmitExp, PowerExp, SusExp,
+        MinorExp, OmitExp, PowerExp, SlashBassExp, SusExp,
     },
 };
 
@@ -62,20 +62,14 @@ impl Parser {
     }
 
     fn read_root(&mut self, tokens: &mut Peekable<Iter<Token>>) {
-        let note = tokens.next();
+        let note = self.expect_note(tokens);
         match note {
             None => {
                 self.errors.push("Expected note literal".to_string());
             }
-            Some(n) => match &n.token_type {
-                TokenType::Note(n) => {
-                    let modifier = self.match_modifier(tokens);
-                    self.ast.root = Note::new(NoteLiteral::from_string(n), modifier);
-                }
-                _ => {
-                    self.errors.push("Expected note literal".to_string());
-                }
-            },
+            Some(n) => {
+                self.ast.root = n;
+            }
         }
     }
 
@@ -119,13 +113,65 @@ impl Parser {
             TokenType::Minor => self.ast.expressions.push(Exp::Minor(MinorExp)),
             TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
             TokenType::Maj7 => todo!(),
-            TokenType::Slash => (),
+            TokenType::Slash => self.slash(tokens, token),
             TokenType::LParent => self.lparen(tokens),
             TokenType::RParent => self.rparen(),
             TokenType::Comma => self.comma(),
             TokenType::Bass => self.ast.expressions.push(Exp::Bass(BassExp)),
             TokenType::Illegal => self.errors.push("Illegal token".to_string()),
             TokenType::Eof => (),
+        }
+    }
+
+    fn slash(&mut self, tokens: &mut Peekable<Iter<Token>>, token: &Token) {
+        if self.expect_extension(tokens) {
+            let alt = tokens.next().unwrap();
+            if let TokenType::Extension(a) = &alt.token_type {
+                match a.as_str() {
+                    "9" => self
+                        .ast
+                        .expressions
+                        .push(Exp::Add(AddExp::new(Interval::Ninth))),
+                    _ => {
+                        self.errors
+                                 .push(format!("Error: Cannot use slash notation for tensions other than 9 at position {}", token.pos));
+                    }
+                }
+            }
+        } else {
+            match self.expect_note(tokens) {
+                None => {
+                    self.errors.push(format!(
+                        "Error: Expected note literal at position {}",
+                        token.pos
+                    ));
+                }
+                Some(b) => {
+                    self.ast
+                        .expressions
+                        .push(Exp::SlashBass(SlashBassExp::new(b)));
+                }
+            }
+        }
+    }
+
+    fn expect_note(&mut self, tokens: &mut Peekable<Iter<Token>>) -> Option<Note> {
+        let note = tokens.next();
+        match note {
+            None => {
+                self.errors.push("Expected note literal".to_string());
+                None
+            }
+            Some(n) => match &n.token_type {
+                TokenType::Note(n) => {
+                    let modifier = self.match_modifier(tokens);
+                    Some(Note::new(NoteLiteral::from_string(n), modifier))
+                }
+                _ => {
+                    self.errors.push("Expected note literal".to_string());
+                    None
+                }
+            },
         }
     }
 
@@ -340,10 +386,10 @@ mod test {
     #[test]
     fn should_work() {
         let mut parser = Parser::new();
-        let chord = parser.parse("C7(add3,add11)");
+        let res = parser.parse("CAlt");
+        dbg!(res);
         dbg!(&parser.ast.is_valid());
-        dbg!(&chord);
-        dbg!(&parser.ast);
+        dbg!(&parser.ast.errors);
         dbg!(&parser.errors);
     }
 }
