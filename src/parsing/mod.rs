@@ -90,10 +90,10 @@ impl Parser {
         let mut tokens = binding.iter().peekable();
         self.read_root(&mut tokens);
         self.read_tokens(&mut tokens);
-        if self.errors.len() > 0 {
+        if !self.errors.is_empty() {
             return Err(ParserErrors::new(self.errors.clone()));
         }
-        let res = self.ast.to_chord(input);
+        let res = self.ast.build_chord(input);
         self.cleanup();
         res
     }

@@ -1,7 +1,7 @@
 //! # Chords, notes and intervals
 use std::vec;
 
-use intervals::Interval;
+use intervals::{Interval, SemInterval};
 use normalize::normalize;
 use quality::Quality;
 use serde::{Deserialize, Serialize};
@@ -128,6 +128,10 @@ impl Chord {
 
     pub(crate) fn has(&self, int: Interval) -> bool {
         self.real_intervals.iter().any(|n| *n == int)
+    }
+
+    pub(crate) fn has_sem(&self, int: SemInterval) -> bool {
+        self.semantic_intervals.iter().any(|n| *n == int.numeric())
     }
 }
 

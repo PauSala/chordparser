@@ -36,19 +36,19 @@
 //! # [Examples](#examples)
 //! ```rust
 //! use chordparser::parsing::Parser;
-//! pub fn main() {
-//!     let mut parser = Parser::new();
-//!     let result = parser.parse("AbMaj7#11");
-//!     match result {
-//!         Ok(chord) => {
-//!             dbg!(&chord);
-//!             dbg!(&chord.to_json());
-//!         }
-//!         Err(e) => {
-//!             dbg!(e);
-//!         }
+//!
+//! let mut parser = Parser::new();
+//! let result = parser.parse("AbMaj7#11");
+//! match result {
+//!     Ok(chord) => {
+//!         dbg!(&chord);
+//!         dbg!(&chord.to_json());
+//!     }
+//!     Err(e) => {
+//!         dbg!(e);
 //!     }
 //! }
+//!
 //! ```
 
 pub mod chord;

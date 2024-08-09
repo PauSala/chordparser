@@ -26,13 +26,7 @@ pub fn normalize(ch: &Chord) -> String {
         Quality::Major7 => {
             res.push_str("Maj");
             let mut mmod = get_main_mod(ch).unwrap();
-            if mmod == Interval::Eleventh
-                && ch.is_sus
-                && !ch
-                    .semantic_intervals
-                    .iter()
-                    .any(|i| *i == SemInterval::Ninth.numeric())
-            {
+            if mmod == Interval::Eleventh && ch.is_sus && !ch.has_sem(SemInterval::Ninth) {
                 mmod = Interval::Ninth;
             } else if mmod == Interval::Eleventh && ch.has(Interval::Ninth) {
                 mmod = Interval::Ninth
@@ -78,13 +72,7 @@ pub fn normalize(ch: &Chord) -> String {
         Quality::Dominant => {
             res.push_str("");
             let mut mmod = get_main_mod(ch).unwrap();
-            if mmod == Interval::Eleventh
-                && ch.is_sus
-                && !ch
-                    .semantic_intervals
-                    .iter()
-                    .any(|i| *i == SemInterval::Ninth.numeric())
-            {
+            if mmod == Interval::Eleventh && ch.is_sus && !ch.has_sem(SemInterval::Ninth) {
                 mmod = Interval::Ninth;
             } else if mmod == Interval::Eleventh && ch.has(Interval::Ninth) {
                 mmod = Interval::Ninth
@@ -163,12 +151,7 @@ fn get_omits(ch: &Chord) -> Vec<String> {
     {
         res.push("3".to_string());
     }
-    if !ch
-        .semantic_intervals
-        .iter()
-        .any(|i| *i == SemInterval::Fifth.numeric())
-        && !ch.has(Interval::FlatThirteenth)
-    {
+    if !ch.has_sem(SemInterval::Fifth) && !ch.has(Interval::FlatThirteenth) {
         res.push("5".to_string());
     }
     res
@@ -186,20 +169,10 @@ fn get_main_mod(ch: &Chord) -> Option<Interval> {
             None
         }
         Quality::Major7 | Quality::Dominant => {
-            if ch.has(Interval::Thirteenth)
-                && ch
-                    .semantic_intervals
-                    .iter()
-                    .any(|i| i == &SemInterval::Ninth.numeric())
-            {
+            if ch.has(Interval::Thirteenth) && ch.has_sem(SemInterval::Ninth) {
                 return Some(Interval::Thirteenth);
             }
-            if ch.has(Interval::Eleventh)
-                && ch
-                    .semantic_intervals
-                    .iter()
-                    .any(|i| i == &SemInterval::Ninth.numeric())
-            {
+            if ch.has(Interval::Eleventh) && ch.has_sem(SemInterval::Ninth) {
                 return Some(Interval::Eleventh);
             }
             if ch.has(Interval::Ninth) {
@@ -212,23 +185,12 @@ fn get_main_mod(ch: &Chord) -> Option<Interval> {
         }
         Quality::Minor7 | Quality::MinorMaj7 | Quality::SemiDiminished => {
             if ch.has(Interval::Thirteenth)
-                && ch
-                    .semantic_intervals
-                    .iter()
-                    .any(|i| i == &SemInterval::Ninth.numeric())
-                && ch
-                    .semantic_intervals
-                    .iter()
-                    .any(|i| i == &SemInterval::Eleventh.numeric())
+                && ch.has_sem(SemInterval::Ninth)
+                && ch.has_sem(SemInterval::Eleventh)
             {
                 return Some(Interval::Thirteenth);
             }
-            if ch.has(Interval::Eleventh)
-                && ch
-                    .semantic_intervals
-                    .iter()
-                    .any(|i| i == &SemInterval::Ninth.numeric())
-            {
+            if ch.has(Interval::Eleventh) && ch.has_sem(SemInterval::Ninth) {
                 return Some(Interval::Eleventh);
             }
             if ch.has(Interval::Ninth) {
@@ -244,23 +206,12 @@ fn get_main_mod(ch: &Chord) -> Option<Interval> {
         }
         Quality::Diminished => {
             if ch.has(Interval::Thirteenth)
-                && ch
-                    .semantic_intervals
-                    .iter()
-                    .any(|i| i == &SemInterval::Ninth.numeric())
-                && ch
-                    .semantic_intervals
-                    .iter()
-                    .any(|i| i == &SemInterval::Eleventh.numeric())
+                && ch.has_sem(SemInterval::Ninth)
+                && ch.has_sem(SemInterval::Eleventh)
             {
                 return Some(Interval::Thirteenth);
             }
-            if ch.has(Interval::Eleventh)
-                && ch
-                    .semantic_intervals
-                    .iter()
-                    .any(|i| i == &SemInterval::Ninth.numeric())
-            {
+            if ch.has(Interval::Eleventh) && ch.has_sem(SemInterval::Ninth) {
                 return Some(Interval::Eleventh);
             }
             if ch.has(Interval::Ninth) {
@@ -276,12 +227,7 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
     match ch.quality {
         Quality::Power => adds,
         Quality::Major7 | Quality::Dominant => {
-            if ch.has(Interval::Thirteenth)
-                && !ch
-                    .semantic_intervals
-                    .iter()
-                    .any(|i| *i == SemInterval::Ninth.numeric())
-            {
+            if ch.has(Interval::Thirteenth) && !ch.has_sem(SemInterval::Ninth) {
                 adds.push(Interval::Thirteenth);
             }
             if ch.has(Interval::Eleventh)

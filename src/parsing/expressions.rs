@@ -72,11 +72,7 @@ impl ExtensionExp {
                 if !i.contains(&self.interval) && !i.contains(&Interval::SharpEleventh) {
                     i.push(self.interval);
                 }
-                *is_sus = if !i.contains(&Interval::MinorThird) {
-                    true
-                } else {
-                    false
-                };
+                *is_sus = !i.contains(&Interval::MinorThird);
             }
             Interval::Thirteenth => {
                 self.include_seventh(i);

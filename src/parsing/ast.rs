@@ -147,7 +147,7 @@ impl Ast {
                     _ => (),
                 }
                 if ext_count[index] > 0 {
-                    self.errors.push(format!("Duplicate extensions"));
+                    self.errors.push("Duplicate extensions".to_string());
                     return false;
                 }
                 ext_count[index] += 1;
@@ -202,7 +202,7 @@ impl Ast {
         name.replace(&format!("{}{}", self.root.literal, modifier_str), "")
     }
 
-    pub fn to_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
+    pub fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
         self.expressions.sort();
         self.set_intervals();
         let notes = self.get_notes();
