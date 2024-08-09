@@ -6,7 +6,8 @@ use crate::{
         note::{Note, NoteLiteral},
         Chord,
     },
-    new_parser::expressions::{OmitExp, PowerExp},
+    new_parser::expressions::{BassExp, OmitExp, PowerExp},
+    parser_error::ParserErrors,
 };
 
 use super::expression::Exp;
@@ -22,10 +23,10 @@ pub struct Ast {
 }
 
 impl Ast {
-    pub fn intervals(&mut self) {
+    pub fn set_intervals(&mut self) {
         for exp in &self.expressions {
             match exp {
-                Exp::Minor(min) => min.execute(&mut self.intervals),
+                Exp::Minor(min) => min.execute(&mut self.intervals, &self.expressions),
                 Exp::Dim7(dim) => dim.execute(&mut self.intervals),
                 Exp::Dim(dim) => dim.execute(&mut self.intervals),
                 Exp::HalfDim(half) => half.execute(&mut self.intervals),
@@ -38,9 +39,9 @@ impl Ast {
                 Exp::Add(add) => add.execute(&mut self.intervals),
                 Exp::Aug(aug) => aug.execute(&mut self.intervals),
                 Exp::SlashBass(bass) => self.bass = Some(bass.note.clone()),
-                Exp::Bass(_) => todo!(),
                 Exp::Alt(alt) => alt.execute(&mut self.intervals),
-                Exp::Power(_) => todo!(),
+                Exp::Power(pw) => pw.execute(&mut self.intervals),
+                Exp::Bass(_) => (),
                 _ => (),
             }
         }
@@ -50,7 +51,8 @@ impl Ast {
     }
 
     fn add_third(&mut self) {
-        if !self.intervals.contains(&Interval::MinorThird)
+        if !self.intervals.contains(&Interval::MajorThird)
+            && !self.intervals.contains(&Interval::MinorThird)
             && !self.is_sus
             && !self.expressions.iter().any(|exp| {
                 matches!(
@@ -58,6 +60,7 @@ impl Ast {
                     Exp::Omit(OmitExp {
                         interval: Interval::MajorThird
                     }) | Exp::Power(PowerExp)
+                        | Exp::Bass(BassExp)
                 )
             })
         {
@@ -67,6 +70,7 @@ impl Ast {
 
     pub fn add_five(&mut self) {
         if !self.intervals.contains(&Interval::DiminishedFifth)
+            && !self.intervals.contains(&Interval::PerfectFifth)
             && !self.intervals.contains(&Interval::AugmentedFifth)
             && !self.intervals.contains(&Interval::FlatThirteenth)
             && !self.expressions.iter().any(|exp| {
@@ -74,7 +78,7 @@ impl Ast {
                     exp,
                     Exp::Omit(OmitExp {
                         interval: Interval::PerfectFifth
-                    })
+                    }) | Exp::Bass(BassExp)
                 )
             })
         {
@@ -83,7 +87,6 @@ impl Ast {
     }
 
     pub fn is_valid(&mut self) -> bool {
-        self.expressions.sort_by_key(|exp| exp.priority());
         if !self.validate_expressions() {
             return false;
         }
@@ -91,6 +94,30 @@ impl Ast {
             return false;
         }
         true
+    }
+
+    fn has_inconsistent_extension(&self, int: &Interval, matches: Vec<&Interval>) -> bool {
+        for i in matches {
+            if self.intervals.contains(i) && self.intervals.contains(int) {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn has_inconsistent_extensions(&mut self) -> bool {
+        if self.has_inconsistent_extension(
+            &Interval::Ninth,
+            vec![&Interval::FlatNinth, &Interval::SharpNinth],
+        ) || self.has_inconsistent_extension(&Interval::Eleventh, vec![&Interval::SharpEleventh])
+            || self
+                .has_inconsistent_extension(&Interval::Thirteenth, vec![&Interval::FlatThirteenth])
+            || self.has_inconsistent_extension(&Interval::MajorSixth, vec![&Interval::MinorSixth])
+        {
+            self.errors.push("Inconsistent extensions".to_string());
+            return false;
+        }
+        false
     }
 
     fn validate_extensions(&mut self) -> bool {
@@ -122,7 +149,7 @@ impl Ast {
                 ext_count[index] += 1;
             }
         }
-        true
+        !self.has_inconsistent_extensions()
     }
 
     fn validate_expressions(&mut self) -> bool {
@@ -171,8 +198,9 @@ impl Ast {
         name.replace(&format!("{}{}", self.root.literal, modifier_str), "")
     }
 
-    pub fn to_chord(&mut self, name: &str) -> Chord {
-        self.intervals();
+    pub fn to_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
+        self.expressions.sort();
+        self.set_intervals();
         let notes = self.get_notes();
         let mut semitones = Vec::new();
         let mut semantic_intervals = Vec::new();
@@ -181,7 +209,12 @@ impl Ast {
             semitones.push(e.st());
             semantic_intervals.push(e.to_semantic_interval().numeric());
         }
-        Chord::builder(name, self.root.clone())
+
+        if !self.is_valid() {
+            dbg!(&self);
+            return Err(ParserErrors::new(self.errors.clone()));
+        }
+        Ok(Chord::builder(name, self.root.clone())
             .descriptor(&self.get_descriptor(name))
             .bass(self.bass.clone())
             .notes(notes)
@@ -191,7 +224,7 @@ impl Ast {
             .real_intervals(self.intervals.clone())
             .is_sus(self.is_sus)
             .adds(vec![])
-            .build()
+            .build())
     }
 }
 

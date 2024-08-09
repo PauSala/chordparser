@@ -7,6 +7,7 @@ use crate::{
         Chord,
     },
     lexer::Lexer,
+    parser_error::ParserErrors,
     token::{Token, TokenType},
 };
 
@@ -46,12 +47,17 @@ impl Parser {
         }
     }
 
-    pub fn parse(&mut self, input: &str) -> Chord {
+    pub fn parse(&mut self, input: &str) -> Result<Chord, ParserErrors> {
         let binding = self.lexer.scan_tokens(input);
         let mut tokens = binding.iter().peekable();
         self.read_root(&mut tokens);
         self.read_tokens(&mut tokens);
-        self.ast.to_chord(input)
+        if self.errors.len() > 0 {
+            return Err(ParserErrors::new(self.errors.clone()));
+        }
+        let res = self.ast.to_chord(input);
+        self.cleanup();
+        res
     }
 
     pub fn cleanup(&mut self) {
@@ -112,7 +118,12 @@ impl Parser {
             TokenType::Sus => self.sus(tokens),
             TokenType::Minor => self.ast.expressions.push(Exp::Minor(MinorExp)),
             TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
-            TokenType::Maj7 => todo!(),
+            TokenType::Maj7 => {
+                self.ast.expressions.push(Exp::Maj(MajExp));
+                self.ast
+                    .expressions
+                    .push(Exp::Extension(ExtensionExp::new(Interval::MinorSeventh)));
+            }
             TokenType::Slash => self.slash(tokens, token),
             TokenType::LParent => self.lparen(tokens),
             TokenType::RParent => self.rparen(),
@@ -133,18 +144,18 @@ impl Parser {
                         .expressions
                         .push(Exp::Add(AddExp::new(Interval::Ninth))),
                     _ => {
-                        self.errors
-                                 .push(format!("Error: Cannot use slash notation for tensions other than 9 at position {}", token.pos));
+                        self.errors.push(format!(
+                            "Cannot use slash notation for tensions other than 9 at position {}",
+                            token.pos
+                        ));
                     }
                 }
             }
         } else {
             match self.expect_note(tokens) {
                 None => {
-                    self.errors.push(format!(
-                        "Error: Expected note literal at position {}",
-                        token.pos
-                    ));
+                    self.errors
+                        .push(format!("Expected note literal at position {}", token.pos));
                 }
                 Some(b) => {
                     self.ast
@@ -187,7 +198,7 @@ impl Parser {
     fn rparen(&mut self) {
         if self.op_count != 1 {
             self.errors
-                .push("Error: Unexpected closing parenthesis".to_string());
+                .push("Unexpected closing parenthesis".to_string());
         }
         self.context = Context::None;
         self.op_count -= 1;
@@ -204,11 +215,10 @@ impl Parser {
                 }
                 TokenType::LParent => {
                     self.errors
-                        .push("Error: Nested parenthesis are not allowed ".to_string());
+                        .push("Nested parenthesis are not allowed ".to_string());
                 }
                 TokenType::Eof => {
-                    self.errors
-                        .push("Error: Missing closing parenthesis".to_string());
+                    self.errors.push("Missing closing parenthesis".to_string());
                     break;
                 }
                 _ => (),
@@ -254,10 +264,8 @@ impl Parser {
                 .expressions
                 .push(Exp::Omit(OmitExp::new(Interval::MajorThird)));
         } else {
-            self.errors.push(format!(
-                "Error: Omit has no target at position {}",
-                token.pos
-            ));
+            self.errors
+                .push(format!("Omit has no target at position {}", token.pos));
         }
     }
 
@@ -286,11 +294,15 @@ impl Parser {
             self.ast
                 .expressions
                 .push(Exp::Add(AddExp::new(Interval::MajorSeventh)));
+            if !self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
+                self.errors.push("Wrong add target".to_string());
+                return;
+            }
             //skip seventh
             tokens.next();
         } else {
             self.errors
-                .push(format!("Error: No Add target at pos {}", token.pos));
+                .push(format!("No Add target at pos {}", token.pos));
         }
     }
 
@@ -377,19 +389,5 @@ impl Parser {
 impl Default for Parser {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    #[test]
-    fn should_work() {
-        let mut parser = Parser::new();
-        let res = parser.parse("CAlt");
-        dbg!(res);
-        dbg!(&parser.ast.is_valid());
-        dbg!(&parser.ast.errors);
-        dbg!(&parser.errors);
     }
 }

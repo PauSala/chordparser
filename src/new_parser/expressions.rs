@@ -10,7 +10,8 @@ impl ExtensionExp {
         Self { interval }
     }
     fn include_seventh(&self, i: &mut Vec<Interval>) {
-        if !i.contains(&Interval::MinorSeventh)
+        if !i.contains(&Interval::MajorSixth)
+            && !i.contains(&Interval::MinorSeventh)
             && !i.contains(&Interval::MajorSeventh)
             && !i.contains(&Interval::DiminishedSeventh)
         {
@@ -98,6 +99,7 @@ impl AddExp {
         matches!(
             self.interval,
             Interval::MajorSecond
+                | Interval::MajorThird
                 | Interval::PerfectFourth
                 | Interval::MinorSixth
                 | Interval::MajorSixth
@@ -230,29 +232,20 @@ impl MajExp {
         {
             i.push(Interval::MajorSeventh);
         }
-
-        if !exp.iter().any(|e| {
-            matches!(
-                e,
-                Exp::Sus(_)
-                    | Exp::Bass(_)
-                    | Exp::Minor(_)
-                    | Exp::HalfDim(_)
-                    | Exp::Dim(_)
-                    | Exp::Dim7(_)
-                    | Exp::Power(_)
-            )
-        }) && !i.contains(&Interval::MajorThird)
-        {
-            i.push(Interval::MajorThird);
-        }
     }
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MinorExp;
 impl MinorExp {
-    pub fn execute(&self, i: &mut Vec<Interval>) {
-        if !i.contains(&Interval::MinorThird) {
+    pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
+        if !i.contains(&Interval::MinorThird)
+            && !exp.iter().any(|e| {
+                e == &Exp::Omit(OmitExp {
+                    // For some reason people wants to write a minor chord without the minor third which has no sense
+                    interval: Interval::MajorThird,
+                })
+            })
+        {
             i.push(Interval::MinorThird);
         }
     }
@@ -280,3 +273,8 @@ impl AltExp {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PowerExp;
+impl PowerExp {
+    pub fn execute(&self, i: &mut Vec<Interval>) {
+        i.push(Interval::PerfectFifth);
+    }
+}

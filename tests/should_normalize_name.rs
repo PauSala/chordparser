@@ -49,7 +49,7 @@ use test_case::test_case;
 #[test_case("C/A", "C/A")]
 #[test_case("Cm6/A", "Cmin6/A")]
 #[test_case("C(bass)", "CBass")]
-#[test_case("C9", "CBass")]
+#[test_case("C9", "C9")]
 //#[test_case("C7(add9,11)", "C7(add9,11)")]
 fn test_normalize(input: &str, expected: &str) {
     let mut parser = Parser::new();

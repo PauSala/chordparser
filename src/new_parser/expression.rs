@@ -5,7 +5,7 @@ use super::expressions::{
     OmitExp, PowerExp, SlashBassExp, SusExp,
 };
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Exp {
     Extension(ExtensionExp),
     Add(AddExp),
@@ -92,5 +92,27 @@ impl Exp {
 impl Display for Exp {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.stringify().fmt(f)
+    }
+}
+
+impl Eq for Exp {}
+
+impl PartialOrd for Exp {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Exp {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match self.priority().cmp(&other.priority()) {
+            std::cmp::Ordering::Equal => match (self, other) {
+                (Exp::Extension(expa), Exp::Extension(expb)) => {
+                    expa.interval.st().cmp(&expb.interval.st())
+                }
+                _ => std::cmp::Ordering::Equal,
+            },
+            other => other,
+        }
     }
 }
