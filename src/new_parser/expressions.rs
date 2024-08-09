@@ -34,7 +34,7 @@ impl ExtensionExp {
             i.push(Interval::Eleventh);
         }
     }
-    pub fn execute(&self, i: &mut Vec<Interval>) {
+    pub fn execute(&self, i: &mut Vec<Interval>, is_sus: &mut bool) {
         match self.interval {
             Interval::PerfectFourth
             | Interval::AugmentedFourth
@@ -72,6 +72,11 @@ impl ExtensionExp {
                 if !i.contains(&self.interval) && !i.contains(&Interval::SharpEleventh) {
                     i.push(self.interval);
                 }
+                *is_sus = if !i.contains(&Interval::MinorThird) {
+                    true
+                } else {
+                    false
+                };
             }
             Interval::Thirteenth => {
                 self.include_seventh(i);

@@ -35,7 +35,7 @@ impl Ast {
                     self.is_sus = true;
                 }
                 Exp::Maj(maj) => maj.execute(&mut self.intervals, &self.expressions),
-                Exp::Extension(ext) => ext.execute(&mut self.intervals),
+                Exp::Extension(ext) => ext.execute(&mut self.intervals, &mut self.is_sus),
                 Exp::Add(add) => add.execute(&mut self.intervals),
                 Exp::Aug(aug) => aug.execute(&mut self.intervals),
                 Exp::SlashBass(bass) => self.bass = Some(bass.note.clone()),
