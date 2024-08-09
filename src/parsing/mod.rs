@@ -69,7 +69,8 @@ impl Parser {
     /// * A Result containing a [Chord] if the parsing was successful, otherwise a [ParserErrors] struct.
     ///   
     /// # Rules
-    /// There is a set of semantic and syntactic rules to ensure chord's consistency, for now the parser will reject a chord if:  
+    /// There is a set of semantic and syntactic rules to ensure chord's consistency, for now the parser will reject a chord if:
+    /// - There are no Root.
     /// - There are multiple roots.
     /// - There are duplicate basses (like C/E/Eb).
     /// - There are two thirds.

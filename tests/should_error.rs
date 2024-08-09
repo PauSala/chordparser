@@ -3,19 +3,31 @@ use core::panic;
 use chordparser::parsing::Parser;
 use test_case::test_case;
 
+#[test_case("FbG△7", vec![])]
+#[test_case("F/G/C", vec![])]
 #[test_case("Cb-7add3", vec![])]
+#[test_case("C-add3", vec![])]
+#[test_case("F△7", vec![])]
 #[test_case("Cmin7Maj7", vec![])]
+#[test_case("Cminb2", vec![])]
+#[test_case("Cminb", vec![])]
+#[test_case("Cmin#", vec![])]
 #[test_case("C#9b9", vec![])]
 #[test_case("C9#9", vec![])]
 #[test_case("C11#11", vec![])]
 #[test_case("C#11#11", vec![])]
 #[test_case("Db13#13", vec![])]
-#[test_case("Db137min7", vec![])]
+#[test_case("Db1313", vec![])]
+#[test_case("Db1sus3", vec![])]
+#[test_case("Dbadd#3", vec![])]
+#[test_case("Gomit", vec![])]
+#[test_case("Gomit7", vec![])]
+#[test_case("Gsus4sus2", vec![])]
+#[test_case("C6/11", vec![])]
 #[test_case("C(#11", vec![])]
 #[test_case("c-9", vec![])]
 #[test_case("C(add9,7)", vec![])]
 #[test_case("C(omit3,7)", vec![])]
-#[test_case("F△7", vec![])]
 fn should_error(i: &str, _expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);

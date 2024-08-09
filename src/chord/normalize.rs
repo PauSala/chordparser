@@ -34,6 +34,8 @@ pub fn normalize(ch: &Chord) -> String {
                     .any(|i| *i == SemInterval::Ninth.numeric())
             {
                 mmod = Interval::Ninth;
+            } else if mmod == Interval::Eleventh && ch.has(Interval::Ninth) {
+                mmod = Interval::Ninth
             } else if mmod == Interval::Eleventh {
                 mmod = Interval::MinorSeventh
             }
