@@ -1,6 +1,5 @@
 use std::path::Path;
 
-use chordparser::parser::Parser;
 /// Parse a chord and generate a both json-string representation and a MIDI file.
 pub fn main() {
     let mut parser = Parser::new();
@@ -17,6 +16,7 @@ pub fn main() {
     }
 }
 
+use chordparser::parsing::Parser;
 use midly::{
     num::{u4, u7},
     Format, Header, MetaMessage, Smf, Timing, Track, TrackEvent, TrackEventKind,

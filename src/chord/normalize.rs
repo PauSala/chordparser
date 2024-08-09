@@ -13,7 +13,7 @@ pub fn normalize(ch: &Chord) -> String {
     match ch.quality {
         Quality::Power => {
             res.push('5');
-            return res;
+            res
         }
         Quality::Major6 => {
             res.push('6');
@@ -21,7 +21,7 @@ pub fn normalize(ch: &Chord) -> String {
             if let Some(mo) = mmod {
                 res.push_str(&mo.to_string());
             }
-            return _normalize(ch, res);
+            _normalize(ch, res)
         }
         Quality::Major7 => {
             res.push_str("Maj");
@@ -34,6 +34,8 @@ pub fn normalize(ch: &Chord) -> String {
                     .any(|i| *i == SemInterval::Ninth.numeric())
             {
                 mmod = Interval::Ninth;
+            } else if mmod == Interval::Eleventh && ch.has(Interval::Ninth) {
+                mmod = Interval::Ninth
             } else if mmod == Interval::Eleventh {
                 mmod = Interval::MinorSeventh
             }
@@ -41,7 +43,7 @@ pub fn normalize(ch: &Chord) -> String {
             if should_add_sus(ch) {
                 res.push_str("sus");
             }
-            return _normalize(ch, res);
+            _normalize(ch, res)
         }
         Quality::Minor6 => {
             res.push_str("min6");
@@ -49,13 +51,13 @@ pub fn normalize(ch: &Chord) -> String {
             if let Some(mo) = mmod {
                 res.push_str(&mo.to_string());
             }
-            return _normalize(ch, res);
+            _normalize(ch, res)
         }
         Quality::Minor7 | Quality::SemiDiminished => {
             res.push_str("min");
             let mmod = get_main_mod(ch).unwrap();
             res.push_str(&mmod.to_string());
-            return _normalize(ch, res);
+            _normalize(ch, res)
         }
         Quality::MinorMaj7 => {
             res.push_str("min");
@@ -64,14 +66,14 @@ pub fn normalize(ch: &Chord) -> String {
                 res.push_str("Maj");
             }
             res.push_str(&mmod.to_string());
-            return _normalize(ch, res);
+            _normalize(ch, res)
         }
         Quality::Diminished => {
             res.push_str("dim");
             if ch.has(Interval::DiminishedSeventh) {
                 res.push('7');
             }
-            return _normalize(ch, res);
+            _normalize(ch, res)
         }
         Quality::Dominant => {
             res.push_str("");
@@ -84,6 +86,8 @@ pub fn normalize(ch: &Chord) -> String {
                     .any(|i| *i == SemInterval::Ninth.numeric())
             {
                 mmod = Interval::Ninth;
+            } else if mmod == Interval::Eleventh && ch.has(Interval::Ninth) {
+                mmod = Interval::Ninth
             } else if mmod == Interval::Eleventh {
                 mmod = Interval::MinorSeventh
             }
@@ -91,7 +95,7 @@ pub fn normalize(ch: &Chord) -> String {
             if should_add_sus(ch) {
                 res.push_str("sus");
             }
-            return _normalize(ch, res);
+            _normalize(ch, res)
         }
         Quality::Major | Quality::Minor => {
             if ch.quality == Quality::Minor {
@@ -100,13 +104,16 @@ pub fn normalize(ch: &Chord) -> String {
             if ch.is_sus {
                 res.push_str("sus");
             }
-            return _normalize(ch, res);
+            _normalize(ch, res)
         }
     }
 }
 
 fn should_add_sus(ch: &Chord) -> bool {
-    ch.is_sus && (ch.has(Interval::Eleventh) || ch.has(Interval::PerfectFourth))
+    (ch.quality == Quality::Dominant
+        || ch.quality == Quality::Major7
+        || ch.quality == Quality::Major)
+        && (ch.has(Interval::Eleventh) || ch.has(Interval::PerfectFourth))
 }
 
 fn _normalize(ch: &Chord, mut base: String) -> String {
