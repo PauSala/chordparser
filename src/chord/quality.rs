@@ -60,7 +60,7 @@ impl Quality {
 mod test {
     use test_case::test_case;
 
-    use crate::{chord::quality::Quality, parser::Parser};
+    use crate::{chord::quality::Quality, parsing::parser::Parser};
 
     #[test_case("C5", Quality::Power)]
     #[test_case("C6Maj7", Quality::Major6)]

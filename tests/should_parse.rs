@@ -1,6 +1,6 @@
 use chordparser::{
     chord::note::{Modifier, Note, NoteLiteral},
-    new_parser::parser::Parser as NewParser,
+    parsing::parser::Parser as NewParser,
 };
 
 use test_case::test_case;

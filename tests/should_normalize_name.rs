@@ -1,4 +1,4 @@
-use chordparser::new_parser::parser::Parser;
+use chordparser::parsing::parser::Parser;
 use test_case::test_case;
 
 #[test_case("C5", "C5")]
@@ -49,13 +49,15 @@ use test_case::test_case;
 #[test_case("Cm6/A", "Cmin6/A")]
 #[test_case("C(bass)", "CBass")]
 #[test_case("C9", "C9")]
-//#[test_case("C11add13", "C13sus")]
-//#[test_case("C7(add9,11)", "C7(add9,11)")]
+#[test_case("C11add13", "C13sus")]
+#[test_case("C11", "C9sus")]
+#[test_case("C7(add9,11)", "C9sus")]
 fn test_normalize(input: &str, expected: &str) {
     let mut parser = Parser::new();
     let res = parser.parse(input);
     match res {
         Ok(chord) => {
+            dbg!(&chord);
             assert_eq!(chord.normalized, expected)
         }
         Err(e) => {

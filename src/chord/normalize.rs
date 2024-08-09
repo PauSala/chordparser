@@ -84,6 +84,8 @@ pub fn normalize(ch: &Chord) -> String {
                     .any(|i| *i == SemInterval::Ninth.numeric())
             {
                 mmod = Interval::Ninth;
+            } else if mmod == Interval::Eleventh && ch.has(Interval::Ninth) {
+                mmod = Interval::Ninth
             } else if mmod == Interval::Eleventh {
                 mmod = Interval::MinorSeventh
             }
@@ -106,7 +108,10 @@ pub fn normalize(ch: &Chord) -> String {
 }
 
 fn should_add_sus(ch: &Chord) -> bool {
-    ch.is_sus && (ch.has(Interval::Eleventh) || ch.has(Interval::PerfectFourth))
+    (ch.quality == Quality::Dominant
+        || ch.quality == Quality::Major7
+        || ch.quality == Quality::Major)
+        && (ch.has(Interval::Eleventh) || ch.has(Interval::PerfectFourth))
 }
 
 fn _normalize(ch: &Chord, mut base: String) -> String {

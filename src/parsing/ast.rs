@@ -6,8 +6,8 @@ use crate::{
         note::{Note, NoteLiteral},
         Chord,
     },
-    new_parser::expressions::{BassExp, OmitExp, PowerExp},
     parser_error::ParserErrors,
+    parsing::expressions::{BassExp, OmitExp, PowerExp},
 };
 
 use super::expression::Exp;
@@ -106,6 +106,7 @@ impl Ast {
     }
 
     fn has_inconsistent_extensions(&mut self) -> bool {
+        dbg!(&self.intervals);
         if self.has_inconsistent_extension(
             &Interval::Ninth,
             vec![&Interval::FlatNinth, &Interval::SharpNinth],

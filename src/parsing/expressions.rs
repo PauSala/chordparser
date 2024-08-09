@@ -64,7 +64,7 @@ impl ExtensionExp {
             }
             Interval::Ninth => {
                 self.include_seventh(i);
-                self.include_ninth(i);
+                i.push(Interval::Ninth);
             }
             Interval::Eleventh => {
                 self.include_seventh(i);

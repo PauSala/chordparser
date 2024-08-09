@@ -4,8 +4,6 @@ use core::panic;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-use super::intervals::Interval;
-
 /// All possible note literals.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum NoteLiteral {
@@ -318,22 +316,5 @@ impl Display for Note {
         };
         f.write_str(&format!("{}{}", self.literal, m))?;
         Ok(())
-    }
-}
-
-/// Intermediate representation of a note used by the parser.
-/// It contains the interval and the position in the string input.
-/// # Fields
-/// * `interval` - The interval from root
-/// * `pos` - The position in the string input
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub(crate) struct NoteDescriptor {
-    pub interval: Interval,
-    pub pos: usize,
-}
-
-impl NoteDescriptor {
-    pub(crate) fn new(interval: Interval, pos: usize) -> NoteDescriptor {
-        NoteDescriptor { interval, pos }
     }
 }

@@ -36,10 +36,6 @@
 //!
 
 pub mod chord;
-pub(crate) mod lexer;
-pub mod new_parser;
-pub mod parser;
 pub mod parser_error;
+pub mod parsing;
 pub(crate) mod token;
-pub(crate) mod transformer;
-pub(crate) mod validator;

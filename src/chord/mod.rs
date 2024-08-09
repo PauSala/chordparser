@@ -9,7 +9,6 @@ use serde_json;
 
 use note::Note;
 
-pub(crate) mod chord_ir;
 pub mod intervals;
 pub(crate) mod normalize;
 pub mod note;
