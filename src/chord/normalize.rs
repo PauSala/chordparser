@@ -17,7 +17,15 @@ pub fn normalize(ch: &Chord) -> String {
         }
         Quality::Major6 => {
             res.push('6');
-            let mmod = get_main_mod(ch);
+            let mmod = get_mod(ch);
+            if let Some(mo) = mmod {
+                res.push_str(&mo.to_string());
+            }
+            _normalize(ch, res)
+        }
+        Quality::Minor6 => {
+            res.push_str("min6");
+            let mmod = get_mod(ch);
             if let Some(mo) = mmod {
                 res.push_str(&mo.to_string());
             }
@@ -25,37 +33,31 @@ pub fn normalize(ch: &Chord) -> String {
         }
         Quality::Major7 => {
             res.push_str("Maj");
-            let mut mmod = get_main_mod(ch).unwrap();
-            if mmod == Interval::Eleventh && ch.is_sus && !ch.has_sem(SemInterval::Ninth) {
-                mmod = Interval::Ninth;
-            } else if mmod == Interval::Eleventh && ch.has(Interval::Ninth) {
-                mmod = Interval::Ninth
-            } else if mmod == Interval::Eleventh {
-                mmod = Interval::MinorSeventh
-            }
+            let mmod = get_mod(ch).unwrap();
             res.push_str(&mmod.to_string().replace("Maj", ""));
             if should_add_sus(ch) {
                 res.push_str("sus");
             }
             _normalize(ch, res)
         }
-        Quality::Minor6 => {
-            res.push_str("min6");
-            let mmod = get_main_mod(ch);
-            if let Some(mo) = mmod {
-                res.push_str(&mo.to_string());
+        Quality::Dominant => {
+            res.push_str("");
+            let mmod = get_mod(ch).unwrap();
+            res.push_str(&mmod.to_string());
+            if should_add_sus(ch) {
+                res.push_str("sus");
             }
             _normalize(ch, res)
         }
         Quality::Minor7 | Quality::SemiDiminished => {
             res.push_str("min");
-            let mmod = get_main_mod(ch).unwrap();
+            let mmod = get_mod(ch).unwrap();
             res.push_str(&mmod.to_string());
             _normalize(ch, res)
         }
         Quality::MinorMaj7 => {
             res.push_str("min");
-            let mmod = get_main_mod(ch).unwrap();
+            let mmod = get_mod(ch).unwrap();
             if mmod != Interval::MajorSeventh {
                 res.push_str("Maj");
             }
@@ -66,22 +68,6 @@ pub fn normalize(ch: &Chord) -> String {
             res.push_str("dim");
             if ch.has(Interval::DiminishedSeventh) {
                 res.push('7');
-            }
-            _normalize(ch, res)
-        }
-        Quality::Dominant => {
-            res.push_str("");
-            let mut mmod = get_main_mod(ch).unwrap();
-            if mmod == Interval::Eleventh && ch.is_sus && !ch.has_sem(SemInterval::Ninth) {
-                mmod = Interval::Ninth;
-            } else if mmod == Interval::Eleventh && ch.has(Interval::Ninth) {
-                mmod = Interval::Ninth
-            } else if mmod == Interval::Eleventh {
-                mmod = Interval::MinorSeventh
-            }
-            res.push_str(&mmod.to_string());
-            if should_add_sus(ch) {
-                res.push_str("sus");
             }
             _normalize(ch, res)
         }
@@ -157,7 +143,7 @@ fn get_omits(ch: &Chord) -> Vec<String> {
     res
 }
 
-fn get_main_mod(ch: &Chord) -> Option<Interval> {
+fn get_mod(ch: &Chord) -> Option<Interval> {
     match ch.quality {
         Quality::Power => None,
         Quality::Major => None,
@@ -173,7 +159,10 @@ fn get_main_mod(ch: &Chord) -> Option<Interval> {
                 return Some(Interval::Thirteenth);
             }
             if ch.has(Interval::Eleventh) && ch.has_sem(SemInterval::Ninth) {
-                return Some(Interval::Eleventh);
+                if (ch.is_sus && !ch.has_sem(SemInterval::Ninth)) || ch.has(Interval::Ninth) {
+                    return Some(Interval::Ninth);
+                }
+                return Some(Interval::MinorSeventh);
             }
             if ch.has(Interval::Ninth) {
                 return Some(Interval::Ninth);
@@ -230,10 +219,7 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
             if ch.has(Interval::Thirteenth) && !ch.has_sem(SemInterval::Ninth) {
                 adds.push(Interval::Thirteenth);
             }
-            if ch.has(Interval::Eleventh)
-                && !ch.real_intervals.iter().any(|i| *i == Interval::Ninth)
-                && !ch.is_sus
-            {
+            if ch.has(Interval::Eleventh) && !ch.has(Interval::Ninth) {
                 adds.push(Interval::Eleventh);
             }
             adds
