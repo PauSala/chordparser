@@ -36,6 +36,5 @@
 //!
 
 pub mod chord;
-pub mod parser_error;
 pub mod parsing;
 pub(crate) mod token;

@@ -1,5 +1,6 @@
-pub mod ast;
-pub mod expression;
-pub mod expressions;
-pub mod lexer;
+pub(crate) mod ast;
+pub(crate) mod expression;
+pub(crate) mod expressions;
+pub(crate) mod lexer;
 pub mod parser;
+pub mod parser_error;

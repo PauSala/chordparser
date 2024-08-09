@@ -6,8 +6,10 @@ use crate::{
         note::{Note, NoteLiteral},
         Chord,
     },
-    parser_error::ParserErrors,
-    parsing::expressions::{BassExp, OmitExp, PowerExp},
+    parsing::{
+        expressions::{BassExp, OmitExp, PowerExp},
+        parser_error::ParserErrors,
+    },
 };
 
 use super::expression::Exp;

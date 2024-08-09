@@ -1,4 +1,5 @@
 //! [&str] to [Chord] parser.
+//!
 
 use std::{iter::Peekable, slice::Iter};
 
@@ -8,7 +9,6 @@ use crate::{
         note::{Modifier, Note, NoteLiteral},
         Chord,
     },
-    parser_error::ParserErrors,
     token::{Token, TokenType},
 };
 
@@ -20,6 +20,7 @@ use super::{
         MinorExp, OmitExp, PowerExp, SlashBassExp, SusExp,
     },
     lexer::Lexer,
+    parser_error::ParserErrors,
 };
 
 /// This is used to handle X(omit/add a,b) cases.
@@ -71,7 +72,7 @@ impl Parser {
     /// - There are duplicate basses (like C/E/Eb).
     /// - There are two thirds.
     /// - There are two fifths (except for (b5, #5) which is allowed).
-    /// - M | Ma | Maj modifier is used without a 7, 9, 11 or 13. This not includes the △ modifier, which is allowed to be used alone.
+    /// - The △ modifier is not used as a synonim for Maj7. For example, F△7 will  fail due to multiple 7ths.
     /// - There are contradictory sevenths (like m7 and Maj7) or multiple ones.
     /// - There are illegal alterations (like #2, b4, #6).
     /// - An alteration has no target.
