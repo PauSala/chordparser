@@ -16,7 +16,7 @@ pub fn main() {
     }
 }
 
-use chordparser::parsing::parser::Parser;
+use chordparser::parsing::Parser;
 use midly::{
     num::{u4, u7},
     Format, Header, MetaMessage, Smf, Timing, Track, TrackEvent, TrackEventKind,

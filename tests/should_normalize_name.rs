@@ -1,4 +1,4 @@
-use chordparser::parsing::parser::Parser;
+use chordparser::parsing::Parser;
 use test_case::test_case;
 
 #[test_case("C5", "C5")]
@@ -57,7 +57,6 @@ fn test_normalize(input: &str, expected: &str) {
     let res = parser.parse(input);
     match res {
         Ok(chord) => {
-            dbg!(&chord);
             assert_eq!(chord.normalized, expected)
         }
         Err(e) => {

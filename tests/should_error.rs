@@ -1,6 +1,6 @@
 use core::panic;
 
-use chordparser::parsing::parser::Parser;
+use chordparser::parsing::Parser;
 use test_case::test_case;
 
 #[test_case("Cb-7add3", vec![])]

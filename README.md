@@ -26,8 +26,7 @@ The chord is also serializable into JSON, can generate MIDI codes for its notes,
 ## Parser rules
 
 Since there isn't a full consensus on how chords should be written, any chord parser is by definition opinionated.  
-The current rules and conventions maybe are too much restrictive, but it should always be a way to express a chord in a way that the parser (and a human) can understand.  
-The main spirit for now is to reject non-standard representations rather than attempting to interpret everything, and to focus on parsing the most standarized forms.  
+We try to get a good balance between rejecting all invalid notations and accept any possible chord representation.  
 Check the test cases in the /test folder to have a grasp of what chords can and cannot be parsed.
 
 ## Limitations
