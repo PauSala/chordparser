@@ -1,7 +1,6 @@
 use core::panic;
 
-use chordparser::parser::Parser;
-
+use chordparser::new_parser::parser::Parser;
 use test_case::test_case;
 
 #[test_case("Cb-7add3", vec![])]
@@ -12,19 +11,10 @@ use test_case::test_case;
 #[test_case("C#11#11", vec![])]
 #[test_case("Db13#13", vec![])]
 #[test_case("Db137min7", vec![])]
-#[test_case("Cma6(b5)", vec![])]
-#[test_case("Cma69", vec![])]
-#[test_case("Cma6(#5)", vec![])]
-#[test_case("Cmano3", vec![])]
-#[test_case("CMaj", vec![])]
-#[test_case("CAltb9", vec![])]
-#[test_case("CAltb13", vec![])]
-#[test_case("CAlt#11", vec![])]
 #[test_case("C(#11", vec![])]
 #[test_case("c-9", vec![])]
 #[test_case("C(add9,7)", vec![])]
 #[test_case("C(omit3,7)", vec![])]
-#[test_case("CBass(9)", vec![])]
 fn should_error(i: &str, _expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);

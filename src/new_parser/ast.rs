@@ -113,9 +113,10 @@ impl Ast {
             || self
                 .has_inconsistent_extension(&Interval::Thirteenth, vec![&Interval::FlatThirteenth])
             || self.has_inconsistent_extension(&Interval::MajorSixth, vec![&Interval::MinorSixth])
+            || self.has_inconsistent_extension(&Interval::MajorThird, vec![&Interval::MinorThird])
         {
             self.errors.push("Inconsistent extensions".to_string());
-            return false;
+            return true;
         }
         false
     }
