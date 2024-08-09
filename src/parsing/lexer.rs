@@ -52,7 +52,7 @@ impl Lexer {
             Some(c) => match c {
                 '#' | '♯' => self.add_token(TokenType::Sharp, self.current),
                 '♭' => self.add_token(TokenType::Flat, self.current),
-                '△' => self.add_token(TokenType::Maj7, self.current),
+                '△' | '^' => self.add_token(TokenType::Maj7, self.current),
                 '-' => self.add_token(TokenType::Minor, self.current),
                 '°' => self.add_token(TokenType::Dim, self.current),
                 'ø' => self.add_token(TokenType::HalfDim, self.current),

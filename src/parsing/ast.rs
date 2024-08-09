@@ -108,7 +108,6 @@ impl Ast {
     }
 
     fn has_inconsistent_extensions(&mut self) -> bool {
-        dbg!(&self.intervals);
         if self.has_inconsistent_extension(
             &Interval::Ninth,
             vec![&Interval::FlatNinth, &Interval::SharpNinth],

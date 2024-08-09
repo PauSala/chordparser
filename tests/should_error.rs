@@ -7,7 +7,6 @@ use test_case::test_case;
 #[test_case("F/G/C", vec![])]
 #[test_case("Cb-7add3", vec![])]
 #[test_case("C-add3", vec![])]
-#[test_case("F△7", vec![])]
 #[test_case("Cmin7Maj7", vec![])]
 #[test_case("Cminb2", vec![])]
 #[test_case("Cminb", vec![])]

@@ -156,12 +156,7 @@ impl Parser {
             TokenType::Sus => self.sus(tokens),
             TokenType::Minor => self.ast.expressions.push(Exp::Minor(MinorExp)),
             TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
-            TokenType::Maj7 => {
-                self.ast.expressions.push(Exp::Maj(MajExp));
-                self.ast
-                    .expressions
-                    .push(Exp::Extension(ExtensionExp::new(Interval::MinorSeventh)));
-            }
+            TokenType::Maj7 => self.maj7(tokens),
             TokenType::Slash => self.slash(tokens, token),
             TokenType::LParent => self.lparen(tokens),
             TokenType::RParent => self.rparen(),
@@ -169,6 +164,15 @@ impl Parser {
             TokenType::Bass => self.ast.expressions.push(Exp::Bass(BassExp)),
             TokenType::Illegal => self.errors.push("Illegal token".to_string()),
             TokenType::Eof => (),
+        }
+    }
+
+    fn maj7(&mut self, tokens: &mut Peekable<Iter<Token>>) {
+        self.ast.expressions.push(Exp::Maj(MajExp));
+        if !self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
+            self.ast
+                .expressions
+                .push(Exp::Extension(ExtensionExp::new(Interval::MinorSeventh)));
         }
     }
 
@@ -244,6 +248,7 @@ impl Parser {
 
     fn lparen(&mut self, tokens: &mut Peekable<Iter<Token>>) {
         self.op_count += 1;
+        self.context = Context::None;
         while tokens.peek().is_some() {
             let token = tokens.next().unwrap();
             match token.token_type {

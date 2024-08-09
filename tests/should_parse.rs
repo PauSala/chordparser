@@ -125,6 +125,16 @@ use test_case::test_case;
 #[test_case("CBass", vec!["C"])]
 #[test_case("C7/9", vec!["C", "E", "G", "Bb", "D"])]
 #[test_case("Cdim7/9", vec!["C", "Eb", "Gb", "B𝄫", "D"])]
+#[test_case("C(add 9,omit 3)", vec!["C", "G", "D"])]
+#[test_case("Fb(add 9,add b13)", vec!["Fb", "Ab", "Gb", "D𝄫"])]
+#[test_case("Eb+(add b9,add #9)", vec!["Eb", "G", "B", "Fb", "F#"])]
+#[test_case("C°7", vec!["C", "Eb", "Gb", "B𝄫"])]
+#[test_case("C°7(add MA7)", vec!["C", "Eb", "Gb", "B𝄫", "B"])]
+#[test_case("Csus(b9)", vec!["C", "F", "G", "Db"])]
+#[test_case("Csus(b5)", vec!["C", "F", "Gb"])]
+#[test_case("CMa", vec!["C", "E", "G"])]
+#[test_case("F△7", vec!["F", "A", "C", "E"])]
+#[test_case("F△13", vec!["F", "A", "C", "E", "G", "D"])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);
