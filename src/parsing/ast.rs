@@ -26,6 +26,7 @@ pub struct Ast {
 
 impl Ast {
     pub fn set_intervals(&mut self) {
+        self.expressions.sort();
         for exp in &self.expressions {
             match exp {
                 Exp::Minor(min) => min.execute(&mut self.intervals, &self.expressions),
@@ -202,7 +203,6 @@ impl Ast {
     }
 
     pub fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
-        self.expressions.sort();
         self.set_intervals();
         let notes = self.get_notes();
         let mut semitones = Vec::new();
