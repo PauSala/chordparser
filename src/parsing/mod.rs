@@ -75,7 +75,6 @@ impl Parser {
     /// - There are duplicate basses (like C/E/Eb).
     /// - There are two thirds.
     /// - There are two fifths (except for (b5, #5) which is allowed).
-    /// - The △ modifier is not used as a synonim for Maj7. For example, F△7 will  fail due to multiple 7ths.
     /// - There are contradictory sevenths (like m7 and Maj7) or multiple ones.
     /// - There are illegal alterations (like #2, b4, #6).
     /// - An alteration has no target.
@@ -98,7 +97,7 @@ impl Parser {
         res
     }
 
-    pub fn cleanup(&mut self) {
+    fn cleanup(&mut self) {
         self.errors.clear();
         self.ast = Ast::default();
         self.op_count = 0;
