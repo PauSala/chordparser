@@ -108,7 +108,8 @@ impl Parser {
         let note = self.expect_note(tokens);
         match note {
             None => {
-                self.errors.push("Expected note literal".to_string());
+                self.errors
+                    .push("Missing root note at position 1".to_string());
             }
             Some(n) => {
                 self.ast.root = n;
@@ -142,13 +143,13 @@ impl Parser {
 
     fn process_token(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
         match &token.token_type {
-            TokenType::Note(_) => self.note(),
-            TokenType::Sharp => self.modifier(tokens, Modifier::Sharp),
-            TokenType::Flat => self.modifier(tokens, Modifier::Flat),
+            TokenType::Note(_) => self.note(token),
+            TokenType::Sharp => self.modifier(tokens, Modifier::Sharp, token),
+            TokenType::Flat => self.modifier(tokens, Modifier::Flat, token),
             TokenType::Aug => self.ast.expressions.push(Exp::Aug(AugExp)),
             TokenType::Dim => self.dim(tokens),
             TokenType::HalfDim => self.ast.expressions.push(Exp::HalfDim(HalfDimExp)),
-            TokenType::Extension(ext) => self.extension(ext),
+            TokenType::Extension(ext) => self.extension(ext, token),
             TokenType::Add => self.add(token, tokens),
             TokenType::Omit => self.omit(token, tokens),
             TokenType::Alt => self.ast.expressions.push(Exp::Alt(AltExp)),
@@ -161,7 +162,9 @@ impl Parser {
             TokenType::RParent => self.rparen(),
             TokenType::Comma => self.comma(),
             TokenType::Bass => self.ast.expressions.push(Exp::Bass(BassExp)),
-            TokenType::Illegal => self.errors.push("Illegal token".to_string()),
+            TokenType::Illegal => self
+                .errors
+                .push(format!("Illegal token at position {}", token.pos)),
             TokenType::Eof => (),
         }
     }
@@ -210,19 +213,13 @@ impl Parser {
     fn expect_note(&mut self, tokens: &mut Peekable<Iter<Token>>) -> Option<Note> {
         let note = tokens.next();
         match note {
-            None => {
-                self.errors.push("Expected note literal".to_string());
-                None
-            }
+            None => None,
             Some(n) => match &n.token_type {
                 TokenType::Note(n) => {
                     let modifier = self.match_modifier(tokens);
                     Some(Note::new(NoteLiteral::from_string(n), modifier))
                 }
-                _ => {
-                    self.errors.push("Expected note literal".to_string());
-                    None
-                }
+                _ => None,
             },
         }
     }
@@ -306,8 +303,10 @@ impl Parser {
                 .expressions
                 .push(Exp::Omit(OmitExp::new(Interval::MajorThird)));
         } else {
-            self.errors
-                .push(format!("Omit has no target at position {}", token.pos));
+            self.errors.push(format!(
+                "Omit has no target or target is not valid at position {}",
+                token.pos
+            ));
         }
     }
 
@@ -328,7 +327,8 @@ impl Parser {
                 if let Some(i) = interval {
                     self.ast.expressions.push(Exp::Add(AddExp::new(i)));
                 } else {
-                    self.errors.push("Invalid extension".to_string());
+                    self.errors
+                        .push(format!("Invalid extension at position {}", token.pos));
                 }
             }
         } else if self.expect_peek(TokenType::Maj, tokens) {
@@ -337,18 +337,19 @@ impl Parser {
                 .expressions
                 .push(Exp::Add(AddExp::new(Interval::MajorSeventh)));
             if !self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
-                self.errors.push("Wrong add target".to_string());
+                self.errors
+                    .push(format!("Wrong add target at position {}", token.pos));
                 return;
             }
             //skip seventh
             tokens.next();
         } else {
             self.errors
-                .push(format!("No Add target at pos {}", token.pos));
+                .push(format!("No Add target at position {}", token.pos));
         }
     }
 
-    fn modifier(&mut self, tokens: &mut Peekable<Iter<Token>>, modifier: Modifier) {
+    fn modifier(&mut self, tokens: &mut Peekable<Iter<Token>>, modifier: Modifier, token: &Token) {
         if self.expect_extension(tokens) {
             let alt = tokens.next().unwrap();
             if let TokenType::Extension(a) = &alt.token_type {
@@ -358,11 +359,13 @@ impl Parser {
                 if let Some(int) = interval {
                     self.add_interval(int);
                 } else {
-                    self.errors.push("Invalid extension".to_string());
+                    self.errors
+                        .push(format!("Invalid extension at position {}", token.pos));
                 }
             }
         } else {
-            self.errors.push("Unexpected modifier".to_string());
+            self.errors
+                .push(format!("Unexpected modifier at position {}", token.pos));
         }
     }
 
@@ -410,7 +413,7 @@ impl Parser {
         }
     }
 
-    fn extension(&mut self, ext: &str) {
+    fn extension(&mut self, ext: &str, token: &Token) {
         if ext == "5" {
             self.ast.expressions.push(Exp::Power(PowerExp));
             return;
@@ -419,12 +422,14 @@ impl Parser {
         if let Some(int) = interval {
             self.add_interval(int);
         } else {
-            self.errors.push("Invalid extension".to_string());
+            self.errors
+                .push(format!("Invalid extension at position {}", token.pos));
         }
     }
 
-    fn note(&mut self) {
-        self.errors.push("Unexpected note".to_string());
+    fn note(&mut self, token: &Token) {
+        self.errors
+            .push(format!("Unexpected note at position {}", token.pos));
     }
 }
 

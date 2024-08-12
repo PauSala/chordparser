@@ -106,9 +106,9 @@ impl Ast {
                 is_valid = false;
                 self.errors.push(format!(
                     "Three consecutive semitones: {}, {}, {}",
-                    map.get(&(i as u8)).unwrap().to_string(),
-                    map.get(&(a as u8)).unwrap().to_string(),
-                    map.get(&(b as u8)).unwrap().to_string(),
+                    map.get(&(i as u8)).unwrap(),
+                    map.get(&(a as u8)).unwrap(),
+                    map.get(&(b as u8)).unwrap(),
                 ))
             }
         }
@@ -181,7 +181,7 @@ impl Ast {
         for exp in &self.expressions {
             is_valid = exp.validate();
             if !is_valid {
-                self.errors.push(format!("Invalid expression {}", exp));
+                self.errors.push(format!("Invalid {} expression", exp));
                 return false;
             }
             let key = match exp {
