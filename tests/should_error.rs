@@ -39,7 +39,6 @@ fn should_error(i: &str, _expected: Vec<&str>) {
     match res {
         Ok(chord) => panic!("Expected an error, got {:?}", chord),
         Err(e) => {
-            dbg!(&e);
             assert!(e.errors.len() > 0);
         }
     }
