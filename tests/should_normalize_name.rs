@@ -56,6 +56,7 @@ use test_case::test_case;
 #[test_case("C-b511(add9,b6)", "Cmin11(b5,b6)")]
 #[test_case("C-9add11", "Cmin11")]
 #[test_case("CBass", "CBass")]
+#[test_case("C119b5+-7", "Cmin11(b5,#5)")]
 fn test_normalize(input: &str, expected: &str) {
     let mut parser = Parser::new();
     let res = parser.parse(input);
