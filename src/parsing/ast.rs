@@ -89,6 +89,7 @@ impl Ast {
         }
     }
 
+    /// Checks if there are any three consecutive semitones, which are illegal.
     pub fn validate_semitones(&mut self) -> bool {
         let mut is_valid = true;
         let mut count = [false; 12];
@@ -104,7 +105,7 @@ impl Ast {
             if count[i] && count[a] && count[b] {
                 is_valid = false;
                 self.errors.push(format!(
-                    "This chord has three consecutive semitones: {}, {}, {}",
+                    "Three consecutive semitones: {}, {}, {}",
                     map.get(&(i as u8)).unwrap().to_string(),
                     map.get(&(a as u8)).unwrap().to_string(),
                     map.get(&(b as u8)).unwrap().to_string(),
@@ -123,6 +124,7 @@ impl Ast {
         false
     }
 
+    /// Finds illegal extensions combinations (for example 9 and b9/#9)
     fn has_inconsistent_extensions(&mut self) -> bool {
         if self.has_inconsistent_extension(
             &Interval::Ninth,
@@ -139,6 +141,7 @@ impl Ast {
         false
     }
 
+    /// Validates extensions finding for duplicates and incosistencies.
     fn validate_extensions(&mut self) -> bool {
         let mut ext_count = [0; 24];
         let filtered = self
@@ -171,6 +174,7 @@ impl Ast {
         !self.has_inconsistent_extensions()
     }
 
+    /// Validates expressions both individually and finding illegal duplicates
     fn validate_expressions(&mut self) -> bool {
         let mut is_valid = true;
         let mut counts: HashMap<u32, usize> = HashMap::new();
@@ -197,6 +201,8 @@ impl Ast {
         is_valid
     }
 
+    /// Analizes expressions and intervals finding inconsistencies.  
+    /// If any inconcistence is found, self.errors is populated and false is returned.
     pub fn is_valid(&mut self) -> bool {
         let valid_exp = self.validate_expressions();
         let valid_ext = self.validate_extensions();
