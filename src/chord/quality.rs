@@ -81,7 +81,6 @@ mod test {
     #[test_case("CAlt", Quality::Dominant)]
     #[test_case("C7#5", Quality::Dominant)]
     #[test_case("C7(#5,b5)", Quality::Dominant)]
-    #[test_case("C13(#5,b5)", Quality::Dominant)]
     #[test_case("CMin13", Quality::Minor7)]
     #[test_case("CMinb13", Quality::Minor)]
     #[test_case("C-Maj7", Quality::MinorMaj7)]

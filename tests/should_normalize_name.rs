@@ -25,7 +25,6 @@ use test_case::test_case;
 #[test_case("CAlt", "C7(b9,#9,#11,b13)")]
 #[test_case("C7#5", "C7(#5)")]
 #[test_case("C7#5,b5", "C7(b5,#5)")]
-#[test_case("C13(#5,b5)", "C13(b5,#5)")]
 #[test_case("CMin13add11", "Cmin13")]
 #[test_case("CMinb13", "Cmin(b13)")]
 #[test_case("CMinb13add9", "Cmin(b13,add9)")]
@@ -44,7 +43,6 @@ use test_case::test_case;
 #[test_case("Cdim7Maj7", "Cdim7(addMaj7)")]
 #[test_case("CdimMaj7", "Cdim(addMaj7)")]
 #[test_case("CdimMaj9", "Cdim(addMaj7,9)")]
-#[test_case("Csus4#11", "Csus(#11)")]
 #[test_case("C/A", "C/A")]
 #[test_case("Cm6/A", "Cmin6/A")]
 #[test_case("C(bass)", "CBass")]
@@ -55,13 +53,14 @@ use test_case::test_case;
 #[test_case("Cmaj7(add9,11)", "CMaj9sus")]
 #[test_case("C-(add9,13)", "Cmin(add9,13)")]
 #[test_case("C-11(add13)", "Cmin13")]
-#[test_case("C-9(add13)b5#5", "Cmin9(b5,#5,add13)")]
-#[test_case("C-b513(add9,b6)", "Cmin13(b5,b6)")]
+#[test_case("C-b511(add9,b6)", "Cmin11(b5,b6)")]
 #[test_case("C-9add11", "Cmin11")]
 #[test_case("CBass", "CBass")]
 fn test_normalize(input: &str, expected: &str) {
     let mut parser = Parser::new();
     let res = parser.parse(input);
+    dbg!(input);
+
     match res {
         Ok(chord) => {
             assert_eq!(chord.normalized, expected)

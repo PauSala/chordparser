@@ -89,14 +89,29 @@ impl Ast {
         }
     }
 
-    pub fn is_valid(&mut self) -> bool {
-        if !self.validate_expressions() {
-            return false;
+    pub fn validate_semitones(&mut self) -> bool {
+        let mut is_valid = true;
+        let mut count = [false; 12];
+        let mut map = HashMap::new();
+        for s in self.intervals.iter() {
+            let pos = s.st() % 12;
+            count[pos as usize] = true;
+            map.insert(pos, s);
         }
-        if !self.validate_extensions() {
-            return false;
+        for i in 0..12 {
+            let a = (i + 1) % 12;
+            let b = (i + 2) % 12;
+            if count[i] && count[a] && count[b] {
+                is_valid = false;
+                self.errors.push(format!(
+                    "This chord has three consecutive semitones: {}, {}, {}",
+                    map.get(&(i as u8)).unwrap().to_string(),
+                    map.get(&(a as u8)).unwrap().to_string(),
+                    map.get(&(b as u8)).unwrap().to_string(),
+                ))
+            }
         }
-        true
+        is_valid
     }
 
     fn has_inconsistent_extension(&self, int: &Interval, matches: Vec<&Interval>) -> bool {
@@ -182,6 +197,13 @@ impl Ast {
         is_valid
     }
 
+    pub fn is_valid(&mut self) -> bool {
+        let valid_exp = self.validate_expressions();
+        let valid_ext = self.validate_extensions();
+        let valid_sem = self.validate_semitones();
+        valid_exp && valid_ext && valid_sem
+    }
+
     /// Get the notes of the chord
     pub(crate) fn get_notes(&mut self) -> Vec<Note> {
         let mut notes = Vec::new();
@@ -214,7 +236,6 @@ impl Ast {
         }
 
         if !self.is_valid() {
-            dbg!(&self);
             return Err(ParserErrors::new(self.errors.clone()));
         }
         Ok(Chord::builder(name, self.root.clone())
