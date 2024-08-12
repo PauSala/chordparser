@@ -59,7 +59,6 @@ use test_case::test_case;
 fn test_normalize(input: &str, expected: &str) {
     let mut parser = Parser::new();
     let res = parser.parse(input);
-    dbg!(input);
 
     match res {
         Ok(chord) => {
