@@ -3,12 +3,13 @@ use std::path::Path;
 /// Parse a chord and generate a both json-string representation and a MIDI file.
 pub fn main() {
     let mut parser = Parser::new();
-    let result = parser.parse("AbMaj7#11");
+    let result = parser.parse("EbMaj7#9#11b13");
     match result {
         Ok(chord) => {
             dbg!(&chord);
             dbg!(&chord.to_json());
-            to_midi_file(&chord.to_midi_codes(), Path::new("my_chord"), 120, 4);
+            let notes = voicing(&chord, 4, None);
+            to_midi_file(&notes, Path::new("my_chord"), 120, 4);
         }
         Err(e) => {
             dbg!(e);
@@ -16,7 +17,7 @@ pub fn main() {
     }
 }
 
-use chordparser::parsing::Parser;
+use chordparser::{parsing::Parser, voicings::voicing};
 use midly::{
     num::{u4, u7},
     Format, Header, MetaMessage, Smf, Timing, Track, TrackEvent, TrackEventKind,
@@ -49,7 +50,7 @@ pub fn to_midi_file(chord_notes: &[u8], name: &Path, bpm: u32, beats: u16) {
                 channel: u4::new(0),
                 message: midly::MidiMessage::NoteOn {
                     key: u7::new(note),
-                    vel: velocity - (3 * i as u8).into(),
+                    vel: velocity - (1 * i as u8).into(),
                 },
             },
         });
