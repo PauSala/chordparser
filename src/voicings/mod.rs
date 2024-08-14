@@ -162,9 +162,20 @@ fn non_guide_notes(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
             )
         })
         .collect();
-    // If pool is small add the fifth to avoid too sparse voicings
-    if pool.len() < 5 {
+    // If pool is small add any existing fifth to avoid too sparse voicings
+    if pool.len() < 6 {
         let fifth = pool.iter().find(|&x| x.int == Interval::PerfectFifth);
+        if let Some(f) = fifth {
+            ts.push(f);
+        }
+        let fifth = pool.iter().find(|&x| x.int == Interval::DiminishedFifth);
+        if let Some(f) = fifth {
+            ts.push(f);
+        }
+    }
+    // If pool is very small add the root to avoid too sparse voicings
+    if pool.len() < 3 {
+        let fifth = pool.iter().find(|&x| x.int == Interval::Unison);
         if let Some(f) = fifth {
             ts.push(f);
         }
@@ -219,10 +230,7 @@ fn non_guide_notes(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
 /// # Returns
 /// A vector of MIDI codes representing the voicing for given chord
 pub fn generate_voicing(ch: &Chord, lead_note: Option<u8>) -> MidiCodesVoicing {
-    let mut prev_lead = lead_note.unwrap_or(MAX_MIDI_CODE);
-    if prev_lead < 65 {
-        prev_lead = 65;
-    }
+    let prev_lead = lead_note.unwrap_or(MAX_MIDI_CODE);
     let mut res = Vec::new();
     let mut pool = notes_pool(ch);
     pool.sort_by_key(|f| f.base);
