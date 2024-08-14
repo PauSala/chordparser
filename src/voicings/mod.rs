@@ -1,9 +1,11 @@
+//! # Midi Codes voicing generator
+
 use std::u8;
 
 use crate::chord::{intervals::Interval, note::Note, Chord};
 
-static MAX_MIDI_CODE: u8 = 72;
-static MIN_MIDI_CODE: u8 = 52;
+static MAX_MIDI_CODE: u8 = 79;
+static MIN_MIDI_CODE: u8 = 51;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MidiNote {
@@ -38,16 +40,17 @@ fn notes_pool(ch: &Chord) -> Vec<MidiNote> {
     midi_notes
 }
 
-pub type Voicing = Vec<u8>;
+pub type MidiCodesVoicing = Vec<u8>;
 
-pub fn nearest_lead(pl: u8, pool: &mut Vec<MidiNote>, imap: &mut [(Interval, usize)]) -> u8 {
-    imap.sort_by_key(|e| -(e.1 as i32));
+/// Find the note near to lead
+fn nearest_lead(pl: u8, pool: &mut Vec<MidiNote>) -> u8 {
+    // filter at b9 distance
     let mut not_allowed: Vec<Interval> = Vec::new();
     for i in 0..pool.len() {
         let curr = &pool[i];
         let next = &pool[(i + 1) % pool.len()];
-        let distance = (curr.base as i32 - next.base as i32).abs();
-        if distance == 1 || distance == 11 {
+        let dist = (curr.base as i32 - next.base as i32).abs();
+        if dist == 1 || dist == 11 {
             not_allowed.push(next.int);
         }
     }
@@ -65,23 +68,22 @@ pub fn nearest_lead(pl: u8, pool: &mut Vec<MidiNote>, imap: &mut [(Interval, usi
             }
         }
     }
-    let found = imap.iter_mut().find(|a| a.0 == min.1).unwrap();
-    found.1 += 1;
-    for i in pool {
-        let mut found = (false, 0);
-        for (i, e) in i.available.iter().enumerate() {
+    let mut found = (false, 0);
+    for (i, el) in pool.iter().enumerate() {
+        for e in &el.available {
             if min.2 == *e {
                 found = (true, i);
             }
         }
-        if found.0 {
-            i.available.remove(found.1);
-        }
+    }
+    if found.0 {
+        pool.remove(found.1);
     }
     min.2
 }
 
-pub fn guide_notes(pool: &mut [MidiNote], v: &mut Voicing) {
+/// Sets guide notes, including major sixth, altered fifths and fourths
+fn guide_notes(pool: &mut [MidiNote], v: &mut MidiCodesVoicing) {
     let binding = pool.to_owned();
     let mut guides: Vec<&MidiNote> = binding
         .iter()
@@ -116,7 +118,8 @@ pub fn guide_notes(pool: &mut [MidiNote], v: &mut Voicing) {
     }
 }
 
-pub fn tensions(pool: &mut [MidiNote], v: &mut Voicing, lead: u8) {
+/// Sets non guide notes, including perfect fifth and excluding Root
+fn non_guide(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
     let binding = pool.to_owned();
     let mut ts: Vec<&MidiNote> = binding
         .iter()
@@ -124,7 +127,6 @@ pub fn tensions(pool: &mut [MidiNote], v: &mut Voicing, lead: u8) {
             matches!(
                 g.int,
                 Interval::PerfectFifth
-                    | Interval::Unison
                     | Interval::FlatNinth
                     | Interval::Ninth
                     | Interval::SharpNinth
@@ -150,46 +152,32 @@ pub fn tensions(pool: &mut [MidiNote], v: &mut Voicing, lead: u8) {
     }
 }
 
-pub fn voicing(ch: &Chord, _voices: usize, prev_lead: Option<u8>) -> Voicing {
-    let prev_lead = prev_lead.unwrap_or(MAX_MIDI_CODE);
+/// Creates a voicing for a chord
+/// # Arguments
+/// * `ch` - The chord to generate the voicing
+/// * `lead_note` - The lead note to start the voicing.
+/// If lead_note is not present in the chord it will be used as boundary (meaning that the actual lead note will be the nearest note in the chord, up or down)
+/// If lead_note is None it will be set to 79 (G5).   
+/// # Returns
+/// A vector of MIDI codes representing the voicing of the chord
+pub fn midi_codes_voicing(ch: &Chord, lead_note: Option<u8>) -> MidiCodesVoicing {
+    let mut prev_lead = lead_note.unwrap_or(MAX_MIDI_CODE);
+    if prev_lead < 65 {
+        prev_lead = 65;
+    }
     let mut res = Vec::new();
     let mut pool = notes_pool(ch);
     pool.sort_by_key(|f| f.base);
-    let mut imap = Vec::new();
-    for i in &pool {
-        imap.push((i.int, 0));
+
+    if ch.bass.is_some() {
+        res.push(ch.bass.as_ref().unwrap().to_midi_code() - 12);
+        res.push(ch.root.to_midi_code());
+    } else {
+        res.push(ch.root.to_midi_code() - 12);
     }
-    let root = {
-        if ch.bass.is_some() {
-            ch.bass.as_ref().unwrap().to_midi_code() - 12
-        } else {
-            ch.root.to_midi_code() - 12
-        }
-    };
-    res.push(root);
-    let lead = nearest_lead(prev_lead, &mut pool, &mut imap);
+    let lead = nearest_lead(prev_lead, &mut pool);
     guide_notes(&mut pool, &mut res);
-    tensions(&mut pool, &mut res, lead);
+    non_guide(&mut pool, &mut res, lead);
     res.push(lead);
-    // while res.len() < voices {
-    //     imap.sort_by_key(|e| -(e.1 as i32));
-    //     //let e =
-    // }
-    // dbg!(imap);
-    // dbg!(pool);
-    // dbg!(&res);
     res
-}
-
-#[cfg(test)]
-mod test {
-    use crate::parsing::Parser;
-
-    use super::*;
-    #[test]
-    pub fn work() {
-        let chord = Parser::new().parse("CMaj769b5(#11)").unwrap();
-        let v = voicing(&chord, 4, None);
-        dbg!(v);
-    }
 }

@@ -3,13 +3,15 @@ use std::path::Path;
 /// Parse a chord and generate a both json-string representation and a MIDI file.
 pub fn main() {
     let mut parser = Parser::new();
-    let result = parser.parse("Csus#4Maj7");
+    let result = parser.parse("CMaj9");
     match result {
         Ok(chord) => {
             dbg!(&chord);
             dbg!(&chord.to_json());
-            let notes = voicing(&chord, 4, None);
-            to_midi_file(&notes, Path::new("my_chord"), 120, 4);
+            let d5_midi_code = 74;
+            // Create a pretty decent voicing with ninth at top
+            let midi_codes = midi_codes_voicing(&chord, Some(d5_midi_code));
+            to_midi_file(&midi_codes, Path::new("my_chord"), 120, 4);
         }
         Err(e) => {
             dbg!(e);
@@ -17,7 +19,7 @@ pub fn main() {
     }
 }
 
-use chordparser::{parsing::Parser, voicings::voicing};
+use chordparser::{parsing::Parser, voicings::midi_codes_voicing};
 use midly::{
     num::{u4, u7},
     Format, Header, MetaMessage, Smf, Timing, Track, TrackEvent, TrackEventKind,
@@ -50,7 +52,7 @@ pub fn to_midi_file(chord_notes: &[u8], name: &Path, bpm: u32, beats: u16) {
                 channel: u4::new(0),
                 message: midly::MidiMessage::NoteOn {
                     key: u7::new(note),
-                    vel: velocity - (1 * i as u8).into(),
+                    vel: velocity - (i as u8).into(),
                 },
             },
         });
@@ -68,7 +70,7 @@ pub fn to_midi_file(chord_notes: &[u8], name: &Path, bpm: u32, beats: u16) {
                 channel: u4::new(0),
                 message: midly::MidiMessage::NoteOff {
                     key: u7::new(note),
-                    vel: velocity - (3 * i as u8).into(),
+                    vel: velocity - (i as u8).into(),
                 },
             },
         });
