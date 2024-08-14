@@ -24,6 +24,11 @@
 //! We try to get a good balance between rejecting all invalid notations and accept any possible chord representation.  
 //! Check the test cases in the /test folder to have a grasp of what chords can and cannot be parsed.
 //!
+//! # [Voicing generation](#voicing_generation)
+//! The voicings module exposes a function to generate a set of MIDI notes from a [Chord](chord/struct.Chord.html) representing a voicing for it.
+//! The voicing is generated in a range from C1 to G5.  The generator function accepts a lead note to generate the voicings around it, which allows chaining distinct chords smoothly.
+//!
+//!
 //! # [Limitations](#limitations)
 //! - Parsed chord notes have enharmonically correct names when possible. For example, a `B#9` chord will have `C𝄪` as the ninth instead of D. Said that,
 //! triple flat/sharps are not suported since they add an unnecesasry complexity for very rare use cases.

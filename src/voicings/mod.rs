@@ -8,7 +8,7 @@ static MAX_MIDI_CODE: u8 = 79;
 static MIN_MIDI_CODE: u8 = 51;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct MidiNote {
+struct MidiNote {
     base: u8,
     available: Vec<u8>,
     int: Interval,
@@ -152,15 +152,16 @@ fn non_guide(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
     }
 }
 
-/// Creates a voicing for a chord
+/// Creates a voicing for a chord.  
+/// The voicing is generated in a range from C1 to G5. Accepts a lead note to generate the voicing around it, which allows chaining distinct chords smoothly.
 /// # Arguments
 /// * `ch` - The chord to generate the voicing
-/// * `lead_note` - The lead note to start the voicing.
-/// If lead_note is not present in the chord it will be used as boundary (meaning that the actual lead note will be the nearest note in the chord, up or down)
-/// If lead_note is None it will be set to 79 (G5).   
+/// * `lead_note` - The lead note of the voicing.
+/// If `lead_note` is not present in the chord it will be used as boundary (meaning that the actual lead note will be the nearest note in the chord, up or down).
+/// If `lead_note` is None it will be set to 79 (G4).   
 /// # Returns
-/// A vector of MIDI codes representing the voicing of the chord
-pub fn midi_codes_voicing(ch: &Chord, lead_note: Option<u8>) -> MidiCodesVoicing {
+/// A vector of MIDI codes representing the voicing for given chord
+pub fn generate_voicing(ch: &Chord, lead_note: Option<u8>) -> MidiCodesVoicing {
     let mut prev_lead = lead_note.unwrap_or(MAX_MIDI_CODE);
     if prev_lead < 65 {
         prev_lead = 65;
