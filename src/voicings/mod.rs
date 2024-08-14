@@ -85,6 +85,7 @@ fn nearest_lead(pl: u8, pool: &mut Vec<MidiNote>) -> u8 {
 /// Sets guide notes, including major sixth, altered fifths and fourths
 fn guide_notes(pool: &mut [MidiNote], v: &mut MidiCodesVoicing) {
     let binding = pool.to_owned();
+    // Get guide notes
     let mut guides: Vec<&MidiNote> = binding
         .iter()
         .filter(|g| {
@@ -96,14 +97,34 @@ fn guide_notes(pool: &mut [MidiNote], v: &mut MidiCodesVoicing) {
                     | Interval::AugmentedFourth
                     | Interval::DiminishedFifth
                     | Interval::AugmentedFifth
-                    | Interval::MajorSixth
                     | Interval::DiminishedSeventh
                     | Interval::MinorSeventh
-                    | Interval::MajorSeventh
             )
         })
         .collect();
+
+    // Handle sixths and sevenths to avoid stacking 6ths and 7ths too close.
+    // If Minor seventh is present, major sixth is handled as tension
+    // If sixth or dim7 is present maj7 is handled as tension
+    let has_sixth_or_dim_seventh = pool
+        .iter()
+        .any(|x| x.int == Interval::MajorSixth || x.int == Interval::DiminishedSeventh);
+    let has_minor_seventh = pool.iter().any(|x| x.int == Interval::MinorSeventh);
+
+    if !has_minor_seventh && has_sixth_or_dim_seventh {
+        let sixth = pool.iter().find(|&x| x.int == Interval::MajorSixth);
+        if let Some(s) = sixth {
+            guides.push(s);
+        }
+    } else if !has_sixth_or_dim_seventh {
+        let maj_seventh = pool.iter().find(|&x| x.int == Interval::MajorSeventh);
+        if let Some(s) = maj_seventh {
+            guides.push(s);
+        }
+    }
+
     let mut min = (u8::MAX, Interval::Unison);
+    let mut len = guides.len();
     while !guides.is_empty() {
         for g in &guides {
             for n in &g.available {
@@ -112,9 +133,15 @@ fn guide_notes(pool: &mut [MidiNote], v: &mut MidiCodesVoicing) {
                 }
             }
         }
-        v.push(min.0);
+        if min.0 != u8::MAX {
+            v.push(min.0);
+        }
         guides.retain(|i| i.int != min.1);
         min = (u8::MAX, Interval::Unison);
+        if guides.len() == len {
+            break;
+        }
+        len = guides.len();
     }
 }
 
@@ -126,8 +153,7 @@ fn non_guide(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
         .filter(|g| {
             matches!(
                 g.int,
-                Interval::PerfectFifth
-                    | Interval::FlatNinth
+                Interval::FlatNinth
                     | Interval::Ninth
                     | Interval::SharpNinth
                     | Interval::Eleventh
@@ -137,18 +163,53 @@ fn non_guide(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
             )
         })
         .collect();
-    let mut min = (u8::MIN, Interval::Unison);
+    if pool.len() < 5 {
+        let fifth = pool.iter().find(|&x| x.int == Interval::PerfectFifth);
+        if let Some(f) = fifth {
+            ts.push(f);
+        }
+    }
+
+    // Handle sixths and sevenths to avoid stacking 6ths and 7ths too close.
+    // If Minor seventh is present, major sixth is handled as tension
+    // If sixth or dim7 is present maj7 is handled as tension
+    let has_sixth_or_dim_seventh = pool
+        .iter()
+        .any(|x| x.int == Interval::MajorSixth || x.int == Interval::DiminishedSeventh);
+    let has_minor_seventh = pool.iter().any(|x| x.int == Interval::MinorSeventh);
+
+    // Minor seventh has been set as guide, so sixth is tension if exist
+    if has_sixth_or_dim_seventh && has_minor_seventh {
+        let sixth = pool.iter().find(|&x| x.int == Interval::MajorSixth);
+        if let Some(s) = sixth {
+            ts.push(s);
+        }
+    // If has a sixth, it has been set as guide and maj7 needs to be set as tension if present
+    } else if has_sixth_or_dim_seventh {
+        let maj_seventh = pool.iter().find(|&x| x.int == Interval::MajorSeventh);
+        if let Some(s) = maj_seventh {
+            ts.push(s);
+        }
+    }
+    let mut max = (u8::MIN, Interval::Unison);
+    let mut len = ts.len();
     while !ts.is_empty() {
         for g in &ts {
             for n in &g.available {
-                if *n > min.0 && *n < lead {
-                    min = (*n, g.int);
+                if *n > max.0 && *n < lead && *n >= MIN_MIDI_CODE {
+                    max = (*n, g.int);
                 }
             }
         }
-        v.push(min.0);
-        ts.retain(|i| i.int != min.1);
-        min = (u8::MIN, Interval::Unison);
+        if max.0 != u8::MIN {
+            v.push(max.0);
+        }
+        ts.retain(|i| i.int != max.1);
+        max = (u8::MIN, Interval::Unison);
+        if ts.len() == len {
+            break;
+        }
+        len = ts.len();
     }
 }
 
