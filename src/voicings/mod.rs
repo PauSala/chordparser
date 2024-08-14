@@ -221,7 +221,7 @@ fn non_guide_notes(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
 }
 
 /// Creates a voicing for a chord.  
-/// The voicing is generated in a range from C1 to G5. Accepts a lead note to generate the voicing around it, which allows chaining distinct chords smoothly.
+/// The voicing is generated in a range from C1 to G4. Accepts a lead note to generate the voicing around it, which allows chaining distinct chords smoothly.
 /// # Arguments
 /// * `ch` - The chord to generate the voicing
 /// * `lead_note` - The lead note of the voicing.
