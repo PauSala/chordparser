@@ -3,7 +3,7 @@ use std::path::Path;
 /// Parse a chord and generate a both json-string representation and a MIDI file.
 pub fn main() {
     let mut parser = Parser::new();
-    let result = parser.parse("EbMaj7#9#11b13");
+    let result = parser.parse("Csus#4Maj7");
     match result {
         Ok(chord) => {
             dbg!(&chord);

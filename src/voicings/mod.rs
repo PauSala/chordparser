@@ -33,14 +33,14 @@ impl MidiNote {
 fn notes_pool(ch: &Chord) -> Vec<MidiNote> {
     let mut midi_notes = Vec::new();
     for (n, i) in ch.notes.iter().zip(ch.real_intervals.clone()) {
-        midi_notes.push(MidiNote::new(&n, i))
+        midi_notes.push(MidiNote::new(n, i))
     }
     midi_notes
 }
 
 pub type Voicing = Vec<u8>;
 
-pub fn nearest_lead(pl: u8, pool: &mut Vec<MidiNote>, imap: &mut Vec<(Interval, usize)>) -> u8 {
+pub fn nearest_lead(pl: u8, pool: &mut Vec<MidiNote>, imap: &mut [(Interval, usize)]) -> u8 {
     imap.sort_by_key(|e| -(e.1 as i32));
     let mut not_allowed: Vec<Interval> = Vec::new();
     for i in 0..pool.len() {
@@ -57,7 +57,7 @@ pub fn nearest_lead(pl: u8, pool: &mut Vec<MidiNote>, imap: &mut Vec<(Interval, 
             continue;
         }
         for n in &i.available {
-            let dist = (pl as i16 - *n as i16).abs() as u8;
+            let dist = (pl as i16 - *n as i16).unsigned_abs() as u8;
             if dist < min.0 {
                 min.0 = dist;
                 min.1 = i.int;
@@ -81,26 +81,28 @@ pub fn nearest_lead(pl: u8, pool: &mut Vec<MidiNote>, imap: &mut Vec<(Interval, 
     min.2
 }
 
-pub fn guide_notes(pool: &mut Vec<MidiNote>, v: &mut Voicing) {
-    let binding = pool.clone();
+pub fn guide_notes(pool: &mut [MidiNote], v: &mut Voicing) {
+    let binding = pool.to_owned();
     let mut guides: Vec<&MidiNote> = binding
         .iter()
-        .filter(|g| match g.int {
-            Interval::MinorThird
-            | Interval::MajorThird
-            | Interval::PerfectFourth
-            | Interval::AugmentedFourth
-            | Interval::DiminishedFifth
-            | Interval::AugmentedFifth
-            | Interval::MajorSixth
-            | Interval::DiminishedSeventh
-            | Interval::MinorSeventh
-            | Interval::MajorSeventh => true,
-            _ => false,
+        .filter(|g| {
+            matches!(
+                g.int,
+                Interval::MinorThird
+                    | Interval::MajorThird
+                    | Interval::PerfectFourth
+                    | Interval::AugmentedFourth
+                    | Interval::DiminishedFifth
+                    | Interval::AugmentedFifth
+                    | Interval::MajorSixth
+                    | Interval::DiminishedSeventh
+                    | Interval::MinorSeventh
+                    | Interval::MajorSeventh
+            )
         })
         .collect();
     let mut min = (u8::MAX, Interval::Unison);
-    while guides.len() > 0 {
+    while !guides.is_empty() {
         for g in &guides {
             for n in &g.available {
                 if *n < min.0 && *n >= MIN_MIDI_CODE {
@@ -114,25 +116,27 @@ pub fn guide_notes(pool: &mut Vec<MidiNote>, v: &mut Voicing) {
     }
 }
 
-pub fn tensions(pool: &mut Vec<MidiNote>, v: &mut Voicing, lead: u8) {
-    let binding = pool.clone();
+pub fn tensions(pool: &mut [MidiNote], v: &mut Voicing, lead: u8) {
+    let binding = pool.to_owned();
     let mut ts: Vec<&MidiNote> = binding
         .iter()
-        .filter(|g| match g.int {
-            Interval::PerfectFifth
-            | Interval::Unison
-            | Interval::FlatNinth
-            | Interval::Ninth
-            | Interval::SharpNinth
-            | Interval::Eleventh
-            | Interval::SharpEleventh
-            | Interval::FlatThirteenth
-            | Interval::Thirteenth => true,
-            _ => false,
+        .filter(|g| {
+            matches!(
+                g.int,
+                Interval::PerfectFifth
+                    | Interval::Unison
+                    | Interval::FlatNinth
+                    | Interval::Ninth
+                    | Interval::SharpNinth
+                    | Interval::Eleventh
+                    | Interval::SharpEleventh
+                    | Interval::FlatThirteenth
+                    | Interval::Thirteenth
+            )
         })
         .collect();
     let mut min = (u8::MIN, Interval::Unison);
-    while ts.len() > 0 {
+    while !ts.is_empty() {
         for g in &ts {
             for n in &g.available {
                 if *n > min.0 && *n < lead {
