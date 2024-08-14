@@ -4,7 +4,9 @@ use std::u8;
 
 use crate::chord::{intervals::Interval, note::Note, Chord};
 
+/// Default top limit to G4
 static MAX_MIDI_CODE: u8 = 79;
+/// Default low limit for non bass notes to Eb2
 static MIN_MIDI_CODE: u8 = 51;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -32,6 +34,7 @@ impl MidiNote {
     }
 }
 
+/// Creates a pool of notes from chord, each note has its available candidates in range MAX_MIDI_CODE-MIN_MIDI_CODE
 fn notes_pool(ch: &Chord) -> Vec<MidiNote> {
     let mut midi_notes = Vec::new();
     for (n, i) in ch.notes.iter().zip(ch.real_intervals.clone()) {
@@ -42,9 +45,9 @@ fn notes_pool(ch: &Chord) -> Vec<MidiNote> {
 
 pub type MidiCodesVoicing = Vec<u8>;
 
-/// Find the note near to lead
+/// Find the note nearest to lead up or down
 fn nearest_lead(pl: u8, pool: &mut Vec<MidiNote>) -> u8 {
-    // filter at b9 distance
+    // filter at b9 distance to avoid b9 in lead note (not taking root into account)
     let mut not_allowed: Vec<Interval> = Vec::new();
     for i in 0..pool.len() {
         let curr = &pool[i];
@@ -103,7 +106,7 @@ fn guide_notes(pool: &mut [MidiNote], v: &mut MidiCodesVoicing) {
         })
         .collect();
 
-    // Handle sixths and sevenths to avoid stacking 6ths and 7ths too close.
+    // Handle 6ths and 7ths to avoid stacking them too close.
     // If Minor seventh is present, major sixth is handled as tension
     // If sixth or dim7 is present maj7 is handled as tension
     let has_sixth_or_dim_seventh = pool
@@ -124,7 +127,6 @@ fn guide_notes(pool: &mut [MidiNote], v: &mut MidiCodesVoicing) {
     }
 
     let mut min = (u8::MAX, Interval::Unison);
-    let mut len = guides.len();
     while !guides.is_empty() {
         for g in &guides {
             for n in &g.available {
@@ -133,20 +135,17 @@ fn guide_notes(pool: &mut [MidiNote], v: &mut MidiCodesVoicing) {
                 }
             }
         }
-        if min.0 != u8::MAX {
-            v.push(min.0);
-        }
-        guides.retain(|i| i.int != min.1);
-        min = (u8::MAX, Interval::Unison);
-        if guides.len() == len {
+        if min.0 == u8::MAX {
             break;
         }
-        len = guides.len();
+        v.push(min.0);
+        guides.retain(|i| i.int != min.1);
+        min = (u8::MAX, Interval::Unison);
     }
 }
 
 /// Sets non guide notes, including perfect fifth and excluding Root
-fn non_guide(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
+fn non_guide_notes(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
     let binding = pool.to_owned();
     let mut ts: Vec<&MidiNote> = binding
         .iter()
@@ -163,6 +162,7 @@ fn non_guide(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
             )
         })
         .collect();
+    // If pool is small add the fifth to avoid too sparse voicings
     if pool.len() < 5 {
         let fifth = pool.iter().find(|&x| x.int == Interval::PerfectFifth);
         if let Some(f) = fifth {
@@ -170,7 +170,7 @@ fn non_guide(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
         }
     }
 
-    // Handle sixths and sevenths to avoid stacking 6ths and 7ths too close.
+    // Handle 6ths and 7ths to avoid stacking them too close.
     // If Minor seventh is present, major sixth is handled as tension
     // If sixth or dim7 is present maj7 is handled as tension
     let has_sixth_or_dim_seventh = pool
@@ -192,7 +192,6 @@ fn non_guide(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
         }
     }
     let mut max = (u8::MIN, Interval::Unison);
-    let mut len = ts.len();
     while !ts.is_empty() {
         for g in &ts {
             for n in &g.available {
@@ -201,15 +200,12 @@ fn non_guide(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
                 }
             }
         }
-        if max.0 != u8::MIN {
-            v.push(max.0);
-        }
-        ts.retain(|i| i.int != max.1);
-        max = (u8::MIN, Interval::Unison);
-        if ts.len() == len {
+        if max.0 == u8::MIN {
             break;
         }
-        len = ts.len();
+        v.push(max.0);
+        ts.retain(|i| i.int != max.1);
+        max = (u8::MIN, Interval::Unison);
     }
 }
 
@@ -239,7 +235,7 @@ pub fn generate_voicing(ch: &Chord, lead_note: Option<u8>) -> MidiCodesVoicing {
     }
     let lead = nearest_lead(prev_lead, &mut pool);
     guide_notes(&mut pool, &mut res);
-    non_guide(&mut pool, &mut res, lead);
+    non_guide_notes(&mut pool, &mut res, lead);
     res.push(lead);
     res
 }
