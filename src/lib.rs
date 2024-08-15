@@ -58,5 +58,4 @@
 
 pub mod chord;
 pub mod parsing;
-pub(crate) mod token;
 pub mod voicings;

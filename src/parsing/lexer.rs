@@ -2,7 +2,8 @@ use std::{iter::Peekable, str::Chars};
 
 use regex::Regex;
 
-use crate::token::{Token, TokenType};
+use super::token::{Token, TokenType};
+
 static EXTENSIONS: &str = r"\b(?:2|3|4|5|6|7|9|11|13)\b";
 pub struct Lexer {
     source: String,

@@ -4,6 +4,7 @@ pub(crate) mod expression;
 pub(crate) mod expressions;
 pub(crate) mod lexer;
 pub mod parser_error;
+pub(crate) mod token;
 
 use std::{iter::Peekable, slice::Iter};
 
@@ -15,14 +16,12 @@ use expressions::{
 };
 use lexer::Lexer;
 use parser_error::ParserErrors;
+use token::{Token, TokenType};
 
-use crate::{
-    chord::{
-        intervals::Interval,
-        note::{Modifier, Note, NoteLiteral},
-        Chord,
-    },
-    token::{Token, TokenType},
+use crate::chord::{
+    intervals::Interval,
+    note::{Modifier, Note, NoteLiteral},
+    Chord,
 };
 
 /// This is used to handle X(omit/add a,b) cases.
