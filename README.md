@@ -1,5 +1,7 @@
 # chordparser
 
+A library for parsing musical chords from a human readable string representation.
+
 # Overview
 
 ChordParser is a library for parsing musical chords from a human readable string representation.  
