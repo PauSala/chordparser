@@ -1,4 +1,4 @@
-# chordparser
+# Chordparser
 
 A library for parsing musical chords from a human readable string representation.
 
