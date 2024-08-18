@@ -26,7 +26,7 @@
 //!
 //! # [Voicing generation](#voicing_generation)
 //! The voicings module exposes a function to generate a set of MIDI notes from a [Chord](chord/struct.Chord.html) representing a voicing for it.
-//! The voicing is generated in a range from C1 to G5.  The generator function accepts a lead note to generate the voicings around it, which allows chaining distinct chords smoothly.
+//! The voicing is generated in a range from C1 to G4.  The generator function accepts a lead note to generate the voicings around it, which allows chaining distinct chords smoothly.
 //!
 //!
 //! # [Limitations](#limitations)
@@ -58,5 +58,4 @@
 
 pub mod chord;
 pub mod parsing;
-pub(crate) mod token;
 pub mod voicings;
