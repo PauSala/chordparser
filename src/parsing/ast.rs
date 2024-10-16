@@ -129,13 +129,29 @@ impl Ast {
         if self.has_inconsistent_extension(
             &Interval::Ninth,
             vec![&Interval::FlatNinth, &Interval::SharpNinth],
-        ) || self.has_inconsistent_extension(&Interval::Eleventh, vec![&Interval::SharpEleventh])
-            || self
-                .has_inconsistent_extension(&Interval::Thirteenth, vec![&Interval::FlatThirteenth])
-            || self.has_inconsistent_extension(&Interval::MajorSixth, vec![&Interval::MinorSixth])
-            || self.has_inconsistent_extension(&Interval::MajorThird, vec![&Interval::MinorThird])
-        {
-            self.errors.push("Inconsistent extensions".to_string());
+        ) {
+            self.errors
+                .push(format!("Inconsistent extension: {}", Interval::Ninth));
+            return true;
+        }
+        if self.has_inconsistent_extension(&Interval::Eleventh, vec![&Interval::SharpEleventh]) {
+            self.errors
+                .push(format!("Inconsistent extension: {}", Interval::Eleventh));
+            return true;
+        }
+        if self.has_inconsistent_extension(&Interval::Thirteenth, vec![&Interval::FlatThirteenth]) {
+            self.errors
+                .push(format!("Inconsistent extension: {}", Interval::Thirteenth));
+            return true;
+        }
+        if self.has_inconsistent_extension(&Interval::MajorSixth, vec![&Interval::MinorSixth]) {
+            self.errors
+                .push(format!("Inconsistent extension: {}", Interval::MajorSixth));
+            return true;
+        }
+        if self.has_inconsistent_extension(&Interval::MajorThird, vec![&Interval::MinorThird]) {
+            self.errors
+                .push(format!("Inconsistent extension: {}", Interval::MajorThird));
             return true;
         }
         false
