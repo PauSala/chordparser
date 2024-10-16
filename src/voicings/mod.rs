@@ -1,7 +1,5 @@
 //! # Midi Codes voicing generator
 
-use std::u8;
-
 use crate::chord::{intervals::Interval, note::Note, Chord};
 
 /// Default top limit to G4
@@ -225,6 +223,7 @@ fn non_guide_notes(pool: &mut [MidiNote], v: &mut MidiCodesVoicing, lead: u8) {
 /// # Arguments
 /// * `ch` - The chord to generate the voicing
 /// * `lead_note` - The lead note of the voicing.
+///
 /// If `lead_note` is not present in the chord it will be used as boundary (meaning that the actual lead note will be the nearest note in the chord, up or down).
 /// If `lead_note` is None it will be set to 79 (G4).   
 /// # Returns

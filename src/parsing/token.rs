@@ -23,7 +23,6 @@ pub enum TokenType {
     Eof,
 }
 impl TokenType {
-    //TODO: Add support for M (major) and m (minor). This implies not converting i to uppercase and put here every case sepparetely
     pub fn from_string(i: &str) -> Option<TokenType> {
         match i {
             "BASS" | "Bass" | "bass" => Some(TokenType::Bass),
