@@ -181,7 +181,8 @@ impl Ast {
                     _ => (),
                 }
                 if ext_count[index] > 0 {
-                    self.errors.push("Duplicate extensions".to_string());
+                    self.errors
+                        .push(format!("Duplicate extensions: {}", ext.interval));
                     return false;
                 }
                 ext_count[index] += 1;
