@@ -16,38 +16,37 @@ use super::expression::Exp;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Ast {
-    pub root: Note,
-    pub bass: Option<Note>,
-    pub expressions: Vec<Exp>,
-    pub intervals: Vec<Interval>,
-    pub is_sus: bool,
-    pub errors: Vec<String>,
+    pub(crate) root: Note,
+    pub(crate) bass: Option<Note>,
+    pub(crate) expressions: Vec<Exp>,
+    pub(crate) intervals: Vec<Interval>,
+    pub(crate) is_sus: bool,
+    pub(crate) errors: Vec<String>,
 }
 
 impl Ast {
-    pub fn set_intervals(&mut self) {
+    fn set_intervals(&mut self) {
         self.expressions.sort();
-        for exp in &self.expressions {
-            match exp {
-                Exp::Minor(min) => min.execute(&mut self.intervals, &self.expressions),
-                Exp::Dim7(dim) => dim.execute(&mut self.intervals),
-                Exp::Dim(dim) => dim.execute(&mut self.intervals),
-                Exp::HalfDim(half) => half.execute(&mut self.intervals),
-                Exp::Sus(sus) => {
-                    sus.execute(&mut self.intervals);
-                    self.is_sus = true;
-                }
-                Exp::Maj(maj) => maj.execute(&mut self.intervals, &self.expressions),
-                Exp::Extension(ext) => ext.execute(&mut self.intervals, &mut self.is_sus),
-                Exp::Add(add) => add.execute(&mut self.intervals),
-                Exp::Aug(aug) => aug.execute(&mut self.intervals),
-                Exp::SlashBass(bass) => self.bass = Some(bass.note.clone()),
-                Exp::Alt(alt) => alt.execute(&mut self.intervals),
-                Exp::Power(pw) => pw.execute(&mut self.intervals),
-                Exp::Bass(_) => (),
-                _ => (),
+        self.expressions.iter().for_each(|e| match e {
+            Exp::Minor(min) => min.execute(&mut self.intervals, &self.expressions),
+            Exp::Dim7(dim) => dim.execute(&mut self.intervals),
+            Exp::Dim(dim) => dim.execute(&mut self.intervals),
+            Exp::HalfDim(half) => half.execute(&mut self.intervals),
+            Exp::Sus(sus) => {
+                sus.execute(&mut self.intervals);
+                self.is_sus = true;
             }
-        }
+            Exp::Maj(maj) => maj.execute(&mut self.intervals, &self.expressions),
+            Exp::Extension(ext) => ext.execute(&mut self.intervals, &mut self.is_sus),
+            Exp::Add(add) => add.execute(&mut self.intervals),
+            Exp::Aug(aug) => aug.execute(&mut self.intervals),
+            Exp::SlashBass(bass) => self.bass = Some(bass.note.clone()),
+            Exp::Alt(alt) => alt.execute(&mut self.intervals),
+            Exp::Power(pw) => pw.execute(&mut self.intervals),
+            Exp::Bass(_) => (),
+            _ => (),
+        });
+
         self.add_third();
         self.add_five();
         self.intervals.sort_by_key(|i| i.st());
@@ -71,7 +70,7 @@ impl Ast {
         }
     }
 
-    pub fn add_five(&mut self) {
+    fn add_five(&mut self) {
         if !self.intervals.contains(&Interval::DiminishedFifth)
             && !self.intervals.contains(&Interval::PerfectFifth)
             && !self.intervals.contains(&Interval::AugmentedFifth)
@@ -90,7 +89,7 @@ impl Ast {
     }
 
     /// Checks if there are any three consecutive semitones, which are illegal.
-    pub fn validate_semitones(&mut self) -> bool {
+    fn validate_semitones(&mut self) -> bool {
         let mut is_valid = true;
         let mut count = [false; 12];
         let mut map = HashMap::new();
@@ -182,7 +181,7 @@ impl Ast {
                 }
                 if ext_count[index] > 0 {
                     self.errors
-                        .push(format!("Duplicate extensions: {}", ext.interval));
+                        .push(format!("Duplicate extension: {}", ext.interval));
                     return false;
                 }
                 ext_count[index] += 1;
@@ -220,7 +219,7 @@ impl Ast {
 
     /// Analizes expressions and intervals finding inconsistencies.  
     /// If any inconcistence is found, self.errors is populated and false is returned.
-    pub fn is_valid(&mut self) -> bool {
+    fn is_valid(&mut self) -> bool {
         let valid_exp = self.validate_expressions();
         let valid_ext = self.validate_extensions();
         let valid_sem = self.validate_semitones();
@@ -228,7 +227,7 @@ impl Ast {
     }
 
     /// Get the notes of the chord
-    pub(crate) fn get_notes(&mut self) -> Vec<Note> {
+    fn get_notes(&mut self) -> Vec<Note> {
         let mut notes = Vec::new();
         for n in &self.intervals {
             let note = self
@@ -247,12 +246,12 @@ impl Ast {
         name.replace(&format!("{}{}", self.root.literal, modifier_str), "")
     }
 
-    pub fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
+    pub(crate) fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
         self.set_intervals();
         let notes = self.get_notes();
         let mut semitones = Vec::new();
         let mut semantic_intervals = Vec::new();
-        let note_literals = notes.iter().map(|a| a.to_string()).collect::<Vec<String>>();
+        let note_literals = notes.iter().map(|a| a.to_string()).collect();
         for e in &self.intervals {
             semitones.push(e.st());
             semantic_intervals.push(e.to_semantic_interval().numeric());
@@ -261,6 +260,7 @@ impl Ast {
         if !self.is_valid() {
             return Err(ParserErrors::new(self.errors.clone()));
         }
+
         Ok(Chord::builder(name, self.root.clone())
             .descriptor(&self.get_descriptor(name))
             .bass(self.bass.clone())

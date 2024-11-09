@@ -68,12 +68,12 @@ impl Lexer {
                         let pos = self.current;
                         let mut literal = String::from(c);
                         let p = chars.peek();
-                        let mut cond = p.is_some() && p.unwrap().is_numeric();
+                        let mut cond = p.is_some_and(|p| p.is_numeric());
                         while cond {
                             let c = self.advance(chars).unwrap();
                             literal.push(c);
                             let p = chars.peek();
-                            cond = p.is_some() && p.unwrap().is_numeric();
+                            cond = p.is_some_and(|p| p.is_numeric());
                         }
 
                         self.parse_number(&literal, pos);
@@ -83,13 +83,13 @@ impl Lexer {
                         let pos = self.current;
                         let mut literal = String::from(c);
                         let p = chars.peek();
-                        let mut cond = p.is_some() && self.is_alphabetic(p.unwrap());
+                        let mut cond = p.is_some_and(|p| self.is_alphabetic(p));
 
                         while cond {
                             let c = self.advance(chars).unwrap();
                             literal.push(c);
                             let p = chars.peek();
-                            cond = p.is_some() && self.is_alphabetic(p.unwrap());
+                            cond = p.is_some_and(|p| self.is_alphabetic(p));
                         }
                         self.parse_string(&literal, pos);
                     } else {
@@ -99,6 +99,14 @@ impl Lexer {
             },
         }
     }
+
+    /// Parses a string literal
+    /// # Arguments
+    /// * `s` - The string to parse
+    /// * `pos` - The position of the string in the source
+    ///
+    /// # Note
+    /// The parsing is done checking first all the string and advancing the start (not reducing the end) to ensure that the last longest match is found.
 
     fn parse_string(&mut self, s: &str, pos: usize) {
         let mut start = 0;
@@ -153,7 +161,7 @@ impl Lexer {
     }
 
     fn is_alphabetic(&self, c: &char) -> bool {
-        c.is_ascii_alphabetic() //&& *c != 'b'
+        c.is_ascii_alphabetic()
     }
 
     fn add_token(&mut self, token_type: TokenType, pos: usize) {

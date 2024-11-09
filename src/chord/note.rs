@@ -5,15 +5,15 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 /// All possible note literals.
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 pub enum NoteLiteral {
-    C,
-    D,
-    E,
-    F,
-    G,
-    A,
-    B,
+    C = 0,
+    D = 1,
+    E = 2,
+    F = 3,
+    G = 4,
+    A = 5,
+    B = 6,
 }
 
 impl NoteLiteral {
@@ -30,16 +30,8 @@ impl NoteLiteral {
         }
     }
 
-    pub(crate) fn to_int(l: &NoteLiteral) -> u8 {
-        match l {
-            NoteLiteral::C => 0,
-            NoteLiteral::D => 1,
-            NoteLiteral::E => 2,
-            NoteLiteral::F => 3,
-            NoteLiteral::G => 4,
-            NoteLiteral::A => 5,
-            NoteLiteral::B => 6,
-        }
+    pub(crate) fn numeric(&self) -> u8 {
+        *self as u8
     }
 
     /// Returns the matcher for given root and interval.  
@@ -53,68 +45,68 @@ impl NoteLiteral {
         let interval = (root + interval) % 12;
         let i = interval % 12;
         match i {
-            0 => NoteMatcher(vec![
+            0 => vec![
                 (NoteLiteral::C, None),
                 (NoteLiteral::B, Some(Modifier::Sharp)),
                 (NoteLiteral::D, Some(Modifier::DFlat)),
-            ]),
-            1 => NoteMatcher(vec![
+            ],
+            1 => vec![
                 (NoteLiteral::D, Some(Modifier::Flat)),
                 (NoteLiteral::C, Some(Modifier::Sharp)),
                 (NoteLiteral::B, Some(Modifier::DSharp)),
-            ]),
-            2 => NoteMatcher(vec![
+            ],
+            2 => vec![
                 (NoteLiteral::D, None),
                 (NoteLiteral::E, Some(Modifier::DFlat)),
                 (NoteLiteral::C, Some(Modifier::DSharp)),
-            ]),
-            3 => NoteMatcher(vec![
+            ],
+            3 => vec![
                 (NoteLiteral::E, Some(Modifier::Flat)),
                 (NoteLiteral::D, Some(Modifier::Sharp)),
                 (NoteLiteral::F, Some(Modifier::DFlat)),
-            ]),
+            ],
 
-            4 => NoteMatcher(vec![
+            4 => vec![
                 (NoteLiteral::E, None),
                 (NoteLiteral::F, Some(Modifier::Flat)),
                 (NoteLiteral::D, Some(Modifier::DSharp)),
-            ]),
-            5 => NoteMatcher(vec![
+            ],
+            5 => vec![
                 (NoteLiteral::F, None),
                 (NoteLiteral::E, Some(Modifier::Sharp)),
                 (NoteLiteral::G, Some(Modifier::DFlat)),
-            ]),
-            6 => NoteMatcher(vec![
+            ],
+            6 => vec![
                 (NoteLiteral::G, Some(Modifier::Flat)),
                 (NoteLiteral::F, Some(Modifier::Sharp)),
                 (NoteLiteral::E, Some(Modifier::DSharp)),
-            ]),
+            ],
 
-            7 => NoteMatcher(vec![
+            7 => vec![
                 (NoteLiteral::G, None),
                 (NoteLiteral::F, Some(Modifier::DSharp)),
                 (NoteLiteral::A, Some(Modifier::DFlat)),
-            ]),
-            8 => NoteMatcher(vec![
+            ],
+            8 => vec![
                 (NoteLiteral::A, Some(Modifier::Flat)),
                 (NoteLiteral::G, Some(Modifier::Sharp)),
-            ]),
+            ],
 
-            9 => NoteMatcher(vec![
+            9 => vec![
                 (NoteLiteral::A, None),
                 (NoteLiteral::G, Some(Modifier::DSharp)),
                 (NoteLiteral::B, Some(Modifier::DFlat)),
-            ]),
-            10 => NoteMatcher(vec![
+            ],
+            10 => vec![
                 (NoteLiteral::B, Some(Modifier::Flat)),
                 (NoteLiteral::A, Some(Modifier::Sharp)),
                 (NoteLiteral::C, Some(Modifier::DFlat)),
-            ]),
-            11 => NoteMatcher(vec![
+            ],
+            11 => vec![
                 (NoteLiteral::B, None),
                 (NoteLiteral::A, Some(Modifier::DSharp)),
                 (NoteLiteral::C, Some(Modifier::Flat)),
-            ]),
+            ],
             _ => panic!("Dont call this with a number greater than 6"),
         }
     }
@@ -135,8 +127,7 @@ impl Display for NoteLiteral {
 }
 
 /// All possible matches for a given semitone from a root note.
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct NoteMatcher(Vec<(NoteLiteral, Option<Modifier>)>);
+pub type NoteMatcher = Vec<(NoteLiteral, Option<Modifier>)>;
 
 /// Represents a note modifier. It can be sharp, flat, double sharp or double flat.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize)]
@@ -187,7 +178,7 @@ impl Note {
     pub fn transpose_to(&self, note: &Note, to: &Note) -> Note {
         let diff = self.get_difference(to);
         let m = self.literal.get_matcher(note.to_semitone(), diff);
-        Note::new(m.0[0].clone().0, m.0[0].clone().1)
+        Note::new(m[0].clone().0, m[0].clone().1)
     }
 
     /// Returns the semitone distance taking C as reference.
@@ -262,21 +253,13 @@ impl Note {
     /// The enharmonically correct note relative to root
     pub fn get_note(&self, semitone: u8, semantic_interval: u8) -> Note {
         let m = self.literal.get_matcher(self.to_semitone(), semitone);
-        let root_index = NoteLiteral::to_int(&self.literal);
+        let root_index = &self.literal.numeric();
         let interval_index = (root_index + (semantic_interval - 1)) % 7;
-        let mut f =
-            m.0.iter()
-                .find(|m| NoteLiteral::to_int(&m.0) == interval_index);
-        f = {
-            // If the note is triple flat/sharp return the first note, it is wrong anyway
-            // Maybe in the future we can try to get the most reasonable note and return some kind of warning attached to the chord
-            if f.is_none() {
-                Some(&m.0[0])
-            } else {
-                f
-            }
-        };
-        let (literal, modifier) = f.unwrap().to_owned();
+        let f = m.iter().find(|m| m.0.numeric() == interval_index);
+
+        // If the note is triple flat/sharp return the first note, it is wrong anyway
+        // Maybe in the future we can try to get the most reasonable note and return some kind of warning attached to the chord
+        let (literal, modifier) = f.unwrap_or(&m[0]).to_owned();
         Note::new(literal, modifier)
     }
 
@@ -286,14 +269,13 @@ impl Note {
     pub fn to_midi_code(&self) -> u8 {
         let central_c = 60;
         let mut code = central_c - 12;
-        match &self.modifier {
-            Some(m) => match m {
+        if let Some(m) = &self.modifier {
+            match m {
                 Modifier::Sharp => code += 1,
                 Modifier::Flat => code -= 1,
                 Modifier::DSharp => code += 2,
                 Modifier::DFlat => code -= 2,
-            },
-            None => (),
+            }
         }
         match self.literal {
             NoteLiteral::C => (),
@@ -316,5 +298,19 @@ impl Display for Note {
         };
         f.write_str(&format!("{}{}", self.literal, m))?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::chord::intervals::SemInterval;
+
+    use super::*;
+
+    #[test]
+    fn enharmonies() {
+        let note = Note::new(NoteLiteral::C, None);
+        let n = note.get_note(3, SemInterval::Third.numeric());
+        dbg!(n);
     }
 }

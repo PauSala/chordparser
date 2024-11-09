@@ -30,9 +30,7 @@
 //!
 //!
 //! # [Limitations](#limitations)
-//! - Parsed chord notes have enharmonically correct names when possible. For example, a `B#9` chord will have `C𝄪` as the ninth instead of D. Said that,
-//!
-//! triple flat/sharps are not suported since they add an unnecesasry complexity for very rare use cases.
+//! - Parsed chord notes have enharmonically correct names when possible (for example, a `B#9` chord will have `C𝄪` as the ninth instead of D), but triple flat/sharps are not suported.
 //! - When transposed, slash-bass notes (like C in Ab/C) may not be enharmonically correct.
 //! - The parser is not customizable for now, but it is expected to be in the future, for example:
 //!     - Include or remove both custom and default validators.

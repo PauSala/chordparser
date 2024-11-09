@@ -7,20 +7,20 @@ use super::expressions::{
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Exp {
+    Power(PowerExp),
+    Alt(AltExp),
+    Bass(BassExp),
+    Minor(MinorExp),
+    Dim7(Dim7Exp),
+    Dim(DimExp),
+    HalfDim(HalfDimExp),
+    Sus(SusExp),
+    Maj(MajExp),
     Extension(ExtensionExp),
     Add(AddExp),
-    Sus(SusExp),
+    Aug(AugExp),
     Omit(OmitExp),
     SlashBass(SlashBassExp),
-    Bass(BassExp),
-    Alt(AltExp),
-    Minor(MinorExp),
-    Aug(AugExp),
-    HalfDim(HalfDimExp),
-    Dim(DimExp),
-    Dim7(Dim7Exp),
-    Maj(MajExp),
-    Power(PowerExp),
 }
 
 impl Exp {

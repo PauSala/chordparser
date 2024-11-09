@@ -171,18 +171,18 @@ impl Serialize for Interval {
 
 /// Enum representing semantic intervals, meaning that every interval can be any of its possible values.  
 /// It is used to calculate the correct enharmonic notes from given root.
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum SemInterval {
-    Root,
-    Second,
-    Third,
-    Fourth,
-    Fifth,
-    Sixth,
-    Seventh,
-    Ninth,
-    Eleventh,
-    Thirteenth,
+    Root = 1,
+    Second = 2,
+    Third = 3,
+    Fourth = 4,
+    Fifth = 5,
+    Sixth = 6,
+    Seventh = 7,
+    Ninth = 9,
+    Eleventh = 11,
+    Thirteenth = 13,
 }
 
 impl SemInterval {
@@ -192,17 +192,6 @@ impl SemInterval {
     /// # Returns
     /// * `u8` - The int representation of the semantic interval
     pub fn numeric(&self) -> u8 {
-        match self {
-            SemInterval::Root => 1,
-            SemInterval::Second => 2,
-            SemInterval::Third => 3,
-            SemInterval::Fourth => 4,
-            SemInterval::Fifth => 5,
-            SemInterval::Sixth => 6,
-            SemInterval::Seventh => 7,
-            SemInterval::Ninth => 9,
-            SemInterval::Eleventh => 11,
-            SemInterval::Thirteenth => 13,
-        }
+        *self as u8
     }
 }
