@@ -309,8 +309,55 @@ mod test {
 
     #[test]
     fn enharmonies() {
-        let note = Note::new(NoteLiteral::C, None);
-        let n = note.get_note(3, SemInterval::Third.numeric());
-        dbg!(n);
+        let cases = vec![
+            (
+                Note::new(NoteLiteral::C, None),
+                3,
+                SemInterval::Third,
+                Note {
+                    literal: NoteLiteral::E,
+                    modifier: Some(Modifier::Flat),
+                },
+            ),
+            (
+                Note::new(NoteLiteral::C, Some(Modifier::Flat)),
+                3,
+                SemInterval::Third,
+                Note {
+                    literal: NoteLiteral::E,
+                    modifier: Some(Modifier::DFlat),
+                },
+            ),
+            (
+                Note::new(NoteLiteral::D, Some(Modifier::Flat)),
+                1,
+                SemInterval::Ninth,
+                Note {
+                    literal: NoteLiteral::E,
+                    modifier: Some(Modifier::DFlat),
+                },
+            ),
+            (
+                Note::new(NoteLiteral::D, Some(Modifier::Sharp)),
+                15,
+                SemInterval::Ninth,
+                Note {
+                    literal: NoteLiteral::E,
+                    modifier: Some(Modifier::DSharp),
+                },
+            ),
+            (
+                Note::new(NoteLiteral::B, None),
+                9,
+                SemInterval::Seventh,
+                Note {
+                    literal: NoteLiteral::A,
+                    modifier: Some(Modifier::Flat),
+                },
+            ),
+        ];
+        for (note, dist, sem_interval, expect) in cases {
+            assert_eq!(expect, note.get_note(dist, sem_interval.numeric()))
+        }
     }
 }
