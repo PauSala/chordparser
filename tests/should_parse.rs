@@ -13,6 +13,7 @@ use test_case::test_case;
 #[test_case("C+", vec!["C", "E", "G#"]; "C+")]
 #[test_case("C+#11", vec!["C", "E", "G#", "F#"]; "C+#11")]
 #[test_case("C+Maj7", vec!["C", "E", "G#", "B"]; "C+Maj7")]
+#[test_case("C+Maj76omit5", vec!["C", "E", "G#", "A", "B"]; "C+Maj76")]
 #[test_case("C+Maj9", vec!["C", "E", "G#", "B", "D"]; "C+Maj9")]
 #[test_case("C6(b5)", vec!["C", "E", "Gb", "A"])]
 #[test_case("C6", vec!["C", "E", "G", "A"])]
