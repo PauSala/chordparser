@@ -105,9 +105,9 @@ impl Lexer {
     /// * `s` - The string to parse
     /// * `pos` - The position of the string in the source
     ///
-    /// # Note
-    /// The parsing is done checking first all the string and advancing the start (not reducing the end) to ensure that the last longest match is found.
-
+    /// The parsing is done by checking first all the string and advancing the start to ensure that the last longest match is found.  
+    /// For example, for `Cminomit5`, those are the handled parts:  
+    /// `Cminomit` -> `minomit` -> `inomit` -> `omit` (match!) -> `Cmin` -> `min` (match!) -> `C` (match!)  
     fn parse_string(&mut self, s: &str, pos: usize) {
         let mut start = 0;
         let mut end = s.len();

@@ -175,7 +175,7 @@ fn test_notes(i: &str, expected: Vec<&str>) {
                 let parsed = parser.parse(&t.origin);
                 match parsed {
                     Ok(p) => assert_eq!(t.real_intervals, p.real_intervals),
-                    Err(_) => panic!(),
+                    Err(e) => panic!("{e}"),
                 }
             }
         }
