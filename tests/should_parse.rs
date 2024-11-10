@@ -10,6 +10,10 @@ use test_case::test_case;
 #[test_case("Csus", vec!["C", "F", "G"])]
 #[test_case("C(b5)", vec!["C", "E", "Gb"])]
 #[test_case("C", vec!["C", "E", "G"])]
+#[test_case("C△", vec!["C", "E", "G", "B"]; "CMaj7")]
+#[test_case("Cmajor7", vec!["C", "E", "G", "B"]; "Cmajor7")]
+#[test_case("C△7", vec!["C", "E", "G", "B"]; "CMaj7 II")]
+#[test_case("C##5", vec!["C#", "E#", "G𝄪"])]
 #[test_case("C+", vec!["C", "E", "G#"]; "C+")]
 #[test_case("C+#11", vec!["C", "E", "G#", "F#"]; "C+#11")]
 #[test_case("C+Maj7", vec!["C", "E", "G#", "B"]; "C+Maj7")]
@@ -22,6 +26,7 @@ use test_case::test_case;
 #[test_case("C69(#11)", vec!["C", "E", "G", "A", "D", "F#"])]
 #[test_case("Cma7(b5)", vec!["C", "E", "Gb", "B"])]
 #[test_case("CMAJ713", vec!["C", "E", "G", "B", "D", "A"])]
+#[test_case("CM7", vec!["C", "E", "G", "B"])]
 #[test_case("Cma7", vec!["C", "E", "G", "B"])]
 #[test_case("Cma7(#5)", vec!["C", "E", "G#", "B"])]
 #[test_case("Cadd9(omit3)", vec!["C", "G", "D"])]
@@ -45,6 +50,8 @@ use test_case::test_case;
 #[test_case("Cmi69", vec!["C", "Eb", "G", "A", "D"])]
 #[test_case("Cmi6/9", vec!["C", "Eb", "G", "A", "D"])]
 #[test_case("C-6", vec!["C", "Eb", "G", "A"])]
+#[test_case("C--5", vec!["C", "Eb", "Gb"])]
+#[test_case("C--56/9", vec!["C", "Eb", "Gb", "A", "D"])]
 #[test_case("C-69", vec!["C", "Eb", "G", "A", "D"])]
 #[test_case("Cminor69", vec!["C", "Eb", "G", "A", "D"])]
 #[test_case("Cminor611", vec!["C", "Eb", "G", "A", "D", "F"])]
@@ -70,7 +77,9 @@ use test_case::test_case;
 #[test_case("C#minomit5maj7add9#11", vec!["C#", "E", "B#", "D#", "F𝄪"])]
 #[test_case("Csus4(b5#5)", vec!["C", "F", "Gb", "G#"])]
 #[test_case("C7", vec!["C", "E", "G", "Bb" ])]
+#[test_case("CMaj", vec!["C", "E", "G" ])]
 #[test_case("Cadd2", vec!["C", "D", "E", "G"])]
+#[test_case("CMaj13#9#11#5", vec!["C", "E", "G#", "B", "D#", "F#", "A" ])]
 #[test_case("CMaj713#9#11#5", vec!["C", "E", "G#", "B", "D#", "F#", "A" ])]
 #[test_case("CM713#9#11#5", vec!["C", "E", "G#", "B", "D#", "F#", "A" ])]
 #[test_case("C△13#9#11#5", vec!["C", "E", "G#", "B", "D#", "F#", "A" ])]
@@ -116,6 +125,9 @@ use test_case::test_case;
 #[test_case("Cdim7addMaj7 b13", vec!["C", "Eb", "Gb", "B𝄫", "B", "Ab"])]
 #[test_case("Cdim7add9", vec!["C", "Eb", "Gb", "B𝄫", "D"])]
 #[test_case("Cdim7add911", vec!["C", "Eb", "Gb", "B𝄫", "D", "F"])]
+#[test_case("Cøadd911", vec!["C", "Eb", "Gb", "Bb", "D", "F"])]
+#[test_case("Cø11", vec!["C", "Eb", "Gb", "Bb", "D", "F"])]
+#[test_case("Cø13", vec!["C", "Eb", "Gb", "Bb", "D", "F", "A"])]
 #[test_case("Cdim7add911 b13", vec!["C", "Eb", "Gb", "B𝄫", "D", "F", "Ab"])]
 #[test_case("Cdim7(add9,13)", vec!["C", "Eb", "Gb", "B𝄫", "D", "A"])]
 #[test_case("Cdim7(add9,add13)", vec!["C", "Eb", "Gb", "B𝄫", "D", "A"])]
@@ -173,10 +185,19 @@ fn test_notes(i: &str, expected: Vec<&str>) {
             assert_eq!(literals, &expected);
             for n in notes {
                 let t = chord.transpose_to(&n);
-                assert_eq!(chord.real_intervals, t.real_intervals);
+                assert_eq!(
+                    chord.real_intervals, t.real_intervals,
+                    "Error parsing chord {}",
+                    chord.origin
+                );
+
                 let parsed = parser.parse(&t.origin);
                 match parsed {
-                    Ok(p) => assert_eq!(t.real_intervals, p.real_intervals),
+                    Ok(p) => assert_eq!(
+                        t.real_intervals, p.real_intervals,
+                        "Error transposing chord {} into {}",
+                        &chord.origin, n
+                    ),
                     Err(e) => panic!("{e}"),
                 }
             }

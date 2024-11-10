@@ -145,7 +145,7 @@ impl Parser {
             TokenType::Note(_) => self.note(token),
             TokenType::Sharp => self.modifier(tokens, Modifier::Sharp, token),
             TokenType::Flat => self.modifier(tokens, Modifier::Flat, token),
-            TokenType::Aug => self.ast.expressions.push(Exp::Aug(AugExp)),
+            TokenType::Aug => self.aug(tokens),
             TokenType::Dim => self.dim(tokens),
             TokenType::HalfDim => self.ast.expressions.push(Exp::HalfDim(HalfDimExp)),
             TokenType::Extension(ext) => self.extension(ext, token),
@@ -153,7 +153,7 @@ impl Parser {
             TokenType::Omit => self.omit(token, tokens),
             TokenType::Alt => self.ast.expressions.push(Exp::Alt(AltExp)),
             TokenType::Sus => self.sus(tokens),
-            TokenType::Minor => self.ast.expressions.push(Exp::Minor(MinorExp)),
+            TokenType::Minor => self.min(tokens),
             TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
             TokenType::Maj7 => self.maj7(tokens),
             TokenType::Slash => self.slash(tokens, token),
@@ -221,6 +221,26 @@ impl Parser {
                 _ => None,
             },
         }
+    }
+
+    fn min(&mut self, tokens: &mut Peekable<Iter<Token>>) {
+        if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
+            tokens.next();
+            self.ast.expressions.push(Exp::Extension(ExtensionExp {
+                interval: Interval::DiminishedFifth,
+            }));
+        } else {
+            self.ast.expressions.push(Exp::Minor(MinorExp));
+        }
+    }
+
+    fn aug(&mut self, tokens: &mut Peekable<Iter<Token>>) {
+        if self.expect_peek(TokenType::Extension("5".to_owned()), tokens) {
+            tokens.next();
+            self.ast.expressions.push(Exp::Aug(AugExp));
+            return;
+        }
+        self.ast.expressions.push(Exp::Aug(AugExp));
     }
 
     fn dim(&mut self, tokens: &mut Peekable<Iter<Token>>) {

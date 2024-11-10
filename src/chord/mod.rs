@@ -78,7 +78,15 @@ impl Chord {
         let note_literals = notes.iter().map(|a| a.to_string()).collect::<Vec<String>>();
 
         let mut origin = transpose_to.to_string();
-        origin.push_str(&self.descriptor);
+
+        // Set origin string
+        // TODO: this is for chords like C##5, which when transposed to D gives D#5, which is interpreted as D#(5));
+        if self.descriptor.starts_with("#5") {
+            let desc = &self.descriptor[0..2].replace("#5", "+5");
+            origin.push_str(desc);
+        } else {
+            origin.push_str(&self.descriptor);
+        }
 
         Chord::builder(&origin, transpose_to.clone())
             .descriptor(&self.descriptor)
