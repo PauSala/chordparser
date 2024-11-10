@@ -173,15 +173,19 @@ impl Ast {
                     | Interval::MajorThird
                     | Interval::DiminishedSeventh
                     | Interval::MajorSeventh => {
-                        self.errors
-                            .push(format!("Invalid extension {}", ext.interval));
+                        self.errors.push(format!(
+                            "Invalid extension {} at position {}",
+                            ext.interval, ext.pos
+                        ));
                         return false;
                     }
                     _ => (),
                 }
                 if ext_count[index] > 0 {
-                    self.errors
-                        .push(format!("Duplicate extension: {}", ext.interval));
+                    self.errors.push(format!(
+                        "Duplicate extension: {} at position: {}",
+                        ext.interval, ext.pos
+                    ));
                     return false;
                 }
                 ext_count[index] += 1;

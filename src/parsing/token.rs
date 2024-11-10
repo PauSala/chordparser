@@ -83,11 +83,11 @@ impl Display for TokenType {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
     pub token_type: TokenType,
-    pub pos: u8,
+    pub pos: usize,
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, pos: u8) -> Token {
+    pub fn new(token_type: TokenType, pos: usize) -> Token {
         Token { token_type, pos }
     }
 }

@@ -153,9 +153,9 @@ impl Parser {
             TokenType::Omit => self.omit(token, tokens),
             TokenType::Alt => self.ast.expressions.push(Exp::Alt(AltExp)),
             TokenType::Sus => self.sus(tokens),
-            TokenType::Minor => self.min(tokens),
+            TokenType::Minor => self.min(tokens, token.pos),
             TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
-            TokenType::Maj7 => self.maj7(tokens),
+            TokenType::Maj7 => self.maj7(tokens, &token.pos),
             TokenType::Slash => self.slash(tokens, token),
             TokenType::LParent => self.lparen(tokens),
             TokenType::RParent => self.rparen(),
@@ -168,12 +168,13 @@ impl Parser {
         }
     }
 
-    fn maj7(&mut self, tokens: &mut Peekable<Iter<Token>>) {
+    fn maj7(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: &usize) {
         self.ast.expressions.push(Exp::Maj(MajExp));
         if !self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
-            self.ast
-                .expressions
-                .push(Exp::Extension(ExtensionExp::new(Interval::MinorSeventh)));
+            self.ast.expressions.push(Exp::Extension(ExtensionExp::new(
+                Interval::MinorSeventh,
+                *pos,
+            )));
         }
     }
 
@@ -225,11 +226,12 @@ impl Parser {
         }
     }
 
-    fn min(&mut self, tokens: &mut Peekable<Iter<Token>>) {
+    fn min(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize) {
         if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
             tokens.next();
             self.ast.expressions.push(Exp::Extension(ExtensionExp {
                 interval: Interval::DiminishedFifth,
+                pos,
             }));
         } else {
             self.ast.expressions.push(Exp::Minor(MinorExp));
@@ -379,10 +381,10 @@ impl Parser {
                 id.push_str(a);
                 let interval = Interval::from_chord_notation(&id);
                 if let Some(int) = interval {
-                    self.add_interval(int);
+                    self.add_interval(int, token.pos);
                 } else {
                     self.errors
-                        .push(format!("Invalid extension at position {}", token.pos));
+                        .push(format!("Invalid extension at position {}", token.pos + 1));
                 }
             }
         } else {
@@ -391,7 +393,7 @@ impl Parser {
         }
     }
 
-    fn add_interval(&mut self, int: Interval) {
+    fn add_interval(&mut self, int: Interval, pos: usize) {
         match self.context {
             Context::Sus => match int {
                 Interval::MinorSecond
@@ -408,7 +410,7 @@ impl Parser {
                         .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
                     self.ast
                         .expressions
-                        .push(Exp::Extension(ExtensionExp::new(int)));
+                        .push(Exp::Extension(ExtensionExp::new(int, pos)));
                 }
             },
             Context::Omit(true) => self.ast.expressions.push(Exp::Omit(OmitExp::new(int))),
@@ -416,7 +418,7 @@ impl Parser {
             _ => self
                 .ast
                 .expressions
-                .push(Exp::Extension(ExtensionExp::new(int))),
+                .push(Exp::Extension(ExtensionExp::new(int, pos))),
         }
     }
 
@@ -442,7 +444,7 @@ impl Parser {
         }
         let interval = Interval::from_chord_notation(ext);
         if let Some(int) = interval {
-            self.add_interval(int);
+            self.add_interval(int, token.pos);
         } else {
             self.errors
                 .push(format!("Invalid extension at position {}", token.pos));

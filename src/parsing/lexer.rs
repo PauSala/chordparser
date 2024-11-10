@@ -136,24 +136,25 @@ impl Lexer {
     fn parse_number(&mut self, s: &str, pos: usize) {
         let mut start = 0;
         let mut end = s.len();
-        let mut is_match = false;
+        let mut errors = Vec::new();
         while start < s.len() {
             let substring = &s[start..end];
             if self.reg_alt.is_match(substring) {
                 self.add_token(TokenType::Extension(substring.to_string()), pos + start);
-                is_match = true;
                 start = end;
                 end = s.len();
                 continue;
             }
             end -= 1;
             if end == start {
+                errors.push((TokenType::Illegal, pos + start));
                 end = s.len();
                 start += 1;
             }
         }
-        if !is_match {
-            self.add_token(TokenType::Illegal, pos);
+
+        while let Some((token_type, pos)) = errors.pop() {
+            self.add_token(token_type, pos);
         }
     }
 
@@ -162,7 +163,7 @@ impl Lexer {
     }
 
     fn add_token(&mut self, token_type: TokenType, pos: usize) {
-        self.tokens.push(Token::new(token_type, pos as u8));
+        self.tokens.push(Token::new(token_type, pos));
     }
 
     fn advance(&mut self, chars: &mut Peekable<Chars>) -> Option<char> {

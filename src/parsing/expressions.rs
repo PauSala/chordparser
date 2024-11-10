@@ -4,10 +4,11 @@ use super::expression::Exp;
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ExtensionExp {
     pub interval: Interval,
+    pub pos: usize,
 }
 impl ExtensionExp {
-    pub fn new(interval: Interval) -> Self {
-        Self { interval }
+    pub fn new(interval: Interval, pos: usize) -> Self {
+        Self { interval, pos }
     }
     fn include_seventh(&self, i: &mut Vec<Interval>) {
         if !i.contains(&Interval::MajorSixth)
@@ -221,12 +222,16 @@ impl MajExp {
                 e,
                 Exp::Extension(ExtensionExp {
                     interval: Interval::MinorSeventh,
+                    ..
                 }) | Exp::Extension(ExtensionExp {
                     interval: Interval::Ninth,
+                    ..
                 }) | Exp::Extension(ExtensionExp {
                     interval: Interval::Eleventh,
+                    ..
                 }) | Exp::Extension(ExtensionExp {
                     interval: Interval::Thirteenth,
+                    ..
                 })
             )
         }) && !i.contains(&Interval::MajorSeventh)
