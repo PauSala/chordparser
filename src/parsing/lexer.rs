@@ -1,49 +1,43 @@
+use super::token::{Token, TokenType};
+use regex::Regex;
 use std::{iter::Peekable, str::Chars};
 
-use regex::Regex;
-
-use super::token::{Token, TokenType};
-
 static EXTENSIONS: &str = r"\b(?:2|3|4|5|6|7|9|11|13)\b";
+
 pub struct Lexer {
-    source: String,
     tokens: Vec<Token>,
     current: usize,
     reg_alt: Regex,
+    input_len: usize,
 }
 
 impl Lexer {
     pub fn new() -> Lexer {
+        // For some reason, generating this with lazy_static! does not improve performance at all.
         let reg_alt = Regex::new(EXTENSIONS).unwrap();
         Lexer {
-            source: String::from(""),
+            input_len: 0,
             tokens: Vec::new(),
             current: 0,
             reg_alt,
         }
     }
 
-    fn is_at_end(&self) -> bool {
-        self.current >= self.source.len()
-    }
-
     pub fn scan_tokens(&mut self, source: &str) -> Vec<Token> {
-        self.set_source(source);
-        let source = self.source.clone();
+        self.input_len = source.len();
         let mut iter = source.chars().peekable();
         while !self.is_at_end() {
             self.scan_token(&mut iter);
         }
         self.add_token(TokenType::Eof, self.current + 1);
         let res = self.tokens.clone();
-        self.source = String::new();
         self.tokens.clear();
         self.current = 0;
         res
     }
 
-    fn set_source(&mut self, source: &str) {
-        source.clone_into(&mut self.source);
+    fn is_at_end(&self) -> bool {
+        self.current >= self.input_len
     }
 
     fn scan_token(&mut self, chars: &mut Peekable<Chars>) {

@@ -1,6 +1,6 @@
 [package]
 name = "chordparser"
-version = "1.2.0"
+version = "1.2.1"
 edition = "2021"
 description = "A parser library to generate Jazz/Pop/Rock chords from string inputs"
 repository = "https://github.com/PauSala/chordparser"
@@ -10,7 +10,6 @@ categories = ["multimedia::audio", "parsing"]
 exclude = [".DS_Store"]
 
 [dependencies]
-lazy_static = "1.5.0"
 regex = "1.10.5"
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.121"
@@ -18,10 +17,16 @@ serde_json = "1.0.121"
 [dev-dependencies]
 test-case = "3.3.1"
 midly = { version = "0.5.3"}
+criterion = { version = "0.5", features = ["html_reports"] }
 
 [[example]]
 name = "parse-chord"
 path = "examples/parse-chord.rs"
+
+[[bench]]
+name = "bench_parser"
+harness = false
+
 
 [profile.release]
 opt-level = 3

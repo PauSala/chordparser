@@ -179,7 +179,9 @@ impl Parser {
 
     fn slash(&mut self, tokens: &mut Peekable<Iter<Token>>, token: &Token) {
         if self.expect_extension(tokens) {
-            let alt = tokens.next().unwrap();
+            let alt = tokens
+                .next()
+                .expect("expect_extension guarrantees that a next token exist");
             if let TokenType::Extension(a) = &alt.token_type {
                 match a.as_str() {
                     "9" => self
@@ -264,8 +266,7 @@ impl Parser {
     fn lparen(&mut self, tokens: &mut Peekable<Iter<Token>>) {
         self.op_count += 1;
         self.context = Context::None;
-        while tokens.peek().is_some() {
-            let token = tokens.next().unwrap();
+        while let Some(token) = tokens.next() {
             match token.token_type {
                 TokenType::RParent => {
                     self.op_count -= 1;
@@ -370,7 +371,9 @@ impl Parser {
 
     fn modifier(&mut self, tokens: &mut Peekable<Iter<Token>>, modifier: Modifier, token: &Token) {
         if self.expect_extension(tokens) {
-            let alt = tokens.next().unwrap();
+            let alt = tokens
+                .next()
+                .expect("expect_extension guarantees that a next token exist");
             if let TokenType::Extension(a) = &alt.token_type {
                 let mut id = modifier.to_string();
                 id.push_str(a);
