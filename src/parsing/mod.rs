@@ -433,7 +433,7 @@ impl Parser {
     }
 
     fn extension(&mut self, ext: &str, token: &Token) {
-        if ext == "5" {
+        if ext == "5" && self.context == Context::None {
             self.ast.expressions.push(Exp::Power(PowerExp));
             return;
         }
