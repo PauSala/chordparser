@@ -29,7 +29,7 @@ impl Lexer {
         while !self.is_at_end() {
             self.scan_token(&mut iter);
         }
-        self.add_token(TokenType::Eof, self.current + 1);
+        self.add_token(TokenType::Eof, self.current + 1, 0);
         let res = self.tokens.clone();
         self.tokens.clear();
         self.current = 0;
@@ -45,18 +45,18 @@ impl Lexer {
         match c {
             None => (),
             Some(c) => match c {
-                '#' | '♯' => self.add_token(TokenType::Sharp, self.current),
-                '♭' => self.add_token(TokenType::Flat, self.current),
-                '△' | '^' => self.add_token(TokenType::Maj7, self.current),
-                '-' => self.add_token(TokenType::Minor, self.current),
-                '°' => self.add_token(TokenType::Dim, self.current),
-                'ø' => self.add_token(TokenType::HalfDim, self.current),
-                '/' => self.add_token(TokenType::Slash, self.current),
-                '+' => self.add_token(TokenType::Aug, self.current),
+                '#' | '♯' => self.add_token(TokenType::Sharp, self.current, 1),
+                '♭' => self.add_token(TokenType::Flat, self.current, 1),
+                '△' | '^' => self.add_token(TokenType::Maj7, self.current, 1),
+                '-' => self.add_token(TokenType::Minor, self.current, 1),
+                '°' => self.add_token(TokenType::Dim, self.current, 1),
+                'ø' => self.add_token(TokenType::HalfDim, self.current, 1),
+                '/' => self.add_token(TokenType::Slash, self.current, 1),
+                '+' => self.add_token(TokenType::Aug, self.current, 1),
                 ' ' => (),
-                ',' => self.add_token(TokenType::Comma, self.current),
-                '(' => self.add_token(TokenType::LParent, self.current),
-                ')' => self.add_token(TokenType::RParent, self.current),
+                ',' => self.add_token(TokenType::Comma, self.current, 1),
+                '(' => self.add_token(TokenType::LParent, self.current, 1),
+                ')' => self.add_token(TokenType::RParent, self.current, 1),
                 c => {
                     if c.is_numeric() {
                         let pos = self.current;
@@ -87,7 +87,7 @@ impl Lexer {
                         }
                         self.parse_string(&literal, pos);
                     } else {
-                        self.add_token(TokenType::Illegal, self.current);
+                        self.add_token(TokenType::Illegal, self.current, 1);
                     }
                 }
             },
@@ -110,7 +110,7 @@ impl Lexer {
         while end > 0 {
             let substring = &s[start..end];
             if let Some(m) = TokenType::from_string(substring) {
-                tokens.push((m, pos + start));
+                tokens.push((m, pos + start, substring.len()));
                 end = start;
                 start = 0;
                 continue;
@@ -118,18 +118,19 @@ impl Lexer {
 
             start += 1;
             if end == start {
+                // dbg!(start, end, substring, pos);
                 errors.push((TokenType::Illegal, (pos + start - 1)));
                 start = 0;
                 end -= 1;
             }
         }
 
-        while let Some((token_type, pos)) = tokens.pop() {
-            self.add_token(token_type, pos);
+        while let Some((token_type, pos, len)) = tokens.pop() {
+            self.add_token(token_type, pos, len);
         }
 
         while let Some((token_type, pos)) = errors.pop() {
-            self.add_token(token_type, pos);
+            self.add_token(token_type, pos, 1);
         }
     }
 
@@ -140,7 +141,11 @@ impl Lexer {
         while start < s.len() {
             let substring = &s[start..end];
             if self.reg_alt.is_match(substring) {
-                self.add_token(TokenType::Extension(substring.to_string()), pos + start);
+                self.add_token(
+                    TokenType::Extension(substring.to_string()),
+                    pos + start,
+                    substring.len(),
+                );
                 start = end;
                 end = s.len();
                 continue;
@@ -154,7 +159,7 @@ impl Lexer {
         }
 
         while let Some((token_type, pos)) = errors.pop() {
-            self.add_token(token_type, pos);
+            self.add_token(token_type, pos, 1);
         }
     }
 
@@ -162,8 +167,8 @@ impl Lexer {
         c.is_ascii_alphabetic()
     }
 
-    fn add_token(&mut self, token_type: TokenType, pos: usize) {
-        self.tokens.push(Token::new(token_type, pos));
+    fn add_token(&mut self, token_type: TokenType, pos: usize, len: usize) {
+        self.tokens.push(Token::new(token_type, pos, len));
     }
 
     fn advance(&mut self, chars: &mut Peekable<Chars>) -> Option<char> {

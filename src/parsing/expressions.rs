@@ -91,28 +91,35 @@ impl ExtensionExp {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AddExp {
     pub interval: Interval,
+    pub target_pos: usize,
 }
 
 impl AddExp {
-    pub fn new(interval: Interval) -> Self {
-        Self { interval }
+    pub fn new(interval: Interval, target_pos: usize) -> Self {
+        Self {
+            interval,
+            target_pos,
+        }
     }
-    pub fn isvalid(&self) -> bool {
-        matches!(
-            self.interval,
-            Interval::MajorSecond
-                | Interval::MajorThird
-                | Interval::PerfectFourth
-                | Interval::MinorSixth
-                | Interval::MajorSixth
-                | Interval::MajorSeventh
-                | Interval::FlatNinth
-                | Interval::Ninth
-                | Interval::SharpNinth
-                | Interval::Eleventh
-                | Interval::SharpEleventh
-                | Interval::FlatThirteenth
-                | Interval::Thirteenth
+    pub fn isvalid(&self) -> (bool, usize) {
+        (
+            matches!(
+                self.interval,
+                Interval::MajorSecond
+                    | Interval::MajorThird
+                    | Interval::PerfectFourth
+                    | Interval::MinorSixth
+                    | Interval::MajorSixth
+                    | Interval::MajorSeventh
+                    | Interval::FlatNinth
+                    | Interval::Ninth
+                    | Interval::SharpNinth
+                    | Interval::Eleventh
+                    | Interval::SharpEleventh
+                    | Interval::FlatThirteenth
+                    | Interval::Thirteenth
+            ),
+            self.target_pos,
         )
     }
 
@@ -149,13 +156,20 @@ impl SusExp {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct OmitExp {
     pub interval: Interval,
+    pub target_pos: usize,
 }
 impl OmitExp {
-    pub fn new(interval: Interval) -> Self {
-        Self { interval }
+    pub fn new(interval: Interval, target_pos: usize) -> Self {
+        Self {
+            interval,
+            target_pos,
+        }
     }
-    pub fn isvalid(&self) -> bool {
-        matches!(self.interval, Interval::MajorThird | Interval::PerfectFifth)
+    pub fn isvalid(&self) -> (bool, usize) {
+        (
+            matches!(self.interval, Interval::MajorThird | Interval::PerfectFifth),
+            self.target_pos,
+        )
     }
 }
 
@@ -246,10 +260,13 @@ impl MinorExp {
     pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
         if !i.contains(&Interval::MinorThird)
             && !exp.iter().any(|e| {
-                e == &Exp::Omit(OmitExp {
-                    // For some reason people wants to write a minor chord without the minor third which has no sense
-                    interval: Interval::MajorThird,
-                })
+                matches!(
+                    e,
+                    Exp::Omit(OmitExp {
+                        interval: Interval::MajorThird,
+                        ..
+                    })
+                )
             })
         {
             i.push(Interval::MinorThird);

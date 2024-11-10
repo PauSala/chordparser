@@ -3,11 +3,13 @@ use std::path::Path;
 /// Parse a chord and generate a both json-string representation and a MIDI file.
 pub fn main() {
     let mut parser = Parser::new();
-    let result = parser.parse("G7Maj7");
+    let origin = "Ab7b913";
+    let result = parser.parse(origin);
+
     match result {
         Ok(chord) => {
             dbg!(&chord);
-            // dbg!(&chord.to_json());
+            dbg!(&chord.to_json());
             let d5_midi_code = 74;
             // Create a voicing with ninth at top
             let midi_codes = generate_voicing(&chord, Some(d5_midi_code));
@@ -15,7 +17,9 @@ pub fn main() {
             to_midi_file(&midi_codes, Path::new("my_chord"), 120, 4);
         }
         Err(e) => {
-            dbg!(e);
+            for e in e.errors {
+                println!("{}", format!("{}", e.verbose_display(origin)));
+            }
         }
     }
 }

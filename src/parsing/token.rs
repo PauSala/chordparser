@@ -84,11 +84,16 @@ impl Display for TokenType {
 pub struct Token {
     pub token_type: TokenType,
     pub pos: usize,
+    pub len: usize,
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, pos: usize) -> Token {
-        Token { token_type, pos }
+    pub fn new(token_type: TokenType, pos: usize, len: usize) -> Token {
+        Token {
+            token_type,
+            pos,
+            len,
+        }
     }
 }
 

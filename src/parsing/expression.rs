@@ -24,11 +24,11 @@ pub enum Exp {
 }
 
 impl Exp {
-    pub fn validate(&self) -> bool {
+    pub fn validate(&self) -> (bool, usize) {
         match self {
             Exp::Omit(exp) => exp.isvalid(),
             Exp::Add(exp) => exp.isvalid(),
-            _ => true,
+            _ => (true, 0),
         }
     }
 

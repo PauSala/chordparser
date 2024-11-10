@@ -15,7 +15,7 @@ use expressions::{
     OmitExp, PowerExp, SlashBassExp, SusExp,
 };
 use lexer::Lexer;
-use parser_error::ParserErrors;
+use parser_error::{ParserError, ParserErrors};
 use token::{Token, TokenType};
 
 use crate::chord::{
@@ -43,7 +43,7 @@ enum Context {
 /// Every time a chord is parsed the parser is cleared, so its recommended to rehuse the parser instead of creating new ones.  
 pub struct Parser {
     lexer: Lexer,
-    errors: Vec<String>,
+    errors: Vec<ParserError>,
     ast: Ast,
     op_count: i16,
     context: Context,
@@ -107,8 +107,7 @@ impl Parser {
         let note = self.expect_note(tokens);
         match note {
             None => {
-                self.errors
-                    .push("Missing root note at position 1".to_string());
+                self.errors.push(ParserError::MissingRootNote);
             }
             Some(n) => {
                 self.ast.root = n;
@@ -157,13 +156,11 @@ impl Parser {
             TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
             TokenType::Maj7 => self.maj7(tokens, &token.pos),
             TokenType::Slash => self.slash(tokens, token),
-            TokenType::LParent => self.lparen(tokens),
-            TokenType::RParent => self.rparen(),
+            TokenType::LParent => self.lparen(tokens, token.pos),
+            TokenType::RParent => self.rparen(token.pos),
             TokenType::Comma => self.comma(),
             TokenType::Bass => self.ast.expressions.push(Exp::Bass(BassExp)),
-            TokenType::Illegal => self
-                .errors
-                .push(format!("Illegal token at position {}", token.pos)),
+            TokenType::Illegal => self.errors.push(ParserError::IllegalToken(token.pos)),
             TokenType::Eof => (),
         }
     }
@@ -188,12 +185,10 @@ impl Parser {
                     "9" => self
                         .ast
                         .expressions
-                        .push(Exp::Add(AddExp::new(Interval::Ninth))),
+                        .push(Exp::Add(AddExp::new(Interval::Ninth, alt.pos))),
                     _ => {
-                        self.errors.push(format!(
-                            "Cannot use slash notation for tensions other than 9 at position {}",
-                            token.pos
-                        ));
+                        self.errors
+                            .push(ParserError::IllegalSlashNotation(token.pos));
                     }
                 }
             }
@@ -201,7 +196,7 @@ impl Parser {
             match self.expect_note(tokens) {
                 None => {
                     self.errors
-                        .push(format!("Expected note literal at position {}", token.pos));
+                        .push(ParserError::IllegalSlashNotation(token.pos));
                 }
                 Some(b) => {
                     self.ast
@@ -256,16 +251,16 @@ impl Parser {
         self.ast.expressions.push(Exp::Dim(DimExp));
     }
 
-    fn rparen(&mut self) {
+    fn rparen(&mut self, pos: usize) {
         if self.op_count != 1 {
             self.errors
-                .push("Unexpected closing parenthesis".to_string());
+                .push(ParserError::UnexpectedClosingParenthesis(pos));
         }
         self.context = Context::None;
         self.op_count -= 1;
     }
 
-    fn lparen(&mut self, tokens: &mut Peekable<Iter<Token>>) {
+    fn lparen(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize) {
         self.op_count += 1;
         self.context = Context::None;
         while let Some(token) = tokens.next() {
@@ -275,11 +270,11 @@ impl Parser {
                     break;
                 }
                 TokenType::LParent => {
-                    self.errors
-                        .push("Nested parenthesis are not allowed ".to_string());
+                    self.errors.push(ParserError::NestedParenthesis(pos));
                 }
                 TokenType::Eof => {
-                    self.errors.push("Missing closing parenthesis".to_string());
+                    self.errors
+                        .push(ParserError::MissingClosingParenthesis(pos));
                     break;
                 }
                 _ => (),
@@ -316,19 +311,20 @@ impl Parser {
         }
         if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
             tokens.next();
-            self.ast
-                .expressions
-                .push(Exp::Omit(OmitExp::new(Interval::PerfectFifth)));
+            self.ast.expressions.push(Exp::Omit(OmitExp::new(
+                Interval::PerfectFifth,
+                token.pos + token.len,
+            )));
         } else if self.expect_peek(TokenType::Extension("3".to_string()), tokens) {
             tokens.next();
-            self.ast
-                .expressions
-                .push(Exp::Omit(OmitExp::new(Interval::MajorThird)));
+            self.ast.expressions.push(Exp::Omit(OmitExp::new(
+                Interval::MajorThird,
+                token.pos + token.len,
+            )));
         } else {
-            self.errors.push(format!(
-                "Omit has no target or target is not valid at position {}",
-                token.pos
-            ));
+            self.errors.push(ParserError::IllegalOrMissingOmitTarget((
+                token.pos, token.len,
+            )));
         }
     }
 
@@ -347,27 +343,29 @@ impl Parser {
                 id.push_str(t);
                 let interval = Interval::from_chord_notation(&id);
                 if let Some(i) = interval {
-                    self.ast.expressions.push(Exp::Add(AddExp::new(i)));
+                    self.ast
+                        .expressions
+                        .push(Exp::Add(AddExp::new(i, next.pos)));
                 } else {
-                    self.errors
-                        .push(format!("Invalid extension at position {}", token.pos));
+                    self.errors.push(ParserError::InvalidExtension(token.pos));
                 }
             }
         } else if self.expect_peek(TokenType::Maj, tokens) {
             tokens.next();
-            self.ast
-                .expressions
-                .push(Exp::Add(AddExp::new(Interval::MajorSeventh)));
+            self.ast.expressions.push(Exp::Add(AddExp::new(
+                Interval::MajorSeventh,
+                token.pos + token.len,
+            )));
             if !self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
                 self.errors
-                    .push(format!("Wrong add target at position {}", token.pos));
+                    .push(ParserError::IllegalAddTarget((token.pos, token.len)));
                 return;
             }
             //skip seventh
             tokens.next();
         } else {
             self.errors
-                .push(format!("No Add target at position {}", token.pos));
+                .push(ParserError::MissingAddTarget((token.pos, token.len)));
         }
     }
 
@@ -384,12 +382,11 @@ impl Parser {
                     self.add_interval(int, token.pos);
                 } else {
                     self.errors
-                        .push(format!("Invalid extension at position {}", token.pos + 1));
+                        .push(ParserError::InvalidExtension(token.pos + 1));
                 }
             }
         } else {
-            self.errors
-                .push(format!("Unexpected modifier at position {}", token.pos));
+            self.errors.push(ParserError::UnexpectedModifier(token.pos));
         }
     }
 
@@ -413,8 +410,8 @@ impl Parser {
                         .push(Exp::Extension(ExtensionExp::new(int, pos)));
                 }
             },
-            Context::Omit(true) => self.ast.expressions.push(Exp::Omit(OmitExp::new(int))),
-            Context::Add(true) => self.ast.expressions.push(Exp::Add(AddExp::new(int))),
+            Context::Omit(true) => self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos))),
+            Context::Add(true) => self.ast.expressions.push(Exp::Add(AddExp::new(int, pos))),
             _ => self
                 .ast
                 .expressions
@@ -446,14 +443,12 @@ impl Parser {
         if let Some(int) = interval {
             self.add_interval(int, token.pos);
         } else {
-            self.errors
-                .push(format!("Invalid extension at position {}", token.pos));
+            self.errors.push(ParserError::InvalidExtension(token.pos));
         }
     }
 
     fn note(&mut self, token: &Token) {
-        self.errors
-            .push(format!("Unexpected note at position {}", token.pos));
+        self.errors.push(ParserError::UnexpectedNote(token.pos));
     }
 }
 

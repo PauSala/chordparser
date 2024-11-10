@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-use super::expression::Exp;
+use super::{expression::Exp, parser_error::ParserError};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Ast {
@@ -21,7 +21,7 @@ pub struct Ast {
     pub(crate) expressions: Vec<Exp>,
     pub(crate) intervals: Vec<Interval>,
     pub(crate) is_sus: bool,
-    pub(crate) errors: Vec<String>,
+    pub(crate) errors: Vec<ParserError>,
 }
 
 impl Ast {
@@ -60,7 +60,8 @@ impl Ast {
                 matches!(
                     exp,
                     Exp::Omit(OmitExp {
-                        interval: Interval::MajorThird
+                        interval: Interval::MajorThird,
+                        ..
                     }) | Exp::Power(PowerExp)
                         | Exp::Bass(BassExp)
                 )
@@ -79,7 +80,8 @@ impl Ast {
                 matches!(
                     exp,
                     Exp::Omit(OmitExp {
-                        interval: Interval::PerfectFifth
+                        interval: Interval::PerfectFifth,
+                        ..
                     }) | Exp::Bass(BassExp)
                 )
             })
@@ -103,12 +105,12 @@ impl Ast {
             let b = (i + 2) % 12;
             if count[i] && count[a] && count[b] {
                 is_valid = false;
-                self.errors.push(format!(
-                    "Three consecutive semitones: {}, {}, {}",
-                    map.get(&(i as u8)).unwrap(),
-                    map.get(&(a as u8)).unwrap(),
-                    map.get(&(b as u8)).unwrap(),
-                ))
+                self.errors
+                    .push(ParserError::ThreeConsecutiveSemitones(vec![
+                        format!("{}", map.get(&(i as u8)).unwrap()),
+                        format!("{}", map.get(&(a as u8)).unwrap()),
+                        format!("{}", map.get(&(b as u8)).unwrap()),
+                    ]));
             }
         }
         is_valid
@@ -129,28 +131,33 @@ impl Ast {
             &Interval::Ninth,
             vec![&Interval::FlatNinth, &Interval::SharpNinth],
         ) {
-            self.errors
-                .push(format!("Inconsistent extension: {}", Interval::Ninth));
+            self.errors.push(ParserError::InconsistentExtension(
+                Interval::Ninth.to_string(),
+            ));
             return true;
         }
         if self.has_inconsistent_extension(&Interval::Eleventh, vec![&Interval::SharpEleventh]) {
-            self.errors
-                .push(format!("Inconsistent extension: {}", Interval::Eleventh));
+            self.errors.push(ParserError::InconsistentExtension(
+                Interval::Eleventh.to_string(),
+            ));
             return true;
         }
         if self.has_inconsistent_extension(&Interval::Thirteenth, vec![&Interval::FlatThirteenth]) {
-            self.errors
-                .push(format!("Inconsistent extension: {}", Interval::Thirteenth));
+            self.errors.push(ParserError::InconsistentExtension(
+                Interval::Thirteenth.to_string(),
+            ));
             return true;
         }
         if self.has_inconsistent_extension(&Interval::MajorSixth, vec![&Interval::MinorSixth]) {
-            self.errors
-                .push(format!("Inconsistent extension: {}", Interval::MajorSixth));
+            self.errors.push(ParserError::InconsistentExtension(
+                Interval::MajorSixth.to_string(),
+            ));
             return true;
         }
         if self.has_inconsistent_extension(&Interval::MajorThird, vec![&Interval::MinorThird]) {
-            self.errors
-                .push(format!("Inconsistent extension: {}", Interval::MajorThird));
+            self.errors.push(ParserError::InconsistentExtension(
+                Interval::MajorThird.to_string(),
+            ));
             return true;
         }
         false
@@ -173,19 +180,13 @@ impl Ast {
                     | Interval::MajorThird
                     | Interval::DiminishedSeventh
                     | Interval::MajorSeventh => {
-                        self.errors.push(format!(
-                            "Invalid extension {} at position {}",
-                            ext.interval, ext.pos
-                        ));
+                        self.errors.push(ParserError::InvalidExtension(ext.pos));
                         return false;
                     }
                     _ => (),
                 }
                 if ext_count[index] > 0 {
-                    self.errors.push(format!(
-                        "Duplicate extension: {} at position: {}",
-                        ext.interval, ext.pos
-                    ));
+                    self.errors.push(ParserError::DuplicateExtension(ext.pos));
                     return false;
                 }
                 ext_count[index] += 1;
@@ -197,11 +198,13 @@ impl Ast {
     /// Validates expressions both individually and finding illegal duplicates
     fn validate_expressions(&mut self) -> bool {
         let mut is_valid = true;
+        let mut target_pos;
         let mut counts: HashMap<u32, usize> = HashMap::new();
         for exp in &self.expressions {
-            is_valid = exp.validate();
+            (is_valid, target_pos) = exp.validate();
             if !is_valid {
-                self.errors.push(format!("Invalid {} expression", exp));
+                self.errors
+                    .push(ParserError::WrongExpressionTarget(target_pos));
                 return false;
             }
             let key = match exp {
@@ -214,7 +217,7 @@ impl Ast {
         for (key, count) in counts {
             if key < u32::MAX && count > 1 {
                 self.errors
-                    .push(format!("Duplicate '{}' modifier", Exp::from_priority(key)));
+                    .push(ParserError::DuplicateModifier(Exp::from_priority(key)));
                 return false;
             }
         }
