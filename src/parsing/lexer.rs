@@ -105,27 +105,30 @@ impl Lexer {
     fn parse_string(&mut self, s: &str, pos: usize) {
         let mut start = 0;
         let mut end = s.len();
-        let mut is_match = false;
         let mut tokens = Vec::new();
+        let mut errors = Vec::new();
         while end > 0 {
             let substring = &s[start..end];
             if let Some(m) = TokenType::from_string(substring) {
                 tokens.push((m, pos + start));
-                is_match = true;
                 end = start;
                 start = 0;
                 continue;
             }
+
             start += 1;
             if end == start {
+                errors.push((TokenType::Illegal, (pos + start - 1)));
                 start = 0;
                 end -= 1;
             }
         }
-        if !is_match {
-            self.add_token(TokenType::Illegal, pos);
-        }
+
         while let Some((token_type, pos)) = tokens.pop() {
+            self.add_token(token_type, pos);
+        }
+
+        while let Some((token_type, pos)) = errors.pop() {
             self.add_token(token_type, pos);
         }
     }

@@ -3,6 +3,8 @@ use core::panic;
 use chordparser::parsing::Parser;
 use test_case::test_case;
 
+#[test_case("CMaj7randomb5", vec![])]
+#[test_case("Cabcdmin7", vec![])]
 #[test_case("FbG△7", vec![])]
 #[test_case("F/G/C", vec![])]
 #[test_case("Cb-7add3", vec![])]
