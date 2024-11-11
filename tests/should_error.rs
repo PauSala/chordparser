@@ -36,6 +36,7 @@ use test_case::test_case;
 #[test_case("CMaj7b9", vec![])]
 #[test_case("FMaj713b13", vec![])]
 #[test_case("C(#49)",  vec![])]
+#[test_case("Cb#4",  vec![])]
 #[test_case("C/AbMaj7",  vec![])]
 fn should_error(i: &str, _expected: Vec<&str>) {
     let mut parser = Parser::new();
