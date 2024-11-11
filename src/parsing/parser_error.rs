@@ -29,6 +29,7 @@ pub enum ParserError {
     UnexpectedClosingParenthesis(usize),
     MissingClosingParenthesis(usize),
     NestedParenthesis(usize),
+    InvalidPowerExpression,
 }
 
 impl ParserError {
@@ -69,6 +70,7 @@ impl ParserError {
     pub fn error_position(&self) -> Option<usize> {
         match self {
             ParserError::ThreeConsecutiveSemitones(_)
+            | ParserError::InvalidPowerExpression
             | ParserError::DuplicateModifier(_)
             | ParserError::InconsistentExtension(_) => None,
             ParserError::IllegalToken(pos) | ParserError::UnexpectedNote(pos) => Some(*pos),
@@ -106,6 +108,7 @@ impl ParserError {
                 res
             }
             ParserError::DuplicateModifier(_)
+            | ParserError::InvalidPowerExpression
             | ParserError::InconsistentExtension(_)
             | ParserError::MissingRootNote
             | ParserError::ThreeConsecutiveSemitones(_) => {
@@ -173,6 +176,9 @@ impl fmt::Display for ParserError {
             }
             ParserError::NestedParenthesis(pos) => {
                 write!(f, "Nested parenthesis at position {}", pos)
+            }
+            ParserError::InvalidPowerExpression => {
+                write!(f, "A power chord should only contain a 5")
             }
         }
     }

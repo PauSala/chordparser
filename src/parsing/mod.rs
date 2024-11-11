@@ -152,7 +152,8 @@ impl Parser {
             TokenType::Omit => self.omit(token, tokens),
             TokenType::Alt => self.ast.expressions.push(Exp::Alt(AltExp)),
             TokenType::Sus => self.sus(tokens),
-            TokenType::Minor => self.min(tokens, token.pos),
+            TokenType::Minor => self.ast.expressions.push(Exp::Minor(MinorExp)),
+            TokenType::Hyphen => self.hyphen(tokens, token.pos),
             TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
             TokenType::Maj7 => self.maj7(tokens, &token.pos),
             TokenType::Slash => self.slash(tokens, token),
@@ -225,7 +226,7 @@ impl Parser {
         }
     }
 
-    fn min(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize) {
+    fn hyphen(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize) {
         if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
             tokens.next();
             self.ast.expressions.push(Exp::Extension(ExtensionExp {

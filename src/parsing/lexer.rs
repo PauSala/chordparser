@@ -48,7 +48,7 @@ impl Lexer {
                 '#' | '♯' => self.add_token(TokenType::Sharp, self.current, 1),
                 '♭' => self.add_token(TokenType::Flat, self.current, 1),
                 '△' | '^' => self.add_token(TokenType::Maj7, self.current, 1),
-                '-' => self.add_token(TokenType::Minor, self.current, 1),
+                '-' => self.add_token(TokenType::Hyphen, self.current, 1),
                 '°' => self.add_token(TokenType::Dim, self.current, 1),
                 'ø' => self.add_token(TokenType::HalfDim, self.current, 1),
                 '/' => self.add_token(TokenType::Slash, self.current, 1),

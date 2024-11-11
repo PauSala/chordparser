@@ -42,7 +42,13 @@ impl Ast {
             Exp::Aug(aug) => aug.execute(&mut self.intervals),
             Exp::SlashBass(bass) => self.bass = Some(bass.note.clone()),
             Exp::Alt(alt) => alt.execute(&mut self.intervals),
-            Exp::Power(pw) => pw.execute(&mut self.intervals),
+            Exp::Power(pw) => {
+                if self.expressions.len() != 1 {
+                    self.errors.push(ParserError::InvalidPowerExpression);
+                } else {
+                    pw.execute(&mut self.intervals)
+                }
+            }
             Exp::Bass(_) => (),
             _ => (),
         });
@@ -230,7 +236,7 @@ impl Ast {
         let valid_exp = self.validate_expressions();
         let valid_ext = self.validate_extensions();
         let valid_sem = self.validate_semitones();
-        valid_exp && valid_ext && valid_sem
+        valid_exp && valid_ext && valid_sem && self.errors.is_empty()
     }
 
     /// Get the notes of the chord
