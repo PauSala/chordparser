@@ -155,7 +155,7 @@ impl Parser {
             TokenType::Minor => self.min(tokens, token.pos),
             TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
             TokenType::Maj7 => self.maj7(tokens, &token.pos),
-            TokenType::Slash => self.slash(tokens),
+            TokenType::Slash => self.slash(tokens, token),
             TokenType::LParent => self.lparen(tokens, token.pos),
             TokenType::RParent => self.rparen(token.pos),
             TokenType::Comma => self.comma(),
@@ -175,7 +175,7 @@ impl Parser {
         }
     }
 
-    fn slash(&mut self, tokens: &mut Peekable<Iter<Token>>) {
+    fn slash(&mut self, tokens: &mut Peekable<Iter<Token>>, token: &Token) {
         if self.expect_extension(tokens) {
             let alt = tokens
                 .next()
@@ -187,7 +187,7 @@ impl Parser {
                         .expressions
                         .push(Exp::Add(AddExp::new(Interval::Ninth, alt.pos))),
                     _ => {
-                        let next = tokens.next().map_or(0, |t| t.pos);
+                        let next = tokens.next().map_or(token.pos, |t| t.pos);
                         self.errors.push(ParserError::IllegalSlashNotation(next));
                     }
                 }
@@ -195,7 +195,7 @@ impl Parser {
         } else {
             match self.expect_note(tokens) {
                 None => {
-                    let next = tokens.next().map_or(0, |t| t.pos);
+                    let next = tokens.next().map_or(token.pos, |t| t.pos);
                     self.errors.push(ParserError::IllegalSlashNotation(next));
                 }
                 Some(b) => {
@@ -206,7 +206,7 @@ impl Parser {
             }
         }
         if !self.expect_peek(TokenType::Eof, tokens) {
-            let next = tokens.next().map_or(0, |t| t.pos);
+            let next = tokens.next().map_or(token.pos, |t| t.pos);
             self.errors.push(ParserError::IllegalSlashNotation(next));
         }
     }
