@@ -155,7 +155,7 @@ impl Parser {
             TokenType::Minor => self.min(tokens, token.pos),
             TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
             TokenType::Maj7 => self.maj7(tokens, &token.pos),
-            TokenType::Slash => self.slash(tokens, token),
+            TokenType::Slash => self.slash(tokens),
             TokenType::LParent => self.lparen(tokens, token.pos),
             TokenType::RParent => self.rparen(token.pos),
             TokenType::Comma => self.comma(),
@@ -175,7 +175,7 @@ impl Parser {
         }
     }
 
-    fn slash(&mut self, tokens: &mut Peekable<Iter<Token>>, token: &Token) {
+    fn slash(&mut self, tokens: &mut Peekable<Iter<Token>>) {
         if self.expect_extension(tokens) {
             let alt = tokens
                 .next()
@@ -187,16 +187,16 @@ impl Parser {
                         .expressions
                         .push(Exp::Add(AddExp::new(Interval::Ninth, alt.pos))),
                     _ => {
-                        self.errors
-                            .push(ParserError::IllegalSlashNotation(token.pos));
+                        let next = tokens.next().map_or(0, |t| t.pos);
+                        self.errors.push(ParserError::IllegalSlashNotation(next));
                     }
                 }
             }
         } else {
             match self.expect_note(tokens) {
                 None => {
-                    self.errors
-                        .push(ParserError::IllegalSlashNotation(token.pos));
+                    let next = tokens.next().map_or(0, |t| t.pos);
+                    self.errors.push(ParserError::IllegalSlashNotation(next));
                 }
                 Some(b) => {
                     self.ast
@@ -204,6 +204,10 @@ impl Parser {
                         .push(Exp::SlashBass(SlashBassExp::new(b)));
                 }
             }
+        }
+        if !self.expect_peek(TokenType::Eof, tokens) {
+            let next = tokens.next().map_or(0, |t| t.pos);
+            self.errors.push(ParserError::IllegalSlashNotation(next));
         }
     }
 
@@ -412,10 +416,20 @@ impl Parser {
             },
             Context::Omit(true) => self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos))),
             Context::Add(true) => self.ast.expressions.push(Exp::Add(AddExp::new(int, pos))),
-            _ => self
-                .ast
-                .expressions
-                .push(Exp::Extension(ExtensionExp::new(int, pos))),
+            _ => {
+                // 4 is allowed as a sus modifier
+                if int == Interval::PerfectFourth {
+                    self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
+                }
+                // But #4 is not allowed
+                if int == Interval::AugmentedFourth {
+                    self.errors.push(ParserError::InvalidExtension(pos));
+                } else {
+                    self.ast
+                        .expressions
+                        .push(Exp::Extension(ExtensionExp::new(int, pos)));
+                }
+            }
         }
     }
 
