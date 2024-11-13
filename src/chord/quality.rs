@@ -14,7 +14,6 @@ pub enum Quality {
     Minor7,
     MinorMaj7,
     Dominant,
-    SemiDiminished,
     Diminished,
 }
 
