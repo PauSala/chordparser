@@ -250,11 +250,7 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
                     a,
                     Interval::MajorSeventh
                         | Interval::Ninth
-                        | Interval::FlatNinth
-                        | Interval::SharpNinth
                         | Interval::Eleventh
-                        | Interval::SharpEleventh
-                        | Interval::FlatThirteenth
                         | Interval::Thirteenth
                 )
             })
