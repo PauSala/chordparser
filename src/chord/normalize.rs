@@ -24,7 +24,7 @@ pub fn normalize(ch: &Chord) -> String {
             _normalize(ch, res)
         }
         Quality::Minor6 => {
-            res.push_str("min6");
+            res.push_str("Min6");
             let mmod = get_mod(ch);
             if let Some(mo) = mmod {
                 res.push_str(&mo.to_string());
@@ -50,13 +50,13 @@ pub fn normalize(ch: &Chord) -> String {
             _normalize(ch, res)
         }
         Quality::Minor7 | Quality::SemiDiminished => {
-            res.push_str("min");
+            res.push_str("Min");
             let mmod = get_mod(ch).unwrap();
             res.push_str(&mmod.to_string());
             _normalize(ch, res)
         }
         Quality::MinorMaj7 => {
-            res.push_str("min");
+            res.push_str("Min");
             let mmod = get_mod(ch).unwrap();
             if mmod != Interval::MajorSeventh {
                 res.push_str("Maj");
@@ -73,7 +73,7 @@ pub fn normalize(ch: &Chord) -> String {
         }
         Quality::Major | Quality::Minor => {
             if ch.quality == Quality::Minor {
-                res.push_str("min");
+                res.push_str("Min");
             }
             if ch.is_sus {
                 res.push_str("sus");
@@ -227,8 +227,8 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
         Quality::Minor7 | Quality::MinorMaj7 | Quality::SemiDiminished => {
             if ch.has(Interval::Thirteenth)
                 && !ch.has(Interval::MajorSixth)
-                && (!ch.real_intervals.iter().any(|i| *i == Interval::Eleventh)
-                    || !ch.real_intervals.iter().any(|i| *i == Interval::Ninth))
+                && (!ch.has(Interval::Eleventh) && !ch.has(Interval::SharpEleventh)
+                    || !ch.has(Interval::Ninth))
             {
                 adds.push(Interval::Thirteenth);
             }

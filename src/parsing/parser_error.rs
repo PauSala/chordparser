@@ -37,7 +37,7 @@ impl ParserError {
         let index = index - 1;
         if index >= s.len() {
             let mut res = s.to_string();
-            res.push_str("{}");
+            res.push_str("(_)");
             return res;
         }
 
@@ -45,14 +45,14 @@ impl ParserError {
         let element = s.chars().nth(index).unwrap();
         let after = &s[index + element.len_utf8()..];
 
-        format!("{}{{{}}}{}", before, element, after)
+        format!("{}({}){}", before, element, after)
     }
 
     fn surround_element_at_index_with_span(&self, s: &str, index: usize, len: usize) -> String {
         let index = index - 1 + len;
         if index >= s.len() {
             let mut res = s.to_string();
-            res.push_str("{}");
+            res.push_str("(_)");
             return res;
         }
 
@@ -60,7 +60,7 @@ impl ParserError {
         let element = s.chars().nth(index).unwrap();
         let after = &s[index + element.len_utf8()..];
 
-        format!("{}{{{}}}{}", before, element, after)
+        format!("{}({}){}", before, element, after)
     }
 
     /// Returns the position in the input string where the error occurred.
