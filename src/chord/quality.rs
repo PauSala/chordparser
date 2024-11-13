@@ -31,10 +31,8 @@ impl Quality {
         let maj6 = chord.has(Interval::MajorSixth);
 
         if min3 {
-            if dim5 && (dim7 || !min7) {
+            if dim5 && !maj6 && (dim7 || !min7) {
                 return Quality::Diminished;
-            } else if dim5 {
-                return Quality::SemiDiminished;
             } else if maj7 && !maj6 {
                 return Quality::MinorMaj7;
             } else if min7 {
@@ -89,8 +87,8 @@ mod test {
     #[test_case("C-69", Quality::Minor6)]
     #[test_case("C-11add6", Quality::Minor7)]
     #[test_case("C-b5", Quality::Diminished)]
-    #[test_case("C-7b5", Quality::SemiDiminished)]
-    #[test_case("Cdim13", Quality::SemiDiminished)]
+    #[test_case("C-7b5", Quality::Minor7)]
+    #[test_case("Cdim13", Quality::Minor7)]
     #[test_case("Cdim7", Quality::Diminished)]
     #[test_case("Cdim7Maj7", Quality::Diminished)]
     #[test_case("CdimMaj7", Quality::Diminished)]
