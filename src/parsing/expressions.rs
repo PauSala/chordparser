@@ -1,3 +1,5 @@
+use core::panic;
+
 use crate::chord::{intervals::Interval, note::Note};
 
 use super::expression::Exp;
@@ -35,18 +37,46 @@ impl ExtensionExp {
             i.push(Interval::Eleventh);
         }
     }
-    pub fn execute(&self, i: &mut Vec<Interval>, is_sus: &mut bool) {
+    pub fn execute(&self, i: &mut Vec<Interval>, is_sus: &mut bool, exp: &[Exp]) {
         match self.interval {
             Interval::PerfectFourth
             | Interval::AugmentedFourth
-            | Interval::DiminishedFifth
-            | Interval::AugmentedFifth
             | Interval::MinorSixth
             | Interval::FlatNinth
             | Interval::SharpNinth
             | Interval::SharpEleventh
             | Interval::FlatThirteenth => {
                 if !i.contains(&self.interval) {
+                    i.push(self.interval);
+                }
+            }
+            Interval::AugmentedFifth => {
+                if !i.contains(&self.interval)
+                    && !exp.iter().any(|e| {
+                        matches!(
+                            e,
+                            Exp::Omit(OmitExp {
+                                interval: Interval::PerfectFifth,
+                                ..
+                            })
+                        )
+                    })
+                {
+                    i.push(self.interval);
+                }
+            }
+            Interval::DiminishedFifth => {
+                if !i.contains(&self.interval)
+                    && !exp.iter().any(|e| {
+                        matches!(
+                            e,
+                            Exp::Omit(OmitExp {
+                                interval: Interval::PerfectFifth,
+                                ..
+                            })
+                        )
+                    })
+                {
                     i.push(self.interval);
                 }
             }
@@ -188,11 +218,31 @@ pub struct BassExp;
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct DimExp;
 impl DimExp {
-    pub fn execute(&self, i: &mut Vec<Interval>) {
-        if !i.contains(&Interval::MinorThird) {
+    pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
+        if !i.contains(&Interval::MinorThird)
+            && !exp.iter().any(|e| {
+                matches!(
+                    e,
+                    Exp::Omit(OmitExp {
+                        interval: Interval::MajorThird,
+                        ..
+                    })
+                )
+            })
+        {
             i.push(Interval::MinorThird);
         }
-        if !i.contains(&Interval::DiminishedFifth) {
+        if !i.contains(&Interval::DiminishedFifth)
+            && !exp.iter().any(|e| {
+                matches!(
+                    e,
+                    Exp::Omit(OmitExp {
+                        interval: Interval::PerfectFifth,
+                        ..
+                    })
+                )
+            })
+        {
             i.push(Interval::DiminishedFifth);
         }
     }
@@ -200,11 +250,31 @@ impl DimExp {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Dim7Exp;
 impl Dim7Exp {
-    pub fn execute(&self, i: &mut Vec<Interval>) {
-        if !i.contains(&Interval::MinorThird) {
+    pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
+        if !i.contains(&Interval::MinorThird)
+            && !exp.iter().any(|e| {
+                matches!(
+                    e,
+                    Exp::Omit(OmitExp {
+                        interval: Interval::MajorThird,
+                        ..
+                    })
+                )
+            })
+        {
             i.push(Interval::MinorThird);
         }
-        if !i.contains(&Interval::DiminishedFifth) {
+        if !i.contains(&Interval::DiminishedFifth)
+            && !exp.iter().any(|e| {
+                matches!(
+                    e,
+                    Exp::Omit(OmitExp {
+                        interval: Interval::PerfectFifth,
+                        ..
+                    })
+                )
+            })
+        {
             i.push(Interval::DiminishedFifth);
         }
         if !i.contains(&Interval::DiminishedSeventh) {
@@ -215,11 +285,31 @@ impl Dim7Exp {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct HalfDimExp;
 impl HalfDimExp {
-    pub fn execute(&self, i: &mut Vec<Interval>) {
-        if !i.contains(&Interval::MinorThird) {
+    pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
+        if !i.contains(&Interval::MinorThird)
+            && !exp.iter().any(|e| {
+                matches!(
+                    e,
+                    Exp::Omit(OmitExp {
+                        interval: Interval::MajorThird,
+                        ..
+                    })
+                )
+            })
+        {
             i.push(Interval::MinorThird);
         }
-        if !i.contains(&Interval::DiminishedFifth) {
+        if !i.contains(&Interval::DiminishedFifth)
+            && !exp.iter().any(|e| {
+                matches!(
+                    e,
+                    Exp::Omit(OmitExp {
+                        interval: Interval::PerfectFifth,
+                        ..
+                    })
+                )
+            })
+        {
             i.push(Interval::DiminishedFifth);
         }
         if !i.contains(&Interval::MinorSeventh) {
@@ -276,8 +366,18 @@ impl MinorExp {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AugExp;
 impl AugExp {
-    pub fn execute(&self, i: &mut Vec<Interval>) {
-        if !i.contains(&Interval::AugmentedFifth) {
+    pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
+        if !i.contains(&Interval::AugmentedFifth)
+            && !exp.iter().any(|e| {
+                matches!(
+                    e,
+                    Exp::Omit(OmitExp {
+                        interval: Interval::PerfectFifth,
+                        ..
+                    })
+                )
+            })
+        {
             i.push(Interval::AugmentedFifth);
         }
     }

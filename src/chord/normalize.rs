@@ -289,13 +289,18 @@ fn get_alt_notes(ch: &Chord) -> Vec<Interval> {
         Interval::SharpNinth,
         Interval::SharpEleventh,
         Interval::FlatThirteenth,
+        Interval::DiminishedSeventh,
     ];
     match ch.quality {
         Quality::Power => res,
         Quality::Diminished => ch
             .real_intervals
             .iter()
-            .filter(|i| altered.contains(i) && *i != &Interval::DiminishedFifth)
+            .filter(|i| {
+                altered.contains(i)
+                    && *i != &Interval::DiminishedFifth
+                    && *i != &Interval::DiminishedSeventh
+            })
             .cloned()
             .collect(),
         _ => ch

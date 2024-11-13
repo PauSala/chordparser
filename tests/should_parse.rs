@@ -20,7 +20,7 @@ use test_case::test_case;
 #[test_case("C(-5#5)", vec!["C", "E", "Gb", "G#"]; "C(-5#5)")]
 #[test_case("C+#11", vec!["C", "E", "G#", "F#"]; "C+#11")]
 #[test_case("C+Maj7", vec!["C", "E", "G#", "B"]; "C+Maj7")]
-#[test_case("C+Maj76omit5", vec!["C", "E", "G#", "A", "B"]; "C+Maj76")]
+#[test_case("C+Maj76omit5", vec!["C", "E", "A", "B"]; "C+Maj76")]
 #[test_case("C+Maj9", vec!["C", "E", "G#", "B", "D"]; "C+Maj9")]
 #[test_case("C6(b5)", vec!["C", "E", "Gb", "A"])]
 #[test_case("C6", vec!["C", "E", "G", "A"])]
@@ -167,6 +167,15 @@ use test_case::test_case;
 #[test_case("C4", vec!["C", "F", "G"])]
 #[test_case("C49", vec!["C", "F", "G", "Bb", "D"])]
 #[test_case("C-5", vec!["C", "E", "Gb"])]
+#[test_case("Cdim7maj711b13",  vec!["C", "Eb", "Gb", "B𝄫", "B", "D", "F", "Ab"])]
+#[test_case("Cdim7omit3", vec!["C", "Gb", "B𝄫"])]
+#[test_case("Cdimomit3", vec!["C", "Gb"])]
+#[test_case("Cdimomit5", vec!["C", "Eb"])]
+#[test_case("Cdim7omit5", vec!["C", "Eb", "B𝄫"])]
+#[test_case("Cøomit5", vec!["C", "Eb", "Bb"])]
+#[test_case("C+omit5",  vec!["C", "E"])]
+#[test_case("C+b5omit5", vec!["C", "E"])]
+#[test_case("C(#5b5omit5)", vec!["C", "E"])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);
@@ -195,7 +204,6 @@ fn test_notes(i: &str, expected: Vec<&str>) {
     ];
     match res {
         Ok(chord) => {
-            dbg!(&chord);
             let literals = &chord.note_literals;
             assert_eq!(literals, &expected);
             for n in notes {

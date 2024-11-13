@@ -40,6 +40,10 @@ impl Quality {
                 return Quality::Minor6;
             }
             return Quality::Minor;
+        } else if dim7 {
+            return Quality::Diminished;
+        } else if dim5 && !min7 {
+            return Quality::Major;
         } else if min7 {
             return Quality::Dominant;
         } else if maj6 {

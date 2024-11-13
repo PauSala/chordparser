@@ -29,17 +29,19 @@ impl Ast {
         self.expressions.sort();
         self.expressions.iter().for_each(|e| match e {
             Exp::Minor(min) => min.execute(&mut self.intervals, &self.expressions),
-            Exp::Dim7(dim) => dim.execute(&mut self.intervals),
-            Exp::Dim(dim) => dim.execute(&mut self.intervals),
-            Exp::HalfDim(half) => half.execute(&mut self.intervals),
+            Exp::Dim7(dim) => dim.execute(&mut self.intervals, &self.expressions),
+            Exp::Dim(dim) => dim.execute(&mut self.intervals, &self.expressions),
+            Exp::HalfDim(half) => half.execute(&mut self.intervals, &self.expressions),
             Exp::Sus(sus) => {
                 sus.execute(&mut self.intervals);
                 self.is_sus = true;
             }
             Exp::Maj(maj) => maj.execute(&mut self.intervals, &self.expressions),
-            Exp::Extension(ext) => ext.execute(&mut self.intervals, &mut self.is_sus),
+            Exp::Extension(ext) => {
+                ext.execute(&mut self.intervals, &mut self.is_sus, &self.expressions)
+            }
             Exp::Add(add) => add.execute(&mut self.intervals),
-            Exp::Aug(aug) => aug.execute(&mut self.intervals),
+            Exp::Aug(aug) => aug.execute(&mut self.intervals, &self.expressions),
             Exp::SlashBass(bass) => self.bass = Some(bass.note.clone()),
             Exp::Alt(alt) => alt.execute(&mut self.intervals),
             Exp::Power(pw) => {
