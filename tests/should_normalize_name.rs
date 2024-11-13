@@ -64,6 +64,7 @@ use test_case::test_case;
 #[test_case("Cm#11(add9,13)", "CMin(#11,add9,13)")]
 #[test_case("C-7add11add13", "CMin7(add13,11)")]
 #[test_case("C-add11add13", "CMin(add11,13)")]
+#[test_case("C-7add#11add9add13", "CMin13(#11)")]
 fn test_normalize(input: &str, expected: &str) {
     let mut parser = Parser::new();
     let res = parser.parse(input);
