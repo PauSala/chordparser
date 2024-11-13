@@ -42,10 +42,9 @@ impl ParserError {
         }
 
         let before = &s[..index];
-        let element = s.chars().nth(index).unwrap();
-        let after = &s[index + element.len_utf8()..];
+        let after = &s[index..];
 
-        format!("{}({}){}", before, element, after)
+        format!("{} ->{}", before, after)
     }
 
     fn surround_element_at_index_with_span(&self, s: &str, index: usize, len: usize) -> String {
@@ -57,10 +56,9 @@ impl ParserError {
         }
 
         let before = &s[..index];
-        let element = s.chars().nth(index).unwrap();
-        let after = &s[index + element.len_utf8()..];
+        let after = &s[index..];
 
-        format!("{}({}){}", before, element, after)
+        format!("{} ->{}", before, after)
     }
 
     /// Returns the position in the input string where the error occurred.
@@ -103,7 +101,7 @@ impl ParserError {
             | ParserError::MissingClosingParenthesis(pos)
             | ParserError::WrongExpressionTarget(pos)
             | ParserError::NestedParenthesis(pos) => {
-                let mut res = format!("{} → ", self);
+                let mut res = format!("{}: ", self);
                 res.push_str(&self.surround_element_at_index(origin, *pos));
                 res
             }
@@ -117,7 +115,7 @@ impl ParserError {
             ParserError::MissingAddTarget((pos, len))
             | ParserError::IllegalOrMissingOmitTarget((pos, len))
             | ParserError::IllegalAddTarget((pos, len)) => {
-                let mut res = format!("{} → ", self);
+                let mut res = format!("{}: ", self);
                 res.push_str(&self.surround_element_at_index_with_span(origin, *pos, *len));
                 res
             }
