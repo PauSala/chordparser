@@ -17,27 +17,7 @@ pub enum Quality {
     Diminished,
 }
 
-//        b3 3  b5 #5 d7/6 7
-// Dim  : 1  0  1  2  2    0
-// Major: 0  1  2  0  2    0
-// Minor: 1  0  2  2  0    0
-
-// pub enum BaseQuality {
-//     Major,
-//     Minor,
-//     Dominant,
-//     Diminished,
-//     Augmented,
-//     Power,
-// }
-
-// impl BaseQuality {}
-
 impl Quality {
-    // pub fn quality(chord: &Chord) -> BaseQuality {
-    //     BaseQuality::Power
-    // }
-
     /// Given a chord, returns its quality
     pub fn from_chord(chord: &Chord) -> Quality {
         // dbg!(&chord);
