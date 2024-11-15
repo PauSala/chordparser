@@ -4,6 +4,7 @@ use super::Chord;
 
 /// Describes the quality of a chord
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[repr(u8)]
 pub enum Quality {
     Power,
     Major,
@@ -17,6 +18,8 @@ pub enum Quality {
     Diminished,
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[repr(u8)]
 pub enum BaseQuality {
     Major,
     Minor,
