@@ -75,7 +75,8 @@ pub fn normalize(ch: &Chord) -> String {
             if ch.quality == Quality::Minor {
                 res.push_str("Min");
             }
-            if ch.is_sus {
+            // Because sus2 is sus but is just an omit3 with a ninth
+            if ch.is_sus && ch.has(Interval::PerfectFourth) {
                 res.push_str("sus");
             }
             _normalize(ch, res)
