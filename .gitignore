@@ -1,3 +1,5 @@
 /target
 /midi_files
 .DS_Store
+*.txt
+examples/generate-table.rs
