@@ -261,12 +261,10 @@ impl Ast {
         name.replace(&format!("{}{}", self.root.literal, modifier_str), "")
     }
 
-    pub fn rbs(&mut self, sts: &Vec<u8>) -> [bool; 12] {
-        let mut rbs = [false; 12];
+    pub fn rbs(&mut self, sts: &Vec<u8>) -> [bool; 24] {
+        let mut rbs = [false; 24];
         for st in sts {
-            if *st <= 11 {
-                rbs[*st as usize] = true;
-            }
+            rbs[*st as usize] = true;
         }
         rbs
     }

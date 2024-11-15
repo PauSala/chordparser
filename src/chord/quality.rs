@@ -30,7 +30,7 @@ pub enum BaseQuality {
 }
 
 impl BaseQuality {
-    fn base_quality(rbs: &[bool; 12]) -> BaseQuality {
+    fn base_quality(rbs: &[bool; 24]) -> BaseQuality {
         if BaseQuality::is_dim(rbs) {
             return BaseQuality::Diminished;
         }
@@ -49,7 +49,7 @@ impl BaseQuality {
         return BaseQuality::Major;
     }
 
-    fn is_power(rbs: &[bool; 12]) -> bool {
+    fn is_power(rbs: &[bool; 24]) -> bool {
         rbs[0]
             && !rbs[1]
             && !rbs[2]
@@ -64,13 +64,13 @@ impl BaseQuality {
             && !rbs[11]
     }
 
-    fn is_min(rbs: &[bool; 12]) -> bool {
+    fn is_min(rbs: &[bool; 24]) -> bool {
         rbs[3] && !rbs[4] && !(rbs[6] && rbs[9]) && !BaseQuality::is_dim(rbs)
     }
-    fn is_aug(rbs: &[bool; 12]) -> bool {
+    fn is_aug(rbs: &[bool; 24]) -> bool {
         !rbs[3] && !rbs[6] && rbs[8] && !rbs[10]
     }
-    fn is_dim(rbs: &[bool; 12]) -> bool {
+    fn is_dim(rbs: &[bool; 24]) -> bool {
         rbs[6]
             && !rbs[10]
             && !rbs[4]
@@ -79,16 +79,16 @@ impl BaseQuality {
                 || (rbs[3] && rbs[9])
                 || (rbs[6] && rbs[9]))
     }
-    fn is_dom(rbs: &[bool; 12]) -> bool {
+    fn is_dom(rbs: &[bool; 24]) -> bool {
         !rbs[3] && rbs[10]
     }
-    fn has_major_sixth(rbs: &[bool; 12]) -> bool {
+    fn has_major_sixth(rbs: &[bool; 24]) -> bool {
         rbs[9]
     }
-    fn has_minor_seventh(rbs: &[bool; 12]) -> bool {
+    fn has_minor_seventh(rbs: &[bool; 24]) -> bool {
         rbs[10]
     }
-    fn has_major_seventh(rbs: &[bool; 12]) -> bool {
+    fn has_major_seventh(rbs: &[bool; 24]) -> bool {
         rbs[11]
     }
 }

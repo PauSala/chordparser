@@ -48,7 +48,7 @@ pub struct Chord {
     #[serde(skip_serializing)]
     adds: Vec<Interval>,
     #[serde(skip_serializing)]
-    pub(crate) rbs: [bool; 12],
+    pub(crate) rbs: [bool; 24],
 }
 
 impl Chord {
@@ -137,7 +137,7 @@ impl Chord {
     }
 
     pub(crate) fn has(&self, int: Interval) -> bool {
-        self.real_intervals.iter().any(|n| *n == int)
+        self.rbs[int.st() as usize]
     }
 
     pub(crate) fn has_sem(&self, int: SemInterval) -> bool {
@@ -160,7 +160,7 @@ pub struct ChordBuilder {
     real_intervals: Vec<Interval>,
     is_sus: bool,
     adds: Vec<Interval>,
-    rbs: [bool; 12],
+    rbs: [bool; 24],
 }
 
 impl ChordBuilder {
@@ -179,11 +179,11 @@ impl ChordBuilder {
             real_intervals: Vec::new(),
             is_sus: false,
             adds: Vec::new(),
-            rbs: [false; 12],
+            rbs: [false; 24],
         }
     }
 
-    pub fn rbs(mut self, rbs: [bool; 12]) -> ChordBuilder {
+    pub fn rbs(mut self, rbs: [bool; 24]) -> ChordBuilder {
         self.rbs = rbs;
         self
     }

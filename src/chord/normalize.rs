@@ -24,7 +24,7 @@ pub fn normalize(ch: &Chord) -> String {
             _normalize(ch, res)
         }
         Quality::Minor6 => {
-            res.push_str("Min6");
+            res.push_str("min6");
             let mmod = get_mod(ch);
             if let Some(mo) = mmod {
                 res.push_str(&mo.to_string());
@@ -50,13 +50,13 @@ pub fn normalize(ch: &Chord) -> String {
             _normalize(ch, res)
         }
         Quality::Minor7 => {
-            res.push_str("Min");
+            res.push_str("min");
             let mmod = get_mod(ch).unwrap();
             res.push_str(&mmod.to_string());
             _normalize(ch, res)
         }
         Quality::MinorMaj7 => {
-            res.push_str("Min");
+            res.push_str("min");
             let mmod = get_mod(ch).unwrap();
             if mmod != Interval::MajorSeventh {
                 res.push_str("Maj");
@@ -73,7 +73,7 @@ pub fn normalize(ch: &Chord) -> String {
         }
         Quality::Major | Quality::Minor => {
             if ch.quality == Quality::Minor {
-                res.push_str("Min");
+                res.push_str("min");
             }
             // Because sus2 is sus but is just an omit3 with a ninth
             if ch.is_sus && ch.has(Interval::PerfectFourth) {
