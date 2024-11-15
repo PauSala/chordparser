@@ -3,7 +3,7 @@ use std::vec;
 
 use intervals::{Interval, SemInterval};
 use normalize::normalize;
-use quality::{BaseQuality, Quality};
+use quality::{InnerQuality, Quality};
 use serde::{Deserialize, Serialize};
 use serde_json;
 
@@ -40,8 +40,8 @@ pub struct Chord {
     semantic_intervals: Vec<u8>,
     /// Full quality of the chord, for internal purposes.
     #[serde(skip_serializing)]
-    complete_quality: Quality,
-    pub quality: BaseQuality,
+    complete_quality: InnerQuality,
+    pub quality: Quality,
     /// Intervals added through the add modifier.
     #[serde(skip_serializing)]
     is_sus: bool,
@@ -49,7 +49,7 @@ pub struct Chord {
     #[serde(skip_serializing)]
     adds: Vec<Interval>,
     #[serde(skip_serializing)]
-    pub(crate) rbs: [bool; 24],
+    rbs: [bool; 24],
 }
 
 impl Chord {
@@ -255,8 +255,8 @@ impl ChordBuilder {
             adds: self.adds,
             rbs: self.rbs,
         };
-        chord.complete_quality = Quality::from_chord(&chord);
-        chord.quality = BaseQuality::quality(&chord.rbs);
+        chord.complete_quality = InnerQuality::from_chord(&chord);
+        chord.quality = Quality::quality(&chord.rbs);
         chord.normalized = normalize(&chord);
         chord
     }
