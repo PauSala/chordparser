@@ -261,6 +261,16 @@ impl Ast {
         name.replace(&format!("{}{}", self.root.literal, modifier_str), "")
     }
 
+    pub fn rbs(&mut self, sts: &Vec<u8>) -> [bool; 12] {
+        let mut rbs = [false; 12];
+        for st in sts {
+            if *st <= 11 {
+                rbs[*st as usize] = true;
+            }
+        }
+        rbs
+    }
+
     pub(crate) fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
         self.set_intervals();
         let notes = self.get_notes();
@@ -281,6 +291,7 @@ impl Ast {
             .bass(self.bass.clone())
             .notes(notes)
             .note_literals(note_literals)
+            .rbs(self.rbs(&semitones))
             .semitones(semitones)
             .semantic_intervals(semantic_intervals)
             .real_intervals(self.intervals.clone())

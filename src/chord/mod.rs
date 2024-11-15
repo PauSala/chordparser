@@ -12,7 +12,7 @@ use note::Note;
 pub mod intervals;
 pub(crate) mod normalize;
 pub mod note;
-pub(crate) mod quality;
+pub mod quality;
 
 /// Chord representation of a successfully parsed string.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
@@ -47,6 +47,8 @@ pub struct Chord {
     /// Sus modifiers comming from input string.
     #[serde(skip_serializing)]
     adds: Vec<Interval>,
+    #[serde(skip_serializing)]
+    pub(crate) rbs: [bool; 12],
 }
 
 impl Chord {
@@ -158,6 +160,7 @@ pub struct ChordBuilder {
     real_intervals: Vec<Interval>,
     is_sus: bool,
     adds: Vec<Interval>,
+    rbs: [bool; 12],
 }
 
 impl ChordBuilder {
@@ -176,7 +179,13 @@ impl ChordBuilder {
             real_intervals: Vec::new(),
             is_sus: false,
             adds: Vec::new(),
+            rbs: [false; 12],
         }
+    }
+
+    pub fn rbs(mut self, rbs: [bool; 12]) -> ChordBuilder {
+        self.rbs = rbs;
+        self
     }
 
     pub fn real_intervals(mut self, real_intervals: Vec<Interval>) -> ChordBuilder {
@@ -244,6 +253,7 @@ impl ChordBuilder {
             is_sus: self.is_sus,
             semitones: self.semitones,
             adds: self.adds,
+            rbs: self.rbs,
         };
         chord.quality = Quality::from_chord(&chord);
         chord.normalized = normalize(&chord);

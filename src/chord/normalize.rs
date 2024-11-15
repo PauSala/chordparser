@@ -66,7 +66,7 @@ pub fn normalize(ch: &Chord) -> String {
         }
         Quality::Diminished => {
             res.push_str("dim");
-            if ch.has(Interval::DiminishedSeventh) {
+            if ch.rbs[9] {
                 res.push('7');
             }
             _normalize(ch, res)
@@ -294,6 +294,12 @@ fn get_alt_notes(ch: &Chord) -> Vec<Interval> {
     ];
     match ch.quality {
         Quality::Power => res,
+        Quality::Minor6 => ch
+            .real_intervals
+            .iter()
+            .filter(|i| altered.contains(i) && *i != &Interval::DiminishedSeventh)
+            .cloned()
+            .collect(),
         Quality::Diminished => ch
             .real_intervals
             .iter()
