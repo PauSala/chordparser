@@ -1,12 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-use super::Chord;
+use super::{intervals::Interval, Chord};
 
 /// Describes the quality of a chord
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Default, Eq, Clone, Serialize, Deserialize)]
 #[repr(u8)]
 pub enum Quality {
     Power,
+    #[default]
     Major,
     Major6,
     Major7,
@@ -18,9 +19,10 @@ pub enum Quality {
     Diminished,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Default)]
 #[repr(u8)]
 pub enum BaseQuality {
+    #[default]
     Major,
     Minor,
     Dominant,
@@ -30,7 +32,7 @@ pub enum BaseQuality {
 }
 
 impl BaseQuality {
-    fn base_quality(rbs: &[bool; 24]) -> BaseQuality {
+    pub fn quality(rbs: &[bool; 24]) -> BaseQuality {
         if BaseQuality::is_dim(rbs) {
             return BaseQuality::Diminished;
         }
@@ -46,7 +48,7 @@ impl BaseQuality {
         if BaseQuality::is_power(rbs) {
             return BaseQuality::Power;
         }
-        return BaseQuality::Major;
+        BaseQuality::Major
     }
 
     fn is_power(rbs: &[bool; 24]) -> bool {
@@ -65,42 +67,27 @@ impl BaseQuality {
     }
 
     fn is_min(rbs: &[bool; 24]) -> bool {
-        rbs[3] && !rbs[4] && !(rbs[6] && rbs[9]) && !BaseQuality::is_dim(rbs)
+        !(!rbs[3] || rbs[4] || BaseQuality::is_dim(rbs) || rbs[6] && rbs[9])
     }
     fn is_aug(rbs: &[bool; 24]) -> bool {
         !rbs[3] && !rbs[6] && rbs[8] && !rbs[10]
     }
     fn is_dim(rbs: &[bool; 24]) -> bool {
-        rbs[6]
-            && !rbs[10]
-            && !rbs[4]
-            && ((rbs[3] && rbs[6] && rbs[9])
-                || (rbs[3] && rbs[6])
-                || (rbs[3] && rbs[9])
-                || (rbs[6] && rbs[9]))
+        rbs[6] && !rbs[10] && !rbs[4] && (!(!rbs[3] || !rbs[9] && !rbs[6]) || (rbs[6] && rbs[9]))
     }
     fn is_dom(rbs: &[bool; 24]) -> bool {
         !rbs[3] && rbs[10]
-    }
-    fn has_major_sixth(rbs: &[bool; 24]) -> bool {
-        rbs[9]
-    }
-    fn has_minor_seventh(rbs: &[bool; 24]) -> bool {
-        rbs[10]
-    }
-    fn has_major_seventh(rbs: &[bool; 24]) -> bool {
-        rbs[11]
     }
 }
 
 impl Quality {
     /// Given a chord, returns its quality
     pub fn from_chord(ch: &Chord) -> Quality {
-        let maj6 = BaseQuality::has_major_sixth(&ch.rbs);
-        let maj7 = BaseQuality::has_major_seventh(&ch.rbs);
-        let min7 = BaseQuality::has_minor_seventh(&ch.rbs);
+        let maj6 = ch.has(Interval::MajorSixth);
+        let maj7 = ch.has(Interval::MajorSeventh);
+        let min7 = ch.has(Interval::MinorSeventh);
 
-        match BaseQuality::base_quality(&ch.rbs) {
+        match BaseQuality::quality(&ch.rbs) {
             BaseQuality::Major | BaseQuality::Augmented => {
                 if maj6 {
                     return Quality::Major6;
@@ -180,9 +167,9 @@ mod test {
         match res {
             Ok(chord) => {
                 // assert_eq!(chord.quality, expected)
-                if chord.quality != expected {
+                if chord.complete_quality != expected {
                     println!("{}", chord.origin);
-                    assert_eq!(chord.quality, expected)
+                    assert_eq!(chord.complete_quality, expected)
                 }
             }
             Err(e) => {

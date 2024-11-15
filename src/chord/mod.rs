@@ -3,7 +3,7 @@ use std::vec;
 
 use intervals::{Interval, SemInterval};
 use normalize::normalize;
-use quality::Quality;
+use quality::{BaseQuality, Quality};
 use serde::{Deserialize, Serialize};
 use serde_json;
 
@@ -38,9 +38,10 @@ pub struct Chord {
     /// The semantic intervals of the notes, meaning non altered intervals.
     #[serde(skip_serializing)]
     semantic_intervals: Vec<u8>,
-    /// The quality of the chord.
+    /// Full quality of the chord, for internal purposes.
     #[serde(skip_serializing)]
-    quality: Quality,
+    complete_quality: Quality,
+    pub quality: BaseQuality,
     /// Intervals added through the add modifier.
     #[serde(skip_serializing)]
     is_sus: bool,
@@ -152,7 +153,6 @@ pub struct ChordBuilder {
     descriptor: String,
     root: Note,
     bass: Option<Note>,
-    quality: Quality,
     notes: Vec<Note>,
     note_literals: Vec<String>,
     semitones: Vec<u8>,
@@ -171,7 +171,6 @@ impl ChordBuilder {
             descriptor: String::new(),
             root,
             bass: None,
-            quality: Quality::Major,
             notes: Vec::new(),
             note_literals: Vec::new(),
             semitones: Vec::new(),
@@ -245,7 +244,8 @@ impl ChordBuilder {
             descriptor: self.descriptor,
             root: self.root,
             bass: self.bass,
-            quality: self.quality,
+            complete_quality: Default::default(),
+            quality: Default::default(),
             notes: self.notes,
             note_literals: self.note_literals,
             semantic_intervals: self.semantic_intervals,
@@ -255,7 +255,8 @@ impl ChordBuilder {
             adds: self.adds,
             rbs: self.rbs,
         };
-        chord.quality = Quality::from_chord(&chord);
+        chord.complete_quality = Quality::from_chord(&chord);
+        chord.quality = BaseQuality::quality(&chord.rbs);
         chord.normalized = normalize(&chord);
         chord
     }

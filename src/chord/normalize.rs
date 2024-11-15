@@ -10,7 +10,7 @@ pub fn normalize(ch: &Chord) -> String {
         res.push_str("Bass");
         return res;
     }
-    match ch.quality {
+    match ch.complete_quality {
         Quality::Power => {
             res.push('5');
             res
@@ -66,13 +66,13 @@ pub fn normalize(ch: &Chord) -> String {
         }
         Quality::Diminished => {
             res.push_str("dim");
-            if ch.rbs[9] {
+            if ch.has(Interval::DiminishedSeventh) {
                 res.push('7');
             }
             _normalize(ch, res)
         }
         Quality::Major | Quality::Minor => {
-            if ch.quality == Quality::Minor {
+            if ch.complete_quality == Quality::Minor {
                 res.push_str("min");
             }
             // Because sus2 is sus but is just an omit3 with a ninth
@@ -85,9 +85,9 @@ pub fn normalize(ch: &Chord) -> String {
 }
 
 fn should_add_sus(ch: &Chord) -> bool {
-    (ch.quality == Quality::Dominant
-        || ch.quality == Quality::Major7
-        || ch.quality == Quality::Major)
+    (ch.complete_quality == Quality::Dominant
+        || ch.complete_quality == Quality::Major7
+        || ch.complete_quality == Quality::Major)
         && (ch.has(Interval::Eleventh) || ch.has(Interval::PerfectFourth))
 }
 
@@ -145,7 +145,7 @@ fn get_omits(ch: &Chord) -> Vec<String> {
 }
 
 fn get_mod(ch: &Chord) -> Option<Interval> {
-    match ch.quality {
+    match ch.complete_quality {
         Quality::Power => None,
         Quality::Major => None,
         Quality::Minor => None,
@@ -168,7 +168,7 @@ fn get_mod(ch: &Chord) -> Option<Interval> {
             if ch.has(Interval::Ninth) {
                 return Some(Interval::Ninth);
             }
-            if ch.quality == Quality::Major7 {
+            if ch.complete_quality == Quality::Major7 {
                 return Some(Interval::MajorSeventh);
             }
             Some(Interval::MinorSeventh)
@@ -186,7 +186,7 @@ fn get_mod(ch: &Chord) -> Option<Interval> {
             if ch.has(Interval::Ninth) {
                 return Some(Interval::Ninth);
             }
-            if ch.quality == Quality::Minor7 {
+            if ch.complete_quality == Quality::Minor7 {
                 return Some(Interval::MinorSeventh);
             }
             if ch.has(Interval::MajorSeventh) {
@@ -214,7 +214,7 @@ fn get_mod(ch: &Chord) -> Option<Interval> {
 
 fn get_adds(ch: &Chord) -> Vec<Interval> {
     let mut adds = Vec::new();
-    match ch.quality {
+    match ch.complete_quality {
         Quality::Power => adds,
         Quality::Major7 | Quality::Dominant => {
             if ch.has(Interval::Thirteenth) && !ch.has_sem(SemInterval::Ninth) {
@@ -292,7 +292,7 @@ fn get_alt_notes(ch: &Chord) -> Vec<Interval> {
         Interval::FlatThirteenth,
         Interval::DiminishedSeventh,
     ];
-    match ch.quality {
+    match ch.complete_quality {
         Quality::Power => res,
         Quality::Minor6 => ch
             .real_intervals
