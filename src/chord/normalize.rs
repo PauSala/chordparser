@@ -69,6 +69,9 @@ pub fn normalize(ch: &Chord) -> String {
             if ch.has(Interval::DiminishedSeventh) {
                 res.push('7');
             }
+            if ch.is_sus {
+                res.push_str("sus");
+            }
             _normalize(ch, res)
         }
         InnerQuality::Major | InnerQuality::Minor => {
