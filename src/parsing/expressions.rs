@@ -358,6 +358,7 @@ impl MinorExp {
                     })
                 )
             })
+            && !exp.iter().any(|e| matches!(e, Exp::Sus(SusExp { .. })))
         {
             i.push(Interval::MinorThird);
         }
