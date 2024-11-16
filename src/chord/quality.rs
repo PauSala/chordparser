@@ -68,6 +68,7 @@ impl Quality {
 
     fn is_min(rbs: &[bool; 24]) -> bool {
         !(!rbs[3] || rbs[4] || Quality::is_dim(rbs) || rbs[6] && rbs[9])
+            || (rbs[3] && (rbs[10] || rbs[11]))
     }
     fn is_aug(rbs: &[bool; 24]) -> bool {
         !rbs[3] && !rbs[6] && rbs[8] && !rbs[10]
@@ -83,6 +84,7 @@ impl Quality {
 impl InnerQuality {
     /// Given a chord, returns its quality
     pub fn from_chord(ch: &Chord) -> InnerQuality {
+        dbg!(&ch.real_intervals);
         let maj6 = ch.has(Interval::MajorSixth);
         let maj7 = ch.has(Interval::MajorSeventh);
         let min7 = ch.has(Interval::MinorSeventh);
