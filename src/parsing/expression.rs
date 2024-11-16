@@ -6,6 +6,7 @@ use super::expressions::{
 };
 
 #[derive(Debug, PartialEq, Clone)]
+#[repr(u8)]
 pub enum Exp {
     Power(PowerExp),
     Alt(AltExp),

@@ -1,6 +1,6 @@
 use super::{
     intervals::{Interval, SemInterval},
-    quality::Quality,
+    quality::InnerQuality,
     Chord,
 };
 
@@ -10,12 +10,12 @@ pub fn normalize(ch: &Chord) -> String {
         res.push_str("Bass");
         return res;
     }
-    match ch.quality {
-        Quality::Power => {
+    match ch.complete_quality {
+        InnerQuality::Power => {
             res.push('5');
             res
         }
-        Quality::Major6 => {
+        InnerQuality::Major6 => {
             res.push('6');
             let mmod = get_mod(ch);
             if let Some(mo) = mmod {
@@ -23,15 +23,15 @@ pub fn normalize(ch: &Chord) -> String {
             }
             _normalize(ch, res)
         }
-        Quality::Minor6 => {
-            res.push_str("Min6");
+        InnerQuality::Minor6 => {
+            res.push_str("min6");
             let mmod = get_mod(ch);
             if let Some(mo) = mmod {
                 res.push_str(&mo.to_string());
             }
             _normalize(ch, res)
         }
-        Quality::Major7 => {
+        InnerQuality::Major7 => {
             res.push_str("Maj");
             let mmod = get_mod(ch).unwrap();
             res.push_str(&mmod.to_string().replace("Maj", ""));
@@ -40,7 +40,7 @@ pub fn normalize(ch: &Chord) -> String {
             }
             _normalize(ch, res)
         }
-        Quality::Dominant => {
+        InnerQuality::Dominant => {
             res.push_str("");
             let mmod = get_mod(ch).unwrap();
             res.push_str(&mmod.to_string());
@@ -49,14 +49,14 @@ pub fn normalize(ch: &Chord) -> String {
             }
             _normalize(ch, res)
         }
-        Quality::Minor7 => {
-            res.push_str("Min");
+        InnerQuality::Minor7 => {
+            res.push_str("min");
             let mmod = get_mod(ch).unwrap();
             res.push_str(&mmod.to_string());
             _normalize(ch, res)
         }
-        Quality::MinorMaj7 => {
-            res.push_str("Min");
+        InnerQuality::MinorMaj7 => {
+            res.push_str("min");
             let mmod = get_mod(ch).unwrap();
             if mmod != Interval::MajorSeventh {
                 res.push_str("Maj");
@@ -64,16 +64,16 @@ pub fn normalize(ch: &Chord) -> String {
             res.push_str(&mmod.to_string());
             _normalize(ch, res)
         }
-        Quality::Diminished => {
+        InnerQuality::Diminished => {
             res.push_str("dim");
             if ch.has(Interval::DiminishedSeventh) {
                 res.push('7');
             }
             _normalize(ch, res)
         }
-        Quality::Major | Quality::Minor => {
-            if ch.quality == Quality::Minor {
-                res.push_str("Min");
+        InnerQuality::Major | InnerQuality::Minor => {
+            if ch.complete_quality == InnerQuality::Minor {
+                res.push_str("min");
             }
             // Because sus2 is sus but is just an omit3 with a ninth
             if ch.is_sus && ch.has(Interval::PerfectFourth) {
@@ -85,9 +85,9 @@ pub fn normalize(ch: &Chord) -> String {
 }
 
 fn should_add_sus(ch: &Chord) -> bool {
-    (ch.quality == Quality::Dominant
-        || ch.quality == Quality::Major7
-        || ch.quality == Quality::Major)
+    (ch.complete_quality == InnerQuality::Dominant
+        || ch.complete_quality == InnerQuality::Major7
+        || ch.complete_quality == InnerQuality::Major)
         && (ch.has(Interval::Eleventh) || ch.has(Interval::PerfectFourth))
 }
 
@@ -145,17 +145,17 @@ fn get_omits(ch: &Chord) -> Vec<String> {
 }
 
 fn get_mod(ch: &Chord) -> Option<Interval> {
-    match ch.quality {
-        Quality::Power => None,
-        Quality::Major => None,
-        Quality::Minor => None,
-        Quality::Major6 | Quality::Minor6 => {
+    match ch.complete_quality {
+        InnerQuality::Power => None,
+        InnerQuality::Major => None,
+        InnerQuality::Minor => None,
+        InnerQuality::Major6 | InnerQuality::Minor6 => {
             if ch.has(Interval::Ninth) {
                 return Some(Interval::Ninth);
             }
             None
         }
-        Quality::Major7 | Quality::Dominant => {
+        InnerQuality::Major7 | InnerQuality::Dominant => {
             if ch.has(Interval::Thirteenth) && ch.has_sem(SemInterval::Ninth) {
                 return Some(Interval::Thirteenth);
             }
@@ -168,12 +168,12 @@ fn get_mod(ch: &Chord) -> Option<Interval> {
             if ch.has(Interval::Ninth) {
                 return Some(Interval::Ninth);
             }
-            if ch.quality == Quality::Major7 {
+            if ch.complete_quality == InnerQuality::Major7 {
                 return Some(Interval::MajorSeventh);
             }
             Some(Interval::MinorSeventh)
         }
-        Quality::Minor7 | Quality::MinorMaj7 => {
+        InnerQuality::Minor7 | InnerQuality::MinorMaj7 => {
             if ch.has(Interval::Thirteenth)
                 && ch.has_sem(SemInterval::Ninth)
                 && ch.has_sem(SemInterval::Eleventh)
@@ -186,7 +186,7 @@ fn get_mod(ch: &Chord) -> Option<Interval> {
             if ch.has(Interval::Ninth) {
                 return Some(Interval::Ninth);
             }
-            if ch.quality == Quality::Minor7 {
+            if ch.complete_quality == InnerQuality::Minor7 {
                 return Some(Interval::MinorSeventh);
             }
             if ch.has(Interval::MajorSeventh) {
@@ -194,7 +194,7 @@ fn get_mod(ch: &Chord) -> Option<Interval> {
             }
             None
         }
-        Quality::Diminished => {
+        InnerQuality::Diminished => {
             if ch.has(Interval::Thirteenth)
                 && ch.has_sem(SemInterval::Ninth)
                 && ch.has_sem(SemInterval::Eleventh)
@@ -214,9 +214,9 @@ fn get_mod(ch: &Chord) -> Option<Interval> {
 
 fn get_adds(ch: &Chord) -> Vec<Interval> {
     let mut adds = Vec::new();
-    match ch.quality {
-        Quality::Power => adds,
-        Quality::Major7 | Quality::Dominant => {
+    match ch.complete_quality {
+        InnerQuality::Power => adds,
+        InnerQuality::Major7 | InnerQuality::Dominant => {
             if ch.has(Interval::Thirteenth) && !ch.has_sem(SemInterval::Ninth) {
                 adds.push(Interval::Thirteenth);
             }
@@ -225,7 +225,7 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
             }
             adds
         }
-        Quality::Minor7 | Quality::MinorMaj7 => {
+        InnerQuality::Minor7 | InnerQuality::MinorMaj7 => {
             if ch.has(Interval::Thirteenth)
                 && !ch.has(Interval::MajorSixth)
                 && (!ch.has(Interval::Eleventh) && !ch.has(Interval::SharpEleventh)
@@ -243,7 +243,7 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
             }
             adds
         }
-        Quality::Diminished => ch
+        InnerQuality::Diminished => ch
             .real_intervals
             .iter()
             .filter(|a| {
@@ -257,7 +257,7 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
             })
             .cloned()
             .collect(),
-        Quality::Major6 | Quality::Minor6 => {
+        InnerQuality::Major6 | InnerQuality::Minor6 => {
             if ch.has(Interval::Eleventh) {
                 adds.push(Interval::Eleventh);
             }
@@ -266,7 +266,7 @@ fn get_adds(ch: &Chord) -> Vec<Interval> {
             }
             adds
         }
-        Quality::Major | Quality::Minor => ch
+        InnerQuality::Major | InnerQuality::Minor => ch
             .real_intervals
             .iter()
             .filter(|a| {
@@ -292,9 +292,15 @@ fn get_alt_notes(ch: &Chord) -> Vec<Interval> {
         Interval::FlatThirteenth,
         Interval::DiminishedSeventh,
     ];
-    match ch.quality {
-        Quality::Power => res,
-        Quality::Diminished => ch
+    match ch.complete_quality {
+        InnerQuality::Power => res,
+        InnerQuality::Minor6 => ch
+            .real_intervals
+            .iter()
+            .filter(|i| altered.contains(i) && *i != &Interval::DiminishedSeventh)
+            .cloned()
+            .collect(),
+        InnerQuality::Diminished => ch
             .real_intervals
             .iter()
             .filter(|i| {

@@ -6,6 +6,7 @@ use std::fmt::Display;
 
 /// All possible note literals.
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
+#[repr(u8)]
 pub enum NoteLiteral {
     C = 0,
     D = 1,
@@ -131,6 +132,7 @@ pub type NoteMatcher = Vec<(NoteLiteral, Option<Modifier>)>;
 
 /// Represents a note modifier. It can be sharp, flat, double sharp or double flat.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize)]
+#[repr(u8)]
 pub enum Modifier {
     Sharp,
     Flat,

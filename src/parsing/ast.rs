@@ -101,26 +101,29 @@ impl Ast {
     /// Checks if there are any three consecutive semitones, which are illegal.
     fn validate_semitones(&mut self) -> bool {
         let mut is_valid = true;
-        let mut count = [false; 12];
-        let mut map = HashMap::new();
+        let mut count = 0u16; // Use a 16-bit integer to represent 12 semitones
+        let mut intervals = vec![None; 12]; // Store intervals directly in a fixed-size array
+
         for s in self.intervals.iter() {
             let pos = s.st() % 12;
-            count[pos as usize] = true;
-            map.insert(pos, s);
+            count |= 1 << pos;
+            intervals[pos as usize] = Some(s);
         }
+
         for i in 0..12 {
             let a = (i + 1) % 12;
             let b = (i + 2) % 12;
-            if count[i] && count[a] && count[b] {
+            if (count & (1 << i) != 0) && (count & (1 << a) != 0) && (count & (1 << b) != 0) {
                 is_valid = false;
                 self.errors
                     .push(ParserError::ThreeConsecutiveSemitones(vec![
-                        format!("{}", map.get(&(i as u8)).unwrap()),
-                        format!("{}", map.get(&(a as u8)).unwrap()),
-                        format!("{}", map.get(&(b as u8)).unwrap()),
+                        format!("{}", intervals[i].unwrap()),
+                        format!("{}", intervals[a].unwrap()),
+                        format!("{}", intervals[b].unwrap()),
                     ]));
             }
         }
+
         is_valid
     }
 
@@ -267,8 +270,12 @@ impl Ast {
         let mut semitones = Vec::new();
         let mut semantic_intervals = Vec::new();
         let note_literals = notes.iter().map(|a| a.to_string()).collect();
+
+        let mut rbs = [false; 24];
         for e in &self.intervals {
-            semitones.push(e.st());
+            let v = e.st();
+            semitones.push(v);
+            rbs[v as usize] = true;
             semantic_intervals.push(e.to_semantic_interval().numeric());
         }
 
@@ -281,6 +288,7 @@ impl Ast {
             .bass(self.bass.clone())
             .notes(notes)
             .note_literals(note_literals)
+            .rbs(rbs)
             .semitones(semitones)
             .semantic_intervals(semantic_intervals)
             .real_intervals(self.intervals.clone())

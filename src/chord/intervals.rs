@@ -6,6 +6,7 @@ use std::fmt::Display;
 
 /// Enum representing all possible intervals of a chord
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Deserialize)]
+#[repr(u8)]
 pub enum Interval {
     Unison,
     MinorSecond,
