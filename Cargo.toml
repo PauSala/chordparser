@@ -4,6 +4,7 @@ version = "2.1.5"
 edition = "2021"
 description = "A parser library to generate Jazz/Pop/Rock chords from string inputs"
 repository = "https://github.com/PauSala/chordparser"
+homepage = "https://chordparser.vercel.app/"
 license = "MIT"
 keywords = ["music", "music-theory", "chords", "midi", "parser"]
 categories = ["multimedia::audio", "parsing"]
