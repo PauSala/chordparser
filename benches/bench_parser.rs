@@ -15,7 +15,7 @@ fn parse(n: &str, parser: &mut Parser) {
 fn criterion_benchmark(c: &mut Criterion) {
     let mut parser = Parser::new();
     c.bench_function("C", |b| {
-        b.iter(|| parse(black_box("CMaj7"), black_box(&mut parser)))
+        b.iter(|| parse(black_box("CMaj7#9#11b6Omit5"), black_box(&mut parser)))
     });
 }
 
