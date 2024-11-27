@@ -409,9 +409,6 @@ impl Parser {
                     self.context = Context::None;
                     self.ast
                         .expressions
-                        .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
-                    self.ast
-                        .expressions
                         .push(Exp::Extension(ExtensionExp::new(int, pos)));
                 }
             },

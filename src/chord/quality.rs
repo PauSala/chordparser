@@ -84,7 +84,6 @@ impl Quality {
 impl InnerQuality {
     /// Given a chord, returns its quality
     pub fn from_chord(ch: &Chord) -> InnerQuality {
-        dbg!(&ch.real_intervals);
         let maj6 = ch.has(Interval::MajorSixth);
         let maj7 = ch.has(Interval::MajorSeventh);
         let min7 = ch.has(Interval::MinorSeventh);

@@ -5,6 +5,8 @@ use chordparser::{
 
 use test_case::test_case;
 
+/// This test suite covers both popular chords and some  really weird ones, as well as edge cases found during development.
+
 #[test_case("C5", vec!["C", "G"])]
 #[test_case("C(omit3)", vec!["C", "G"])]
 #[test_case("Csus", vec!["C", "F", "G"])]
@@ -185,6 +187,8 @@ use test_case::test_case;
 #[test_case("Cmin7sus4", vec!["C", "F", "G", "Bb"])]
 #[test_case("Cdimsus4", vec!["C", "F", "Gb"])]
 #[test_case("Cdim7sus4", vec!["C", "F", "Gb", "B𝄫"])]
+#[test_case("Csusdim7maj7", vec!["C", "F", "Gb", "B𝄫", "B"])]
+#[test_case(" C+susMaj76", vec!["C", "F", "G#", "A", "B"])]
 fn test_notes(i: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
     let res = parser.parse(i);
