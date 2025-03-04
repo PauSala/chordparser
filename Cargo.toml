@@ -1,6 +1,6 @@
 [package]
 name = "chordparser"
-version = "2.1.7"
+version = "2.1.8"
 edition = "2024"
 description = "A parser library to generate Jazz/Pop/Rock chords from string inputs"
 repository = "https://github.com/PauSala/chordparser"
@@ -22,10 +22,6 @@ criterion = { version = "0.5", features = ["html_reports"] }
 [[example]]
 name = "parse-chord"
 path = "examples/parse-chord.rs"
-
-[[example]]
-name = "table"
-path = "examples/generate-table.rs"
 
 [[bench]]
 name = "bench_parser"
