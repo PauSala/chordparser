@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use crate::{
     chord::{
+        Chord,
         intervals::Interval,
         note::{Note, NoteLiteral},
-        Chord,
     },
     parsing::{
         expressions::{BassExp, OmitExp, PowerExp},
@@ -101,8 +101,8 @@ impl Ast {
     /// Checks if there are any three consecutive semitones, which are illegal.
     fn validate_semitones(&mut self) -> bool {
         let mut is_valid = true;
-        let mut count = 0u16; // Use a 16-bit integer to represent 12 semitones
-        let mut intervals = vec![None; 12]; // Store intervals directly in a fixed-size array
+        let mut count = 0u16;
+        let mut intervals = [None; 12];
 
         for s in self.intervals.iter() {
             let pos = s.st() % 12;

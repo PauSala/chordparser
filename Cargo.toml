@@ -1,7 +1,7 @@
 [package]
 name = "chordparser"
 version = "2.1.7"
-edition = "2021"
+edition = "2024"
 description = "A parser library to generate Jazz/Pop/Rock chords from string inputs"
 repository = "https://github.com/PauSala/chordparser"
 license = "MIT"

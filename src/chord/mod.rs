@@ -256,7 +256,7 @@ impl ChordBuilder {
             rbs: self.rbs,
         };
         chord.complete_quality = InnerQuality::from_chord(&chord);
-        chord.quality = Quality::quality(&chord.rbs);
+        chord.quality = Quality::new(&chord.rbs);
         chord.normalized = normalize(&chord);
         chord
     }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{intervals::Interval, Chord};
+use super::{Chord, intervals::Interval};
 
 /// Describes the quality of a chord
 #[derive(Debug, PartialEq, Default, Eq, Clone, Serialize, Deserialize)]
@@ -32,7 +32,7 @@ pub enum Quality {
 }
 
 impl Quality {
-    pub fn quality(rbs: &[bool; 24]) -> Quality {
+    pub fn new(rbs: &[bool; 24]) -> Quality {
         if Quality::is_dim(rbs) {
             return Quality::Diminished;
         }
@@ -88,7 +88,7 @@ impl InnerQuality {
         let maj7 = ch.has(Interval::MajorSeventh);
         let min7 = ch.has(Interval::MinorSeventh);
 
-        match Quality::quality(&ch.rbs) {
+        match Quality::new(&ch.rbs) {
             Quality::Major | Quality::Augmented => {
                 if maj6 {
                     return InnerQuality::Major6;
