@@ -237,9 +237,7 @@ fn adds(ch: &Chord) -> Vec<Interval> {
             {
                 adds.push(Interval::Thirteenth);
             }
-            if ch.has(Interval::Eleventh)
-                && !ch.norm_intervals.iter().any(|i| *i == Interval::Ninth)
-            {
+            if ch.has(Interval::Eleventh) && !ch.norm_intervals.contains(&Interval::Ninth) {
                 adds.push(Interval::Eleventh);
             }
             if ch.has(Interval::MajorSixth) {
