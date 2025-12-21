@@ -438,8 +438,8 @@ impl Parser {
     fn sus(&mut self, tokens: &mut Peekable<Iter<Token>>) {
         self.context = Context::Sus;
         let next = tokens.peek();
-        match next {
-            Some(t) => match &t.token_type {
+        if let Some(t) = next {
+            match &t.token_type {
                 TokenType::Extension(_) | TokenType::Sharp | TokenType::Flat => (),
                 _ => {
                     self.ast
@@ -447,8 +447,7 @@ impl Parser {
                         .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
                     self.context = Context::None;
                 }
-            },
-            None => (),
+            }
         }
     }
 
