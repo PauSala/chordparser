@@ -396,7 +396,6 @@ impl Parser {
     }
 
     fn add_interval(&mut self, int: Interval, pos: usize) {
-        // panic!();
         match self.context {
             Context::Sus => match int {
                 Interval::MinorSecond
