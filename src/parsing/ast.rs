@@ -19,6 +19,7 @@ pub struct Ast {
     pub(crate) root: Note,
     pub(crate) bass: Option<Note>,
     pub(crate) expressions: Vec<Exp>,
+    pub(crate) norm_intervals: Vec<Interval>,
     pub(crate) intervals: Vec<Interval>,
     pub(crate) is_sus: bool,
     pub(crate) errors: Vec<ParserError>,
@@ -28,27 +29,29 @@ impl Ast {
     fn set_intervals(&mut self) {
         self.expressions.sort();
         self.expressions.iter().for_each(|e| match e {
-            Exp::Minor(min) => min.execute(&mut self.intervals, &self.expressions),
-            Exp::Dim7(dim) => dim.execute(&mut self.intervals, &self.expressions),
-            Exp::Dim(dim) => dim.execute(&mut self.intervals, &self.expressions),
-            Exp::HalfDim(half) => half.execute(&mut self.intervals, &self.expressions),
+            Exp::Minor(min) => min.execute(&mut self.norm_intervals, &self.expressions),
+            Exp::Dim7(dim) => dim.execute(&mut self.norm_intervals, &self.expressions),
+            Exp::Dim(dim) => dim.execute(&mut self.norm_intervals, &self.expressions),
+            Exp::HalfDim(half) => half.execute(&mut self.norm_intervals, &self.expressions),
             Exp::Sus(sus) => {
-                sus.execute(&mut self.intervals);
+                sus.execute(&mut self.norm_intervals);
                 self.is_sus = true;
             }
-            Exp::Maj(maj) => maj.execute(&mut self.intervals, &self.expressions),
-            Exp::Extension(ext) => {
-                ext.execute(&mut self.intervals, &mut self.is_sus, &self.expressions)
-            }
-            Exp::Add(add) => add.execute(&mut self.intervals),
-            Exp::Aug(aug) => aug.execute(&mut self.intervals, &self.expressions),
+            Exp::Maj(maj) => maj.execute(&mut self.norm_intervals, &self.expressions),
+            Exp::Extension(ext) => ext.execute(
+                &mut self.norm_intervals,
+                &mut self.is_sus,
+                &self.expressions,
+            ),
+            Exp::Add(add) => add.execute(&mut self.norm_intervals),
+            Exp::Aug(aug) => aug.execute(&mut self.norm_intervals, &self.expressions),
             Exp::SlashBass(bass) => self.bass = Some(bass.note.clone()),
-            Exp::Alt(alt) => alt.execute(&mut self.intervals),
+            Exp::Alt(alt) => alt.execute(&mut self.norm_intervals),
             Exp::Power(pw) => {
                 if self.expressions.len() != 1 {
                     self.errors.push(ParserError::InvalidPowerExpression);
                 } else {
-                    pw.execute(&mut self.intervals)
+                    pw.execute(&mut self.norm_intervals)
                 }
             }
             Exp::Bass(_) => (),
@@ -57,12 +60,29 @@ impl Ast {
 
         self.add_third();
         self.add_five();
-        self.intervals.sort_by_key(|i| i.st());
+        self.norm_intervals.sort_by_key(|i| i.st());
+        self.intervals = self.norm_intervals.clone();
+        if let Some(Exp::Sus(sus_exp)) = self.expressions.iter().find(|e| matches!(e, Exp::Sus(_)))
+        {
+            self.intervals = self
+                .intervals
+                .iter()
+                .map(|i| match (sus_exp.interval, i) {
+                    (Interval::MinorSecond, Interval::FlatNinth) => Interval::MinorSecond,
+                    (Interval::MajorSecond, Interval::Ninth) => Interval::MajorSecond,
+                    (Interval::AugmentedFourth, Interval::SharpEleventh) => {
+                        Interval::AugmentedFourth
+                    }
+                    _ => *i,
+                })
+                .collect();
+            self.intervals.sort_by_key(|i| i.st());
+        }
     }
 
     fn add_third(&mut self) {
-        if !self.intervals.contains(&Interval::MajorThird)
-            && !self.intervals.contains(&Interval::MinorThird)
+        if !self.norm_intervals.contains(&Interval::MajorThird)
+            && !self.norm_intervals.contains(&Interval::MinorThird)
             && !self.is_sus
             && !self.expressions.iter().any(|exp| {
                 matches!(
@@ -75,15 +95,15 @@ impl Ast {
                 )
             })
         {
-            self.intervals.push(Interval::MajorThird);
+            self.norm_intervals.push(Interval::MajorThird);
         }
     }
 
     fn add_five(&mut self) {
-        if !self.intervals.contains(&Interval::DiminishedFifth)
-            && !self.intervals.contains(&Interval::PerfectFifth)
-            && !self.intervals.contains(&Interval::AugmentedFifth)
-            && !self.intervals.contains(&Interval::FlatThirteenth)
+        if !self.norm_intervals.contains(&Interval::DiminishedFifth)
+            && !self.norm_intervals.contains(&Interval::PerfectFifth)
+            && !self.norm_intervals.contains(&Interval::AugmentedFifth)
+            && !self.norm_intervals.contains(&Interval::FlatThirteenth)
             && !self.expressions.iter().any(|exp| {
                 matches!(
                     exp,
@@ -94,7 +114,7 @@ impl Ast {
                 )
             })
         {
-            self.intervals.push(Interval::PerfectFifth);
+            self.norm_intervals.push(Interval::PerfectFifth);
         }
     }
 
@@ -104,7 +124,7 @@ impl Ast {
         let mut count = 0u16;
         let mut intervals = [None; 12];
 
-        for s in self.intervals.iter() {
+        for s in self.norm_intervals.iter() {
             let pos = s.st() % 12;
             count |= 1 << pos;
             intervals[pos as usize] = Some(s);
@@ -129,7 +149,7 @@ impl Ast {
 
     fn has_inconsistent_extension(&self, int: &Interval, matches: Vec<&Interval>) -> bool {
         for i in matches {
-            if self.intervals.contains(i) && self.intervals.contains(int) {
+            if self.norm_intervals.contains(i) && self.norm_intervals.contains(int) {
                 return true;
             }
         }
@@ -247,7 +267,7 @@ impl Ast {
     /// Get the notes of the chord
     fn notes(&mut self) -> Vec<Note> {
         let mut notes = Vec::new();
-        for n in &self.intervals {
+        for n in &self.norm_intervals {
             let note = self
                 .root
                 .get_note(n.st(), n.to_semantic_interval().numeric());
@@ -272,7 +292,7 @@ impl Ast {
         let note_literals = notes.iter().map(|a| a.to_string()).collect();
 
         let mut rbs = [false; 24];
-        for e in &self.intervals {
+        for e in &self.norm_intervals {
             let v = e.st();
             semitones.push(v);
             rbs[v as usize] = true;
@@ -291,7 +311,8 @@ impl Ast {
             .rbs(rbs)
             .semitones(semitones)
             .semantic_intervals(semantic_intervals)
-            .real_intervals(self.intervals.clone())
+            .normalized_intervals(self.norm_intervals.clone())
+            .intervals(self.intervals.clone())
             .is_sus(self.is_sus)
             .adds(vec![])
             .build())
@@ -304,7 +325,8 @@ impl Default for Ast {
             root: Note::new(NoteLiteral::C, None),
             bass: None,
             expressions: Vec::new(),
-            intervals: vec![Interval::Unison],
+            norm_intervals: vec![Interval::Unison],
+            intervals: vec![],
             is_sus: false,
             errors: Vec::new(),
         }

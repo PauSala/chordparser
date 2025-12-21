@@ -6,7 +6,7 @@ use super::{
 
 pub fn normalize(ch: &Chord) -> String {
     let mut res = ch.root.to_string();
-    if ch.real_intervals.len() == 1 {
+    if ch.norm_intervals.len() == 1 {
         res.push_str("Bass");
         return res;
     }
@@ -238,7 +238,7 @@ fn adds(ch: &Chord) -> Vec<Interval> {
                 adds.push(Interval::Thirteenth);
             }
             if ch.has(Interval::Eleventh)
-                && !ch.real_intervals.iter().any(|i| *i == Interval::Ninth)
+                && !ch.norm_intervals.iter().any(|i| *i == Interval::Ninth)
             {
                 adds.push(Interval::Eleventh);
             }
@@ -248,7 +248,7 @@ fn adds(ch: &Chord) -> Vec<Interval> {
             adds
         }
         InnerQuality::Diminished => ch
-            .real_intervals
+            .norm_intervals
             .iter()
             .filter(|a| {
                 matches!(
@@ -271,7 +271,7 @@ fn adds(ch: &Chord) -> Vec<Interval> {
             adds
         }
         InnerQuality::Major | InnerQuality::Minor => ch
-            .real_intervals
+            .norm_intervals
             .iter()
             .filter(|a| {
                 matches!(
@@ -299,13 +299,13 @@ fn get_alt_notes(ch: &Chord) -> Vec<Interval> {
     match ch.complete_quality {
         InnerQuality::Power => res,
         InnerQuality::Minor6 => ch
-            .real_intervals
+            .norm_intervals
             .iter()
             .filter(|i| ALTERED.contains(i) && *i != &Interval::DiminishedSeventh)
             .cloned()
             .collect(),
         InnerQuality::Diminished => ch
-            .real_intervals
+            .norm_intervals
             .iter()
             .filter(|i| {
                 ALTERED.contains(i)
@@ -315,7 +315,7 @@ fn get_alt_notes(ch: &Chord) -> Vec<Interval> {
             .cloned()
             .collect(),
         _ => ch
-            .real_intervals
+            .norm_intervals
             .iter()
             .filter(|i| ALTERED.contains(i))
             .cloned()

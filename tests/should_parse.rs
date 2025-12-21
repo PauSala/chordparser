@@ -222,7 +222,7 @@ fn test_notes(i: &str, expected: Vec<&str>) {
             for n in notes {
                 let t = chord.transpose_to(&n);
                 assert_eq!(
-                    chord.real_intervals, t.real_intervals,
+                    chord.intervals, t.intervals,
                     "Error parsing chord {}",
                     chord.origin
                 );
@@ -230,7 +230,7 @@ fn test_notes(i: &str, expected: Vec<&str>) {
                 let parsed = parser.parse(&t.origin);
                 match parsed {
                     Ok(p) => assert_eq!(
-                        t.real_intervals, p.real_intervals,
+                        t.intervals, p.intervals,
                         "Error transposing chord {} into {}",
                         &chord.origin, n
                     ),

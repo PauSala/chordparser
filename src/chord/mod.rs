@@ -34,7 +34,10 @@ pub struct Chord {
     /// The semitones of the notes relative to root.
     pub semitones: Vec<u8>,
     /// The real intervals of the notes.
-    pub real_intervals: Vec<Interval>,
+    pub intervals: Vec<Interval>,
+    /// The normalized intervals of the notes, used to normalize the name
+    #[serde(skip_serializing)]
+    pub norm_intervals: Vec<Interval>,
     /// The semantic intervals of the notes, meaning non altered intervals.
     #[serde(skip_serializing)]
     semantic_intervals: Vec<u8>,
@@ -98,7 +101,8 @@ impl Chord {
             .note_literals(note_literals)
             .semitones(semitones)
             .semantic_intervals(semantic_intervals)
-            .real_intervals(self.real_intervals.clone())
+            .normalized_intervals(self.norm_intervals.clone())
+            .intervals(self.intervals.clone())
             .adds(self.adds.clone())
             .is_sus(self.is_sus)
             .build()
@@ -118,7 +122,7 @@ impl Chord {
         } else {
             codes.push(root - 12);
         }
-        for note in self.real_intervals.iter().skip(1) {
+        for note in self.norm_intervals.iter().skip(1) {
             codes.push(note.st() + root);
         }
         codes
@@ -157,7 +161,8 @@ pub struct ChordBuilder {
     note_literals: Vec<String>,
     semitones: Vec<u8>,
     semantic_intervals: Vec<u8>,
-    real_intervals: Vec<Interval>,
+    intervals: Vec<Interval>,
+    normalized_intervals: Vec<Interval>,
     is_sus: bool,
     adds: Vec<Interval>,
     rbs: [bool; 24],
@@ -175,7 +180,8 @@ impl ChordBuilder {
             note_literals: Vec::new(),
             semitones: Vec::new(),
             semantic_intervals: Vec::new(),
-            real_intervals: Vec::new(),
+            normalized_intervals: Vec::new(),
+            intervals: Vec::new(),
             is_sus: false,
             adds: Vec::new(),
             rbs: [false; 24],
@@ -187,8 +193,13 @@ impl ChordBuilder {
         self
     }
 
-    pub fn real_intervals(mut self, real_intervals: Vec<Interval>) -> ChordBuilder {
-        self.real_intervals = real_intervals;
+    pub fn intervals(mut self, real_intervals: Vec<Interval>) -> ChordBuilder {
+        self.intervals = real_intervals;
+        self
+    }
+
+    pub fn normalized_intervals(mut self, normalized_intervals: Vec<Interval>) -> ChordBuilder {
+        self.normalized_intervals = normalized_intervals;
         self
     }
 
@@ -249,7 +260,8 @@ impl ChordBuilder {
             notes: self.notes,
             note_literals: self.note_literals,
             semantic_intervals: self.semantic_intervals,
-            real_intervals: self.real_intervals,
+            intervals: self.intervals,
+            norm_intervals: self.normalized_intervals,
             is_sus: self.is_sus,
             semitones: self.semitones,
             adds: self.adds,
