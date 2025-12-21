@@ -396,6 +396,7 @@ impl Parser {
     }
 
     fn add_interval(&mut self, int: Interval, pos: usize) {
+        // panic!();
         match self.context {
             Context::Sus => match int {
                 Interval::MinorSecond
@@ -406,6 +407,9 @@ impl Parser {
                     self.context = Context::None;
                 }
                 _ => {
+                    self.ast
+                        .expressions
+                        .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
                     self.context = Context::None;
                     self.ast
                         .expressions
@@ -437,12 +441,14 @@ impl Parser {
         match next {
             Some(t) => match &t.token_type {
                 TokenType::Extension(_) | TokenType::Sharp | TokenType::Flat => (),
-                _ => self
-                    .ast
-                    .expressions
-                    .push(Exp::Sus(SusExp::new(Interval::PerfectFourth))),
+                _ => {
+                    self.ast
+                        .expressions
+                        .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
+                    self.context = Context::None;
+                }
             },
-            None => todo!(),
+            None => (),
         }
     }
 
