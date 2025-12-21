@@ -48,9 +48,6 @@ pub struct Chord {
     /// Intervals added through the add modifier.
     #[serde(skip_serializing)]
     is_sus: bool,
-    /// Sus modifiers comming from input string.
-    #[serde(skip_serializing)]
-    adds: Vec<Interval>,
     #[serde(skip_serializing)]
     rbs: [bool; 24],
 }
@@ -103,7 +100,6 @@ impl Chord {
             .semantic_intervals(semantic_intervals)
             .normalized_intervals(self.norm_intervals.clone())
             .intervals(self.intervals.clone())
-            .adds(self.adds.clone())
             .is_sus(self.is_sus)
             .build()
     }
@@ -164,7 +160,6 @@ pub struct ChordBuilder {
     intervals: Vec<Interval>,
     normalized_intervals: Vec<Interval>,
     is_sus: bool,
-    adds: Vec<Interval>,
     rbs: [bool; 24],
 }
 
@@ -183,7 +178,6 @@ impl ChordBuilder {
             normalized_intervals: Vec::new(),
             intervals: Vec::new(),
             is_sus: false,
-            adds: Vec::new(),
             rbs: [false; 24],
         }
     }
@@ -238,11 +232,6 @@ impl ChordBuilder {
         self
     }
 
-    pub fn adds(mut self, adds: Vec<Interval>) -> ChordBuilder {
-        self.adds = adds;
-        self
-    }
-
     pub fn normalized(mut self, normalized: String) -> ChordBuilder {
         self.normalized = normalized;
         self
@@ -264,7 +253,6 @@ impl ChordBuilder {
             norm_intervals: self.normalized_intervals,
             is_sus: self.is_sus,
             semitones: self.semitones,
-            adds: self.adds,
             rbs: self.rbs,
         };
         chord.complete_quality = InnerQuality::from_chord(&chord);

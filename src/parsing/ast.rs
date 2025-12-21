@@ -267,7 +267,7 @@ impl Ast {
     /// Get the notes of the chord
     fn notes(&mut self) -> Vec<Note> {
         let mut notes = Vec::new();
-        for n in &self.norm_intervals {
+        for n in &self.intervals {
             let note = self
                 .root
                 .get_note(n.st(), n.to_semantic_interval().numeric());
@@ -294,9 +294,13 @@ impl Ast {
         let mut rbs = [false; 24];
         for e in &self.norm_intervals {
             let v = e.st();
-            semitones.push(v);
             rbs[v as usize] = true;
             semantic_intervals.push(e.to_semantic_interval().numeric());
+        }
+
+        for e in &self.intervals {
+            let v = e.st();
+            semitones.push(v);
         }
 
         if !self.is_valid() {
@@ -314,7 +318,6 @@ impl Ast {
             .normalized_intervals(self.norm_intervals.clone())
             .intervals(self.intervals.clone())
             .is_sus(self.is_sus)
-            .adds(vec![])
             .build())
     }
 }
