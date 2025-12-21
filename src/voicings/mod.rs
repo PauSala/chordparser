@@ -1,6 +1,6 @@
 //! # Midi Codes voicing generator
 
-use crate::chord::{intervals::Interval, note::Note, Chord};
+use crate::chord::{Chord, intervals::Interval, note::Note};
 
 /// Default top limit to G4
 static MAX_MIDI_CODE: u8 = 79;

@@ -245,7 +245,7 @@ impl Ast {
     }
 
     /// Get the notes of the chord
-    fn get_notes(&mut self) -> Vec<Note> {
+    fn notes(&mut self) -> Vec<Note> {
         let mut notes = Vec::new();
         for n in &self.intervals {
             let note = self
@@ -256,7 +256,7 @@ impl Ast {
         notes
     }
 
-    pub fn get_descriptor(&mut self, name: &str) -> String {
+    pub fn descriptor(&mut self, name: &str) -> String {
         let modifier_str = match &self.root.modifier {
             Some(m) => m.to_string(),
             None => "".to_string(),
@@ -266,7 +266,7 @@ impl Ast {
 
     pub(crate) fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
         self.set_intervals();
-        let notes = self.get_notes();
+        let notes = self.notes();
         let mut semitones = Vec::new();
         let mut semantic_intervals = Vec::new();
         let note_literals = notes.iter().map(|a| a.to_string()).collect();
@@ -284,7 +284,7 @@ impl Ast {
         }
 
         Ok(Chord::builder(name, self.root.clone())
-            .descriptor(&self.get_descriptor(name))
+            .descriptor(&self.descriptor(name))
             .bass(self.bass.clone())
             .notes(notes)
             .note_literals(note_literals)

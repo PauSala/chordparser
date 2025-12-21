@@ -19,9 +19,9 @@ use parser_error::{ParserError, ParserErrors};
 use token::{Token, TokenType};
 
 use crate::chord::{
+    Chord,
     intervals::Interval,
     note::{Modifier, Note, NoteLiteral},
-    Chord,
 };
 
 /// This is used to handle X(omit/add a,b) cases.

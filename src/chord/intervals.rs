@@ -1,7 +1,7 @@
 //! Useful abstractions to work with intervals
 
-use serde::ser::{Serialize, Serializer};
 use serde::Deserialize;
+use serde::ser::{Serialize, Serializer};
 use std::fmt::Display;
 
 /// Enum representing all possible intervals of a chord

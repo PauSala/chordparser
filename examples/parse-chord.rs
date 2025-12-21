@@ -26,8 +26,8 @@ pub fn main() {
 
 use chordparser::{parsing::Parser, voicings::generate_voicing};
 use midly::{
-    num::{u4, u7},
     Format, Header, MetaMessage, Smf, Timing, Track, TrackEvent, TrackEventKind,
+    num::{u4, u7},
 };
 
 /// Generate a MIDI file from Chord.

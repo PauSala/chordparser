@@ -1,7 +1,7 @@
 use super::{
+    Chord,
     intervals::{Interval, SemInterval},
     quality::InnerQuality,
-    Chord,
 };
 
 pub fn normalize(ch: &Chord) -> String {
