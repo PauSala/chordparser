@@ -37,7 +37,7 @@ pub struct Chord {
     pub intervals: Vec<Interval>,
     /// The normalized intervals of the notes, used to normalize the name
     #[serde(skip_serializing)]
-    norm_intervals: Vec<Interval>,
+    pub(crate) norm_intervals: Vec<Interval>,
     /// The semantic intervals of the notes, meaning non altered intervals.
     #[serde(skip_serializing)]
     semantic_intervals: Vec<u8>,

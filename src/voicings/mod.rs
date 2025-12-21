@@ -35,7 +35,7 @@ impl MidiNote {
 /// Creates a pool of notes from chord, each note has its available candidates in range MAX_MIDI_CODE-MIN_MIDI_CODE
 fn notes_pool(ch: &Chord) -> Vec<MidiNote> {
     let mut midi_notes = Vec::new();
-    for (n, i) in ch.notes.iter().zip(ch.intervals.clone()) {
+    for (n, i) in ch.notes.iter().zip(ch.norm_intervals.clone()) {
         midi_notes.push(MidiNote::new(n, i))
     }
     midi_notes
