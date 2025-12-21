@@ -101,7 +101,7 @@ fn _normalize(ch: &Chord, mut base: String) -> String {
     for a in alter {
         ext.push(a.to_chord_notation());
     }
-    let adds = get_adds(ch);
+    let adds = adds(ch);
     for (i, a) in adds.iter().enumerate() {
         let mut r = String::new();
         if i == 0 {
@@ -110,7 +110,7 @@ fn _normalize(ch: &Chord, mut base: String) -> String {
         r.push_str(&a.to_chord_notation());
         ext.push(r);
     }
-    let omits = get_omits(ch);
+    let omits = omits(ch);
     for (i, o) in omits.iter().enumerate() {
         let mut r = String::new();
         if i == 0 {
@@ -132,7 +132,7 @@ fn _normalize(ch: &Chord, mut base: String) -> String {
     base
 }
 
-fn get_omits(ch: &Chord) -> Vec<String> {
+fn omits(ch: &Chord) -> Vec<String> {
     let mut res = Vec::new();
     if !(ch
         .semantic_intervals
@@ -216,7 +216,7 @@ fn get_mod(ch: &Chord) -> Option<Interval> {
     }
 }
 
-fn get_adds(ch: &Chord) -> Vec<Interval> {
+fn adds(ch: &Chord) -> Vec<Interval> {
     let mut adds = Vec::new();
     match ch.complete_quality {
         InnerQuality::Power => adds,
