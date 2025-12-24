@@ -285,7 +285,7 @@ impl Parser {
                 }
                 _ => (),
             }
-            // This will advance to next token
+            // Process next tokens
             self.process_token(token, tokens);
         }
     }
@@ -317,7 +317,6 @@ impl Parser {
             return;
         }
 
-        // No valid target found
         self.errors.push(ParserError::IllegalOrMissingOmitTarget((
             token.pos, token.len,
         )));
