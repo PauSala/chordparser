@@ -3,7 +3,7 @@ pub(crate) mod ast;
 pub(crate) mod expression;
 pub(crate) mod expressions;
 pub(crate) mod lexer;
-pub(crate) mod parser;
+pub mod parser;
 pub mod parser_error;
 pub(crate) mod token;
 
@@ -32,14 +32,43 @@ use crate::chord::{
 /// So in C7(omit3,5), the 5 is assumed as an omit, but in C7(omit3 5) it is not.
 /// When parents are closed the context is reset to None.  
 /// Commas with no context are ignored.  
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Context {
-    OmitStart,
-    OmitActive,
-    AddStart,
-    AddActive,
-    Sus,
     None,
+    Sus,
+    Group(GroupContext),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct GroupContext {
+    kind: GroupKind,
+    active: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GroupKind {
+    Omit,
+    Add,
+}
+
+impl Context {
+    fn start_group(kind: GroupKind) -> Self {
+        Context::Group(GroupContext {
+            kind,
+            active: false,
+        })
+    }
+
+    fn on_comma(self) -> Self {
+        match self {
+            Context::Group(mut group) => {
+                group.active = true;
+                Context::Group(group)
+            }
+            Context::Sus => Context::None,
+            Context::None => Context::None,
+        }
+    }
 }
 
 /// The parser is responsible fo reading and parsing the user input, transforming it into a [Chord] struct.  
@@ -48,7 +77,7 @@ pub struct Parser {
     lexer: Lexer,
     errors: Vec<ParserError>,
     ast: Ast,
-    op_count: i16,
+    open_parent_count: i16,
     context: Context,
 }
 
@@ -58,7 +87,7 @@ impl Parser {
             lexer: Lexer::new(),
             errors: Vec::new(),
             ast: Ast::default(),
-            op_count: 0,
+            open_parent_count: 0,
             context: Context::None,
         }
     }
@@ -102,7 +131,7 @@ impl Parser {
     fn cleanup(&mut self) {
         self.errors.clear();
         self.ast = Ast::default();
-        self.op_count = 0;
+        self.open_parent_count = 0;
         self.context = Context::None;
     }
 
@@ -126,11 +155,7 @@ impl Parser {
     }
 
     fn expect_extension(&self, tokens: &mut Peekable<Iter<Token>>) -> bool {
-        let val = tokens.peek();
-        match val {
-            None => false,
-            Some(real) => matches!(real.token_type, TokenType::Extension(_)),
-        }
+        matches!(tokens.peek(), Some(t) if matches!(t.token_type, TokenType::Extension(_)))
     }
 
     fn process_token(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
@@ -240,21 +265,21 @@ impl Parser {
     }
 
     fn rparen(&mut self, pos: usize) {
-        if self.op_count != 1 {
+        if self.open_parent_count != 1 {
             self.errors
                 .push(ParserError::UnexpectedClosingParenthesis(pos));
         }
         self.context = Context::None;
-        self.op_count -= 1;
+        self.open_parent_count -= 1;
     }
 
     fn lparen(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize) {
-        self.op_count += 1;
+        self.open_parent_count += 1;
         self.context = Context::None;
         while let Some(token) = tokens.next() {
             match token.token_type {
                 TokenType::RParent => {
-                    self.op_count -= 1;
+                    self.open_parent_count -= 1;
                     break;
                 }
                 TokenType::LParent => {
@@ -273,17 +298,12 @@ impl Parser {
     }
 
     fn comma(&mut self) {
-        match self.context {
-            Context::OmitStart | Context::OmitActive => self.context = Context::OmitActive,
-            Context::AddStart | Context::AddActive => self.context = Context::AddActive,
-            Context::None => (),
-            Context::Sus => self.context = Context::None,
-        }
+        self.context = self.context.on_comma();
     }
 
     fn omit(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
-        if self.op_count > 0 {
-            self.context = Context::OmitStart;
+        if self.open_parent_count > 0 {
+            self.context = Context::start_group(GroupKind::Omit);
         }
         if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
             tokens.next();
@@ -305,8 +325,8 @@ impl Parser {
     }
 
     fn add(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
-        if self.op_count > 0 {
-            self.context = Context::AddStart;
+        if self.open_parent_count > 0 {
+            self.context = Context::start_group(GroupKind::Add);
         }
         let modifier = self.match_modifier(tokens);
         if self.expect_extension(tokens) {
@@ -419,8 +439,14 @@ impl Parser {
                         .push(Exp::Extension(ExtensionExp::new(int, pos)));
                 }
             },
-            Context::OmitActive => self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos))),
-            Context::AddActive => self.ast.expressions.push(Exp::Add(AddExp::new(int, pos))),
+            Context::Group(g) if g.active => match g.kind {
+                GroupKind::Omit => {
+                    self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos)));
+                }
+                GroupKind::Add => {
+                    self.ast.expressions.push(Exp::Add(AddExp::new(int, pos)));
+                }
+            },
             _ => {
                 // This is for the C4 as Csus case
                 if int == Interval::PerfectFourth {
