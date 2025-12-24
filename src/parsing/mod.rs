@@ -366,24 +366,25 @@ impl Parser {
     }
 
     fn modifier(&mut self, tokens: &mut Peekable<Iter<Token>>, modifier: Modifier, token: &Token) {
-        if self.expect_extension(tokens) {
-            let alt = tokens
-                .next()
-                .expect("expect_extension guarantees that a next token exist");
-            if let TokenType::Extension(a) = &alt.token_type {
-                let mut id = modifier.to_string();
-                id.push_str(a);
-                let interval = Interval::from_chord_notation(&id);
-                if let Some(int) = interval {
-                    self.add_interval(int, token.pos);
-                } else {
-                    self.errors
-                        .push(ParserError::InvalidExtension(token.pos + 1));
-                }
+        if let Some(Token {
+            token_type: TokenType::Extension(extension),
+            ..
+        }) = tokens.next_if(|t| self.is_extension(t))
+        {
+            if let Some(int) = Interval::from_chord_notation(&format!("{}{}", modifier, extension))
+            {
+                self.add_interval(int, token.pos);
+            } else {
+                self.errors
+                    .push(ParserError::InvalidExtension(token.pos + 1));
             }
         } else {
             self.errors.push(ParserError::UnexpectedModifier(token.pos));
         }
+    }
+
+    fn is_extension(&self, token: &Token) -> bool {
+        matches!(token.token_type, TokenType::Extension(_))
     }
 
     fn sus(&mut self, tokens: &mut Peekable<Iter<Token>>) {
