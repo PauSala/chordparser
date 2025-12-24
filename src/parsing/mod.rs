@@ -3,6 +3,7 @@ pub(crate) mod ast;
 pub(crate) mod expression;
 pub(crate) mod expressions;
 pub(crate) mod lexer;
+pub(crate) mod parser;
 pub mod parser_error;
 pub(crate) mod token;
 
@@ -104,14 +105,9 @@ impl Parser {
     }
 
     fn read_root(&mut self, tokens: &mut Peekable<Iter<Token>>) {
-        let note = self.expect_note(tokens);
-        match note {
-            None => {
-                self.errors.push(ParserError::MissingRootNote);
-            }
-            Some(n) => {
-                self.ast.root = n;
-            }
+        match self.expect_note(tokens) {
+            Some(note) => self.ast.root = note,
+            None => self.errors.push(ParserError::MissingRootNote),
         }
     }
 
@@ -124,11 +120,7 @@ impl Parser {
     }
 
     fn expect_peek(&self, expected: TokenType, tokens: &mut Peekable<Iter<Token>>) -> bool {
-        let val = tokens.peek();
-        match val {
-            None => false,
-            Some(real) => real.token_type == expected,
-        }
+        matches!(tokens.peek(), Some(token) if token.token_type == expected)
     }
 
     fn expect_extension(&self, tokens: &mut Peekable<Iter<Token>>) -> bool {
@@ -166,8 +158,11 @@ impl Parser {
         }
     }
 
+    // [△ | ^] only
     fn maj7(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: &usize) {
         self.ast.expressions.push(Exp::Maj(MajExp));
+
+        // [△ | ^] implies a major seventh; if no literal 7 follows, create one so MajExp can upgrade it
         if !self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
             self.ast.expressions.push(Exp::Extension(ExtensionExp::new(
                 Interval::MinorSeventh,
@@ -209,20 +204,6 @@ impl Parser {
         if !self.expect_peek(TokenType::Eof, tokens) {
             let next = tokens.next().map_or(token.pos, |t| t.pos);
             self.errors.push(ParserError::IllegalSlashNotation(next));
-        }
-    }
-
-    fn expect_note(&mut self, tokens: &mut Peekable<Iter<Token>>) -> Option<Note> {
-        let note = tokens.next();
-        match note {
-            None => None,
-            Some(n) => match &n.token_type {
-                TokenType::Note(n) => {
-                    let modifier = self.match_modifier(tokens);
-                    Some(Note::new(NoteLiteral::from_string(n), modifier))
-                }
-                _ => None,
-            },
         }
     }
 
@@ -289,18 +270,6 @@ impl Parser {
         }
     }
 
-    fn match_modifier(&self, tokens: &mut Peekable<Iter<Token>>) -> Option<Modifier> {
-        let mut modifier = None;
-        if self.expect_peek(TokenType::Flat, tokens) {
-            tokens.next();
-            modifier = Some(Modifier::Flat);
-        } else if self.expect_peek(TokenType::Sharp, tokens) {
-            tokens.next();
-            modifier = Some(Modifier::Sharp);
-        }
-        modifier
-    }
-
     fn comma(&mut self) {
         match self.context {
             Context::Omit(_) => self.context = Context::Omit(true),
@@ -357,15 +326,15 @@ impl Parser {
             }
         } else if self.expect_peek(TokenType::Maj, tokens) {
             tokens.next();
-            self.ast.expressions.push(Exp::Add(AddExp::new(
-                Interval::MajorSeventh,
-                token.pos + token.len,
-            )));
             if !self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
                 self.errors
                     .push(ParserError::IllegalAddTarget((token.pos, token.len)));
                 return;
             }
+            self.ast.expressions.push(Exp::Add(AddExp::new(
+                Interval::MajorSeventh,
+                token.pos + token.len,
+            )));
             //skip seventh
             tokens.next();
         } else {
@@ -392,45 +361,6 @@ impl Parser {
             }
         } else {
             self.errors.push(ParserError::UnexpectedModifier(token.pos));
-        }
-    }
-
-    fn add_interval(&mut self, int: Interval, pos: usize) {
-        match self.context {
-            Context::Sus => match int {
-                Interval::MinorSecond
-                | Interval::MajorSecond
-                | Interval::PerfectFourth
-                | Interval::AugmentedFourth => {
-                    self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
-                    self.context = Context::None;
-                }
-                _ => {
-                    self.ast
-                        .expressions
-                        .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
-                    self.context = Context::None;
-                    self.ast
-                        .expressions
-                        .push(Exp::Extension(ExtensionExp::new(int, pos)));
-                }
-            },
-            Context::Omit(true) => self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos))),
-            Context::Add(true) => self.ast.expressions.push(Exp::Add(AddExp::new(int, pos))),
-            _ => {
-                // 4 is allowed as a sus modifier
-                if int == Interval::PerfectFourth {
-                    self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
-                }
-                // But #4 is not allowed
-                if int == Interval::AugmentedFourth {
-                    self.errors.push(ParserError::InvalidExtension(pos));
-                } else {
-                    self.ast
-                        .expressions
-                        .push(Exp::Extension(ExtensionExp::new(int, pos)));
-                }
-            }
         }
     }
 
@@ -465,6 +395,69 @@ impl Parser {
 
     fn note(&mut self, token: &Token) {
         self.errors.push(ParserError::UnexpectedNote(token.pos));
+    }
+
+    fn add_interval(&mut self, int: Interval, pos: usize) {
+        match self.context {
+            Context::Sus => match int {
+                Interval::MinorSecond
+                | Interval::MajorSecond
+                | Interval::PerfectFourth
+                | Interval::AugmentedFourth => {
+                    self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
+                    self.context = Context::None;
+                }
+                _ => {
+                    self.ast
+                        .expressions
+                        .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
+                    self.context = Context::None;
+                    self.ast
+                        .expressions
+                        .push(Exp::Extension(ExtensionExp::new(int, pos)));
+                }
+            },
+            Context::Omit(true) => self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos))),
+            Context::Add(true) => self.ast.expressions.push(Exp::Add(AddExp::new(int, pos))),
+            _ => {
+                // This is for the C4 as Csus case
+                if int == Interval::PerfectFourth {
+                    self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
+                }
+                // But #4 is not allowed
+                if int == Interval::AugmentedFourth {
+                    self.errors.push(ParserError::InvalidExtension(pos));
+                } else {
+                    self.ast
+                        .expressions
+                        .push(Exp::Extension(ExtensionExp::new(int, pos)));
+                }
+            }
+        }
+    }
+
+    fn match_modifier(&self, tokens: &mut Peekable<Iter<Token>>) -> Option<Modifier> {
+        match tokens.peek().map(|t| &t.token_type) {
+            Some(TokenType::Flat) => {
+                tokens.next();
+                Some(Modifier::Flat)
+            }
+            Some(TokenType::Sharp) => {
+                tokens.next();
+                Some(Modifier::Sharp)
+            }
+            _ => None,
+        }
+    }
+
+    fn expect_note(&mut self, tokens: &mut Peekable<Iter<Token>>) -> Option<Note> {
+        match &tokens.next()?.token_type {
+            TokenType::Note(n) => {
+                let modifier = self.match_modifier(tokens);
+                Some(Note::new(NoteLiteral::from_string(n), modifier))
+            }
+            _ => None,
+        }
     }
 }
 
