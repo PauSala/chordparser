@@ -34,8 +34,10 @@ use crate::chord::{
 /// Commas with no context are ignored.  
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Context {
-    Omit(bool),
-    Add(bool),
+    OmitStart,
+    OmitActive,
+    AddStart,
+    AddActive,
     Sus,
     None,
 }
@@ -272,8 +274,8 @@ impl Parser {
 
     fn comma(&mut self) {
         match self.context {
-            Context::Omit(_) => self.context = Context::Omit(true),
-            Context::Add(_) => self.context = Context::Add(true),
+            Context::OmitStart | Context::OmitActive => self.context = Context::OmitActive,
+            Context::AddStart | Context::AddActive => self.context = Context::AddActive,
             Context::None => (),
             Context::Sus => self.context = Context::None,
         }
@@ -281,7 +283,7 @@ impl Parser {
 
     fn omit(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
         if self.op_count > 0 {
-            self.context = Context::Omit(false);
+            self.context = Context::OmitStart;
         }
         if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
             tokens.next();
@@ -304,7 +306,7 @@ impl Parser {
 
     fn add(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
         if self.op_count > 0 {
-            self.context = Context::Add(false);
+            self.context = Context::AddStart;
         }
         let modifier = self.match_modifier(tokens);
         if self.expect_extension(tokens) {
@@ -417,8 +419,8 @@ impl Parser {
                         .push(Exp::Extension(ExtensionExp::new(int, pos)));
                 }
             },
-            Context::Omit(true) => self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos))),
-            Context::Add(true) => self.ast.expressions.push(Exp::Add(AddExp::new(int, pos))),
+            Context::OmitActive => self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos))),
+            Context::AddActive => self.ast.expressions.push(Exp::Add(AddExp::new(int, pos))),
             _ => {
                 // This is for the C4 as Csus case
                 if int == Interval::PerfectFourth {

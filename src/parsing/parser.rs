@@ -10,6 +10,15 @@ use crate::{
     },
 };
 
+pub enum ParserContext {
+    None,
+    Sus,
+    /// Active when an Omit token is found
+    OmitStart,
+    /// Active when context == OmitStart AND a comma is found
+    OmitActive,
+}
+
 pub struct NewParser {
     lexer: Lexer,
     errors: Vec<ParserError>,
