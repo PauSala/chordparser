@@ -18,10 +18,13 @@ use lexer::Lexer;
 use parser_error::{ParserError, ParserErrors};
 use token::{Token, TokenType};
 
-use crate::chord::{
-    Chord,
-    intervals::Interval,
-    note::{Modifier, Note, NoteLiteral},
+use crate::{
+    chord::{
+        Chord,
+        intervals::Interval,
+        note::{Modifier, Note, NoteLiteral},
+    },
+    parsing::expressions::Maj7Exp,
 };
 
 /// This is used to handle X(omit/add a,b) cases.
@@ -165,7 +168,7 @@ impl Parser {
             TokenType::Minor => self.ast.expressions.push(Exp::Minor(MinorExp)),
             TokenType::Hyphen => self.hyphen(tokens, token.pos),
             TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
-            TokenType::Maj7 => self.maj7(tokens, &token.pos),
+            TokenType::Maj7 => self.ast.expressions.push(Exp::Maj7(Maj7Exp)),
             TokenType::Slash => self.slash(tokens, token),
             TokenType::LParent => self.lparen(tokens, token.pos),
             TokenType::RParent => self.rparen(token.pos),
@@ -174,22 +177,6 @@ impl Parser {
             TokenType::Illegal => self.errors.push(ParserError::IllegalToken(token.pos)),
             TokenType::Eof => (),
         }
-    }
-
-    // [△ | ^] only
-    fn maj7(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: &usize) {
-        self.ast.expressions.push(Exp::Maj(MajExp));
-        // [△ | ^] implies a major seventh; if no literal 7 follows, create one so MajExp can upgrade it
-        if !Self::next_is_extension(tokens, "7") {
-            self.ast.expressions.push(Exp::Extension(ExtensionExp::new(
-                Interval::MinorSeventh,
-                *pos,
-            )));
-        }
-    }
-
-    fn next_is_extension(tokens: &mut Peekable<Iter<Token>>, ext: &str) -> bool {
-        matches!(tokens.peek(), Some(Token { token_type: TokenType::Extension(e), .. }) if e == ext)
     }
 
     fn slash(&mut self, tokens: &mut Peekable<Iter<Token>>, token: &Token) {
