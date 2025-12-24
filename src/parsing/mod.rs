@@ -149,14 +149,6 @@ impl Parser {
         }
     }
 
-    fn expect_peek(&self, expected: TokenType, tokens: &mut Peekable<Iter<Token>>) -> bool {
-        matches!(tokens.peek(), Some(token) if token.token_type == expected)
-    }
-
-    fn expect_extension(&self, tokens: &mut Peekable<Iter<Token>>) -> bool {
-        matches!(tokens.peek(), Some(t) if matches!(t.token_type, TokenType::Extension(_)))
-    }
-
     fn process_token(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
         match &token.token_type {
             TokenType::Note(_) => self.note(token),
@@ -302,64 +294,89 @@ impl Parser {
         if self.open_parent_count > 0 {
             self.context = Context::start_group(GroupKind::Omit);
         }
-        if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
-            tokens.next();
+
+        // Check for 5 or 3 extension
+        if let Some(Token {
+            token_type: TokenType::Extension(..),
+            ..
+        }) =
+            tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref ex) if ex == "5"))
+        {
             self.ast.expressions.push(Exp::Omit(OmitExp::new(
                 Interval::PerfectFifth,
                 token.pos + token.len,
             )));
-        } else if self.expect_peek(TokenType::Extension("3".to_string()), tokens) {
-            tokens.next();
+            return;
+        }
+
+        if let Some(Token {
+            token_type: TokenType::Extension(..),
+            ..
+        }) =
+            tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref ex) if ex == "3"))
+        {
             self.ast.expressions.push(Exp::Omit(OmitExp::new(
                 Interval::MajorThird,
                 token.pos + token.len,
             )));
-        } else {
-            self.errors.push(ParserError::IllegalOrMissingOmitTarget((
-                token.pos, token.len,
-            )));
+            return;
         }
+
+        // No valid target found
+        self.errors.push(ParserError::IllegalOrMissingOmitTarget((
+            token.pos, token.len,
+        )));
     }
 
     fn add(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
         if self.open_parent_count > 0 {
             self.context = Context::start_group(GroupKind::Add);
         }
-        let modifier = self.match_modifier(tokens);
-        if self.expect_extension(tokens) {
-            let next = tokens.next().unwrap();
-            if let TokenType::Extension(t) = &next.token_type {
-                let mut id = String::new();
-                if let Some(m) = modifier {
-                    id.push_str(m.to_string().as_str());
-                }
-                id.push_str(t);
-                let interval = Interval::from_chord_notation(&id);
-                if let Some(i) = interval {
-                    self.ast
-                        .expressions
-                        .push(Exp::Add(AddExp::new(i, next.pos)));
-                } else {
-                    self.errors.push(ParserError::InvalidExtension(token.pos));
-                }
+
+        let modifier = self
+            .match_modifier(tokens)
+            .map_or(String::new(), |m| m.to_string());
+
+        // Extension after optional modifier
+        if let Some(Token {
+            token_type: TokenType::Extension(ext),
+            pos,
+            ..
+        }) = tokens.next_if(|t| self.is_extension(t))
+        {
+            let id = format!("{}{}", modifier, ext);
+            match Interval::from_chord_notation(&id) {
+                Some(interval) => self
+                    .ast
+                    .expressions
+                    .push(Exp::Add(AddExp::new(interval, *pos))),
+                None => self.errors.push(ParserError::InvalidExtension(token.pos)),
             }
-        } else if self.expect_peek(TokenType::Maj, tokens) {
-            tokens.next();
-            if !self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
+            return;
+        }
+
+        // Maj7 (Maj followed by Extension("7"))
+        if tokens
+            .next_if(|t| matches!(t.token_type, TokenType::Maj))
+            .is_some()
+        {
+            if tokens
+                .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == "7"))
+                .is_some()
+            {
+                self.ast.expressions.push(Exp::Add(AddExp::new(
+                    Interval::MajorSeventh,
+                    token.pos + token.len,
+                )));
+            } else {
                 self.errors
                     .push(ParserError::IllegalAddTarget((token.pos, token.len)));
-                return;
             }
-            self.ast.expressions.push(Exp::Add(AddExp::new(
-                Interval::MajorSeventh,
-                token.pos + token.len,
-            )));
-            //skip seventh
-            tokens.next();
-        } else {
-            self.errors
-                .push(ParserError::MissingAddTarget((token.pos, token.len)));
+            return;
         }
+
+        self.errors
+            .push(ParserError::MissingAddTarget((token.pos, token.len)));
     }
 
     fn modifier(&mut self, tokens: &mut Peekable<Iter<Token>>, modifier: Modifier, token: &Token) {
@@ -446,6 +463,14 @@ impl Parser {
         }
     }
 
+    fn expect_peek(&self, expected: TokenType, tokens: &mut Peekable<Iter<Token>>) -> bool {
+        matches!(tokens.peek(), Some(token) if token.token_type == expected)
+    }
+
+    fn expect_extension(&self, tokens: &mut Peekable<Iter<Token>>) -> bool {
+        matches!(tokens.peek(), Some(t) if matches!(t.token_type, TokenType::Extension(_)))
+    }
+
     fn add_sus_exp(&mut self, int: Interval) {
         self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
         self.context = Context::None;
@@ -461,6 +486,7 @@ impl Parser {
         )
     }
 
+    /// Returns Some(modifier) and advances tokens or returnes None if any
     fn match_modifier(&self, tokens: &mut Peekable<Iter<Token>>) -> Option<Modifier> {
         match tokens.peek().map(|t| &t.token_type) {
             Some(TokenType::Flat) => {
