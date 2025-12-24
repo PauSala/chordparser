@@ -179,9 +179,8 @@ impl Parser {
     // [△ | ^] only
     fn maj7(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: &usize) {
         self.ast.expressions.push(Exp::Maj(MajExp));
-
         // [△ | ^] implies a major seventh; if no literal 7 follows, create one so MajExp can upgrade it
-        if !self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
+        if !Self::next_is_extension(tokens, "7") {
             self.ast.expressions.push(Exp::Extension(ExtensionExp::new(
                 Interval::MinorSeventh,
                 *pos,
@@ -189,45 +188,50 @@ impl Parser {
         }
     }
 
+    fn next_is_extension(tokens: &mut Peekable<Iter<Token>>, ext: &str) -> bool {
+        matches!(tokens.peek(), Some(Token { token_type: TokenType::Extension(e), .. }) if e == ext)
+    }
+
     fn slash(&mut self, tokens: &mut Peekable<Iter<Token>>, token: &Token) {
-        if self.expect_extension(tokens) {
-            let alt = tokens
-                .next()
-                .expect("expect_extension guarrantees that a next token exist");
-            if let TokenType::Extension(a) = &alt.token_type {
-                match a.as_str() {
-                    "9" => self
-                        .ast
-                        .expressions
-                        .push(Exp::Add(AddExp::new(Interval::Ninth, alt.pos))),
-                    _ => {
-                        let next = tokens.next().map_or(token.pos, |t| t.pos);
-                        self.errors.push(ParserError::IllegalSlashNotation(next));
-                    }
+        if let Some(Token {
+            token_type: TokenType::Extension(a),
+            pos,
+            ..
+        }) = tokens.next_if(|t| self.is_extension(t))
+        {
+            match a.as_str() {
+                "9" => self
+                    .ast
+                    .expressions
+                    .push(Exp::Add(AddExp::new(Interval::Ninth, *pos))),
+                _ => {
+                    let next_pos = tokens.peek().map_or(token.pos, |t| t.pos);
+                    self.errors
+                        .push(ParserError::IllegalSlashNotation(next_pos));
                 }
             }
+        } else if let Some(b) = self.expect_note(tokens) {
+            self.ast
+                .expressions
+                .push(Exp::SlashBass(SlashBassExp::new(b)));
         } else {
-            match self.expect_note(tokens) {
-                None => {
-                    let next = tokens.next().map_or(token.pos, |t| t.pos);
-                    self.errors.push(ParserError::IllegalSlashNotation(next));
-                }
-                Some(b) => {
-                    self.ast
-                        .expressions
-                        .push(Exp::SlashBass(SlashBassExp::new(b)));
-                }
-            }
+            let next_pos = tokens.peek().map_or(token.pos, |t| t.pos);
+            self.errors
+                .push(ParserError::IllegalSlashNotation(next_pos));
         }
+
         if !self.expect_peek(TokenType::Eof, tokens) {
-            let next = tokens.next().map_or(token.pos, |t| t.pos);
-            self.errors.push(ParserError::IllegalSlashNotation(next));
+            let next_pos = tokens.peek().map_or(token.pos, |t| t.pos);
+            self.errors
+                .push(ParserError::IllegalSlashNotation(next_pos));
         }
     }
 
     fn hyphen(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize) {
-        if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
-            tokens.next();
+        if tokens
+            .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == "5"))
+            .is_some()
+        {
             self.ast.expressions.push(Exp::Extension(ExtensionExp {
                 interval: Interval::DiminishedFifth,
                 pos,
@@ -295,30 +299,21 @@ impl Parser {
             self.context = Context::start_group(GroupKind::Omit);
         }
 
-        // Check for 5 or 3 extension
-        if let Some(Token {
-            token_type: TokenType::Extension(..),
-            ..
-        }) =
-            tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref ex) if ex == "5"))
-        {
-            self.ast.expressions.push(Exp::Omit(OmitExp::new(
+        if self.consume_extension_if(tokens, "5", |s| {
+            s.ast.expressions.push(Exp::Omit(OmitExp::new(
                 Interval::PerfectFifth,
                 token.pos + token.len,
             )));
+        }) {
             return;
         }
 
-        if let Some(Token {
-            token_type: TokenType::Extension(..),
-            ..
-        }) =
-            tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref ex) if ex == "3"))
-        {
-            self.ast.expressions.push(Exp::Omit(OmitExp::new(
+        if self.consume_extension_if(tokens, "3", |s| {
+            s.ast.expressions.push(Exp::Omit(OmitExp::new(
                 Interval::MajorThird,
                 token.pos + token.len,
             )));
+        }) {
             return;
         }
 
@@ -405,17 +400,15 @@ impl Parser {
 
     fn sus(&mut self, tokens: &mut Peekable<Iter<Token>>) {
         self.context = Context::Sus;
-        let next = tokens.peek();
-        if let Some(t) = next {
-            match &t.token_type {
-                TokenType::Extension(_) | TokenType::Sharp | TokenType::Flat => (),
-                _ => {
-                    self.ast
-                        .expressions
-                        .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
-                    self.context = Context::None;
-                }
-            }
+
+        if !matches!(
+            tokens.peek().map(|t| &t.token_type),
+            Some(TokenType::Extension(_) | TokenType::Sharp | TokenType::Flat)
+        ) {
+            self.ast
+                .expressions
+                .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
+            self.context = Context::None;
         }
     }
 
@@ -463,12 +456,30 @@ impl Parser {
         }
     }
 
-    fn expect_peek(&self, expected: TokenType, tokens: &mut Peekable<Iter<Token>>) -> bool {
-        matches!(tokens.peek(), Some(token) if token.token_type == expected)
+    fn consume_extension_if<F>(
+        &mut self,
+        tokens: &mut Peekable<Iter<Token>>,
+        target: &str,
+        f: F,
+    ) -> bool
+    where
+        F: FnOnce(&mut Self),
+    {
+        if let Some(Token {
+            token_type: TokenType::Extension(..),
+            ..
+        }) =
+            tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == target))
+        {
+            f(self);
+            true
+        } else {
+            false
+        }
     }
 
-    fn expect_extension(&self, tokens: &mut Peekable<Iter<Token>>) -> bool {
-        matches!(tokens.peek(), Some(t) if matches!(t.token_type, TokenType::Extension(_)))
+    fn expect_peek(&self, expected: TokenType, tokens: &mut Peekable<Iter<Token>>) -> bool {
+        matches!(tokens.peek(), Some(token) if token.token_type == expected)
     }
 
     fn add_sus_exp(&mut self, int: Interval) {
