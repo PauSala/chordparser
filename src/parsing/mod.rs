@@ -366,20 +366,22 @@ impl Parser {
     }
 
     fn modifier(&mut self, tokens: &mut Peekable<Iter<Token>>, modifier: Modifier, token: &Token) {
-        if let Some(Token {
-            token_type: TokenType::Extension(extension),
-            ..
-        }) = tokens.next_if(|t| self.is_extension(t))
-        {
-            if let Some(int) = Interval::from_chord_notation(&format!("{}{}", modifier, extension))
-            {
-                self.add_interval(int, token.pos);
-            } else {
-                self.errors
-                    .push(ParserError::InvalidExtension(token.pos + 1));
+        let extension = match tokens.next_if(|t| self.is_extension(t)) {
+            Some(Token {
+                token_type: TokenType::Extension(ext),
+                ..
+            }) => ext,
+            _ => {
+                self.errors.push(ParserError::UnexpectedModifier(token.pos));
+                return;
             }
-        } else {
-            self.errors.push(ParserError::UnexpectedModifier(token.pos));
+        };
+
+        match Interval::from_chord_notation(&format!("{}{}", modifier, extension)) {
+            Some(int) => self.add_interval(int, token.pos),
+            None => self
+                .errors
+                .push(ParserError::InvalidExtension(token.pos + 1)),
         }
     }
 
@@ -422,24 +424,17 @@ impl Parser {
 
     fn add_interval(&mut self, int: Interval, pos: usize) {
         match self.context {
-            Context::Sus => match int {
-                Interval::MinorSecond
-                | Interval::MajorSecond
-                | Interval::PerfectFourth
-                | Interval::AugmentedFourth => {
-                    self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
-                    self.context = Context::None;
-                }
-                _ => {
-                    self.ast
-                        .expressions
-                        .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
-                    self.context = Context::None;
+            Context::Sus => {
+                if self.allowed_sus_interval(int) {
+                    self.add_sus_exp(int);
+                } else {
+                    // Csus13 -> here we receive a 13, sus needs to be pushed
+                    self.add_sus_exp(Interval::PerfectFourth);
                     self.ast
                         .expressions
                         .push(Exp::Extension(ExtensionExp::new(int, pos)));
                 }
-            },
+            }
             Context::Group(g) if g.active => match g.kind {
                 GroupKind::Omit => {
                     self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos)));
@@ -448,21 +443,32 @@ impl Parser {
                     self.ast.expressions.push(Exp::Add(AddExp::new(int, pos)));
                 }
             },
-            _ => {
+            _ => match int {
                 // This is for the C4 as Csus case
-                if int == Interval::PerfectFourth {
-                    self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
-                }
-                // But #4 is not allowed
-                if int == Interval::AugmentedFourth {
-                    self.errors.push(ParserError::InvalidExtension(pos));
-                } else {
-                    self.ast
-                        .expressions
-                        .push(Exp::Extension(ExtensionExp::new(int, pos)));
-                }
-            }
+                Interval::PerfectFourth => self.ast.expressions.push(Exp::Sus(SusExp::new(int))),
+                // #4 is not allowed
+                Interval::AugmentedFourth => self.errors.push(ParserError::InvalidExtension(pos)),
+                _ => self
+                    .ast
+                    .expressions
+                    .push(Exp::Extension(ExtensionExp::new(int, pos))),
+            },
         }
+    }
+
+    fn add_sus_exp(&mut self, int: Interval) {
+        self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
+        self.context = Context::None;
+    }
+
+    fn allowed_sus_interval(&self, int: Interval) -> bool {
+        matches!(
+            int,
+            Interval::MinorSecond
+                | Interval::MajorSecond
+                | Interval::PerfectFourth
+                | Interval::AugmentedFourth
+        )
     }
 
     fn match_modifier(&self, tokens: &mut Peekable<Iter<Token>>) -> Option<Modifier> {
