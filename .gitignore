@@ -4,3 +4,4 @@
 *.txt
 examples/generate-table.rs
 *.mid
+todos.md

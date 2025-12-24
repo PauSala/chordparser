@@ -38,6 +38,7 @@ impl Ast {
                 self.is_sus = true;
             }
             Exp::Maj(maj) => maj.execute(&mut self.norm_intervals, &self.expressions),
+            Exp::Maj7(maj) => maj.execute(&mut self.norm_intervals),
             Exp::Extension(ext) => ext.execute(
                 &mut self.norm_intervals,
                 &mut self.is_sus,

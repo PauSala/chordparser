@@ -18,10 +18,13 @@ use lexer::Lexer;
 use parser_error::{ParserError, ParserErrors};
 use token::{Token, TokenType};
 
-use crate::chord::{
-    Chord,
-    intervals::Interval,
-    note::{Modifier, Note, NoteLiteral},
+use crate::{
+    chord::{
+        Chord,
+        intervals::Interval,
+        note::{Modifier, Note, NoteLiteral},
+    },
+    parsing::expressions::Maj7Exp,
 };
 
 /// This is used to handle X(omit/add a,b) cases.
@@ -31,12 +34,43 @@ use crate::chord::{
 /// So in C7(omit3,5), the 5 is assumed as an omit, but in C7(omit3 5) it is not.
 /// When parents are closed the context is reset to None.  
 /// Commas with no context are ignored.  
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Context {
-    Omit(bool),
-    Add(bool),
-    Sus,
     None,
+    Sus,
+    Group(GroupContext),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct GroupContext {
+    kind: GroupKind,
+    active: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GroupKind {
+    Omit,
+    Add,
+}
+
+impl Context {
+    fn start_group(kind: GroupKind) -> Self {
+        Context::Group(GroupContext {
+            kind,
+            active: false,
+        })
+    }
+
+    fn on_comma(self) -> Self {
+        match self {
+            Context::Group(mut group) => {
+                group.active = true;
+                Context::Group(group)
+            }
+            Context::Sus => Context::None,
+            Context::None => Context::None,
+        }
+    }
 }
 
 /// The parser is responsible fo reading and parsing the user input, transforming it into a [Chord] struct.  
@@ -45,7 +79,7 @@ pub struct Parser {
     lexer: Lexer,
     errors: Vec<ParserError>,
     ast: Ast,
-    op_count: i16,
+    open_parent_count: i16,
     context: Context,
 }
 
@@ -55,7 +89,7 @@ impl Parser {
             lexer: Lexer::new(),
             errors: Vec::new(),
             ast: Ast::default(),
-            op_count: 0,
+            open_parent_count: 0,
             context: Context::None,
         }
     }
@@ -99,19 +133,14 @@ impl Parser {
     fn cleanup(&mut self) {
         self.errors.clear();
         self.ast = Ast::default();
-        self.op_count = 0;
+        self.open_parent_count = 0;
         self.context = Context::None;
     }
 
     fn read_root(&mut self, tokens: &mut Peekable<Iter<Token>>) {
-        let note = self.expect_note(tokens);
-        match note {
-            None => {
-                self.errors.push(ParserError::MissingRootNote);
-            }
-            Some(n) => {
-                self.ast.root = n;
-            }
+        match self.expect_note(tokens) {
+            Some(note) => self.ast.root = note,
+            None => self.errors.push(ParserError::MissingRootNote),
         }
     }
 
@@ -120,22 +149,6 @@ impl Parser {
         while next.is_some() {
             self.process_token(next.unwrap(), tokens);
             next = tokens.next();
-        }
-    }
-
-    fn expect_peek(&self, expected: TokenType, tokens: &mut Peekable<Iter<Token>>) -> bool {
-        let val = tokens.peek();
-        match val {
-            None => false,
-            Some(real) => real.token_type == expected,
-        }
-    }
-
-    fn expect_extension(&self, tokens: &mut Peekable<Iter<Token>>) -> bool {
-        let val = tokens.peek();
-        match val {
-            None => false,
-            Some(real) => matches!(real.token_type, TokenType::Extension(_)),
         }
     }
 
@@ -155,7 +168,7 @@ impl Parser {
             TokenType::Minor => self.ast.expressions.push(Exp::Minor(MinorExp)),
             TokenType::Hyphen => self.hyphen(tokens, token.pos),
             TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
-            TokenType::Maj7 => self.maj7(tokens, &token.pos),
+            TokenType::Maj7 => self.ast.expressions.push(Exp::Maj7(Maj7Exp)),
             TokenType::Slash => self.slash(tokens, token),
             TokenType::LParent => self.lparen(tokens, token.pos),
             TokenType::RParent => self.rparen(token.pos),
@@ -166,69 +179,46 @@ impl Parser {
         }
     }
 
-    fn maj7(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: &usize) {
-        self.ast.expressions.push(Exp::Maj(MajExp));
-        if !self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
-            self.ast.expressions.push(Exp::Extension(ExtensionExp::new(
-                Interval::MinorSeventh,
-                *pos,
-            )));
-        }
-    }
-
     fn slash(&mut self, tokens: &mut Peekable<Iter<Token>>, token: &Token) {
-        if self.expect_extension(tokens) {
-            let alt = tokens
-                .next()
-                .expect("expect_extension guarrantees that a next token exist");
-            if let TokenType::Extension(a) = &alt.token_type {
-                match a.as_str() {
-                    "9" => self
-                        .ast
-                        .expressions
-                        .push(Exp::Add(AddExp::new(Interval::Ninth, alt.pos))),
-                    _ => {
-                        let next = tokens.next().map_or(token.pos, |t| t.pos);
-                        self.errors.push(ParserError::IllegalSlashNotation(next));
-                    }
+        if let Some(Token {
+            token_type: TokenType::Extension(a),
+            pos,
+            ..
+        }) = tokens.next_if(|t| self.is_extension(t))
+        {
+            match a.as_str() {
+                "9" => self
+                    .ast
+                    .expressions
+                    .push(Exp::Add(AddExp::new(Interval::Ninth, *pos))),
+                _ => {
+                    let next_pos = tokens.peek().map_or(token.pos, |t| t.pos);
+                    self.errors
+                        .push(ParserError::IllegalSlashNotation(next_pos));
                 }
             }
+        } else if let Some(b) = self.expect_note(tokens) {
+            self.ast
+                .expressions
+                .push(Exp::SlashBass(SlashBassExp::new(b)));
         } else {
-            match self.expect_note(tokens) {
-                None => {
-                    let next = tokens.next().map_or(token.pos, |t| t.pos);
-                    self.errors.push(ParserError::IllegalSlashNotation(next));
-                }
-                Some(b) => {
-                    self.ast
-                        .expressions
-                        .push(Exp::SlashBass(SlashBassExp::new(b)));
-                }
-            }
+            let next_pos = tokens.peek().map_or(token.pos, |t| t.pos);
+            self.errors
+                .push(ParserError::IllegalSlashNotation(next_pos));
         }
-        if !self.expect_peek(TokenType::Eof, tokens) {
-            let next = tokens.next().map_or(token.pos, |t| t.pos);
-            self.errors.push(ParserError::IllegalSlashNotation(next));
-        }
-    }
 
-    fn expect_note(&mut self, tokens: &mut Peekable<Iter<Token>>) -> Option<Note> {
-        let note = tokens.next();
-        match note {
-            None => None,
-            Some(n) => match &n.token_type {
-                TokenType::Note(n) => {
-                    let modifier = self.match_modifier(tokens);
-                    Some(Note::new(NoteLiteral::from_string(n), modifier))
-                }
-                _ => None,
-            },
+        if !self.expect_peek(TokenType::Eof, tokens) {
+            let next_pos = tokens.peek().map_or(token.pos, |t| t.pos);
+            self.errors
+                .push(ParserError::IllegalSlashNotation(next_pos));
         }
     }
 
     fn hyphen(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize) {
-        if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
-            tokens.next();
+        if tokens
+            .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == "5"))
+            .is_some()
+        {
             self.ast.expressions.push(Exp::Extension(ExtensionExp {
                 interval: Interval::DiminishedFifth,
                 pos,
@@ -239,39 +229,37 @@ impl Parser {
     }
 
     fn aug(&mut self, tokens: &mut Peekable<Iter<Token>>) {
-        if self.expect_peek(TokenType::Extension("5".to_owned()), tokens) {
-            tokens.next();
-            self.ast.expressions.push(Exp::Aug(AugExp));
-            return;
-        }
+        let _ = tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == "5"));
         self.ast.expressions.push(Exp::Aug(AugExp));
     }
 
     fn dim(&mut self, tokens: &mut Peekable<Iter<Token>>) {
-        if self.expect_peek(TokenType::Extension("7".to_owned()), tokens) {
-            tokens.next();
+        if tokens
+            .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == "7"))
+            .is_some()
+        {
             self.ast.expressions.push(Exp::Dim7(Dim7Exp));
-            return;
+        } else {
+            self.ast.expressions.push(Exp::Dim(DimExp));
         }
-        self.ast.expressions.push(Exp::Dim(DimExp));
     }
 
     fn rparen(&mut self, pos: usize) {
-        if self.op_count != 1 {
+        if self.open_parent_count != 1 {
             self.errors
                 .push(ParserError::UnexpectedClosingParenthesis(pos));
         }
         self.context = Context::None;
-        self.op_count -= 1;
+        self.open_parent_count -= 1;
     }
 
     fn lparen(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize) {
-        self.op_count += 1;
+        self.open_parent_count += 1;
         self.context = Context::None;
         while let Some(token) = tokens.next() {
             match token.token_type {
                 TokenType::RParent => {
-                    self.op_count -= 1;
+                    self.open_parent_count -= 1;
                     break;
                 }
                 TokenType::LParent => {
@@ -284,179 +272,141 @@ impl Parser {
                 }
                 _ => (),
             }
-            // This will advance to next token
+            // Process next tokens
             self.process_token(token, tokens);
         }
     }
 
-    fn match_modifier(&self, tokens: &mut Peekable<Iter<Token>>) -> Option<Modifier> {
-        let mut modifier = None;
-        if self.expect_peek(TokenType::Flat, tokens) {
-            tokens.next();
-            modifier = Some(Modifier::Flat);
-        } else if self.expect_peek(TokenType::Sharp, tokens) {
-            tokens.next();
-            modifier = Some(Modifier::Sharp);
-        }
-        modifier
-    }
-
     fn comma(&mut self) {
-        match self.context {
-            Context::Omit(_) => self.context = Context::Omit(true),
-            Context::Add(_) => self.context = Context::Add(true),
-            Context::None => (),
-            Context::Sus => self.context = Context::None,
-        }
+        self.context = self.context.on_comma();
     }
 
     fn omit(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
-        if self.op_count > 0 {
-            self.context = Context::Omit(false);
+        if self.open_parent_count > 0 {
+            self.context = Context::start_group(GroupKind::Omit);
         }
-        if self.expect_peek(TokenType::Extension("5".to_string()), tokens) {
-            tokens.next();
-            self.ast.expressions.push(Exp::Omit(OmitExp::new(
+
+        if self.consume_extension_if(tokens, "5", |s| {
+            s.ast.expressions.push(Exp::Omit(OmitExp::new(
                 Interval::PerfectFifth,
                 token.pos + token.len,
             )));
-        } else if self.expect_peek(TokenType::Extension("3".to_string()), tokens) {
-            tokens.next();
-            self.ast.expressions.push(Exp::Omit(OmitExp::new(
+        }) {
+            return;
+        }
+
+        if self.consume_extension_if(tokens, "3", |s| {
+            s.ast.expressions.push(Exp::Omit(OmitExp::new(
                 Interval::MajorThird,
                 token.pos + token.len,
             )));
-        } else {
-            self.errors.push(ParserError::IllegalOrMissingOmitTarget((
-                token.pos, token.len,
-            )));
+        }) {
+            return;
         }
+
+        self.errors.push(ParserError::IllegalOrMissingOmitTarget((
+            token.pos, token.len,
+        )));
     }
 
     fn add(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
-        if self.op_count > 0 {
-            self.context = Context::Add(false);
+        if self.open_parent_count > 0 {
+            self.context = Context::start_group(GroupKind::Add);
         }
-        let modifier = self.match_modifier(tokens);
-        if self.expect_extension(tokens) {
-            let next = tokens.next().unwrap();
-            if let TokenType::Extension(t) = &next.token_type {
-                let mut id = String::new();
-                if let Some(m) = modifier {
-                    id.push_str(m.to_string().as_str());
-                }
-                id.push_str(t);
-                let interval = Interval::from_chord_notation(&id);
-                if let Some(i) = interval {
-                    self.ast
-                        .expressions
-                        .push(Exp::Add(AddExp::new(i, next.pos)));
-                } else {
-                    self.errors.push(ParserError::InvalidExtension(token.pos));
-                }
+
+        let modifier = self
+            .match_modifier(tokens)
+            .map_or(String::new(), |m| m.to_string());
+
+        // Extension after optional modifier
+        if let Some(Token {
+            token_type: TokenType::Extension(ext),
+            pos,
+            ..
+        }) = tokens.next_if(|t| self.is_extension(t))
+        {
+            let id = format!("{}{}", modifier, ext);
+            match Interval::from_chord_notation(&id) {
+                Some(interval) => self
+                    .ast
+                    .expressions
+                    .push(Exp::Add(AddExp::new(interval, *pos))),
+                None => self.errors.push(ParserError::InvalidExtension(token.pos)),
             }
-        } else if self.expect_peek(TokenType::Maj, tokens) {
-            tokens.next();
-            self.ast.expressions.push(Exp::Add(AddExp::new(
-                Interval::MajorSeventh,
-                token.pos + token.len,
-            )));
-            if !self.expect_peek(TokenType::Extension("7".to_string()), tokens) {
+            return;
+        }
+
+        // Maj7 (Maj followed by Extension("7"))
+        if tokens
+            .next_if(|t| matches!(t.token_type, TokenType::Maj))
+            .is_some()
+        {
+            if tokens
+                .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == "7"))
+                .is_some()
+            {
+                self.ast.expressions.push(Exp::Add(AddExp::new(
+                    Interval::MajorSeventh,
+                    token.pos + token.len,
+                )));
+            } else {
                 self.errors
                     .push(ParserError::IllegalAddTarget((token.pos, token.len)));
-                return;
             }
-            //skip seventh
-            tokens.next();
-        } else {
-            self.errors
-                .push(ParserError::MissingAddTarget((token.pos, token.len)));
+            return;
         }
+
+        self.errors
+            .push(ParserError::MissingAddTarget((token.pos, token.len)));
     }
 
     fn modifier(&mut self, tokens: &mut Peekable<Iter<Token>>, modifier: Modifier, token: &Token) {
-        if self.expect_extension(tokens) {
-            let alt = tokens
-                .next()
-                .expect("expect_extension guarantees that a next token exist");
-            if let TokenType::Extension(a) = &alt.token_type {
-                let mut id = modifier.to_string();
-                id.push_str(a);
-                let interval = Interval::from_chord_notation(&id);
-                if let Some(int) = interval {
-                    self.add_interval(int, token.pos);
-                } else {
-                    self.errors
-                        .push(ParserError::InvalidExtension(token.pos + 1));
-                }
+        let extension = match tokens.next_if(|t| self.is_extension(t)) {
+            Some(Token {
+                token_type: TokenType::Extension(ext),
+                ..
+            }) => ext,
+            _ => {
+                self.errors.push(ParserError::UnexpectedModifier(token.pos));
+                return;
             }
-        } else {
-            self.errors.push(ParserError::UnexpectedModifier(token.pos));
+        };
+
+        match Interval::from_chord_notation(&format!("{}{}", modifier, extension)) {
+            Some(int) => self.add_interval(int, token.pos),
+            None => self
+                .errors
+                .push(ParserError::InvalidExtension(token.pos + 1)),
         }
     }
 
-    fn add_interval(&mut self, int: Interval, pos: usize) {
-        match self.context {
-            Context::Sus => match int {
-                Interval::MinorSecond
-                | Interval::MajorSecond
-                | Interval::PerfectFourth
-                | Interval::AugmentedFourth => {
-                    self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
-                    self.context = Context::None;
-                }
-                _ => {
-                    self.ast
-                        .expressions
-                        .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
-                    self.context = Context::None;
-                    self.ast
-                        .expressions
-                        .push(Exp::Extension(ExtensionExp::new(int, pos)));
-                }
-            },
-            Context::Omit(true) => self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos))),
-            Context::Add(true) => self.ast.expressions.push(Exp::Add(AddExp::new(int, pos))),
-            _ => {
-                // 4 is allowed as a sus modifier
-                if int == Interval::PerfectFourth {
-                    self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
-                }
-                // But #4 is not allowed
-                if int == Interval::AugmentedFourth {
-                    self.errors.push(ParserError::InvalidExtension(pos));
-                } else {
-                    self.ast
-                        .expressions
-                        .push(Exp::Extension(ExtensionExp::new(int, pos)));
-                }
-            }
-        }
+    fn is_extension(&self, token: &Token) -> bool {
+        matches!(token.token_type, TokenType::Extension(_))
     }
 
     fn sus(&mut self, tokens: &mut Peekable<Iter<Token>>) {
         self.context = Context::Sus;
-        let next = tokens.peek();
-        if let Some(t) = next {
-            match &t.token_type {
-                TokenType::Extension(_) | TokenType::Sharp | TokenType::Flat => (),
-                _ => {
-                    self.ast
-                        .expressions
-                        .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
-                    self.context = Context::None;
-                }
-            }
+
+        if !matches!(
+            tokens.peek().map(|t| &t.token_type),
+            Some(TokenType::Extension(_) | TokenType::Sharp | TokenType::Flat)
+        ) {
+            self.ast
+                .expressions
+                .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
+            self.context = Context::None;
         }
+    }
+
+    fn add_sus_exp(&mut self, int: Interval) {
+        self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
+        self.context = Context::None;
     }
 
     fn extension(&mut self, ext: &str, token: &Token) {
         if ext == "5" && self.context == Context::None {
             self.ast.expressions.push(Exp::Power(PowerExp));
-            return;
-        }
-        let interval = Interval::from_chord_notation(ext);
-        if let Some(int) = interval {
+        } else if let Some(int) = Interval::from_chord_notation(ext) {
             self.add_interval(int, token.pos);
         } else {
             self.errors.push(ParserError::InvalidExtension(token.pos));
@@ -465,6 +415,97 @@ impl Parser {
 
     fn note(&mut self, token: &Token) {
         self.errors.push(ParserError::UnexpectedNote(token.pos));
+    }
+
+    fn add_interval(&mut self, int: Interval, pos: usize) {
+        match self.context {
+            Context::Sus => {
+                if self.allowed_sus_interval(int) {
+                    self.add_sus_exp(int);
+                } else {
+                    // Csus13 -> here we receive a 13, sus needs to be pushed
+                    self.add_sus_exp(Interval::PerfectFourth);
+                    self.ast
+                        .expressions
+                        .push(Exp::Extension(ExtensionExp::new(int, pos)));
+                }
+            }
+            Context::Group(g) if g.active => match g.kind {
+                GroupKind::Omit => self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos))),
+                GroupKind::Add => self.ast.expressions.push(Exp::Add(AddExp::new(int, pos))),
+            },
+            _ => match int {
+                // This is for the C4 as Csus case
+                Interval::PerfectFourth => self.ast.expressions.push(Exp::Sus(SusExp::new(int))),
+                // #4 is not allowed
+                Interval::AugmentedFourth => self.errors.push(ParserError::InvalidExtension(pos)),
+                _ => self
+                    .ast
+                    .expressions
+                    .push(Exp::Extension(ExtensionExp::new(int, pos))),
+            },
+        }
+    }
+
+    fn consume_extension_if<F>(
+        &mut self,
+        tokens: &mut Peekable<Iter<Token>>,
+        target: &str,
+        f: F,
+    ) -> bool
+    where
+        F: FnOnce(&mut Self),
+    {
+        if let Some(Token {
+            token_type: TokenType::Extension(..),
+            ..
+        }) =
+            tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == target))
+        {
+            f(self);
+            true
+        } else {
+            false
+        }
+    }
+
+    fn expect_peek(&self, expected: TokenType, tokens: &mut Peekable<Iter<Token>>) -> bool {
+        matches!(tokens.peek(), Some(token) if token.token_type == expected)
+    }
+
+    fn allowed_sus_interval(&self, int: Interval) -> bool {
+        matches!(
+            int,
+            Interval::MinorSecond
+                | Interval::MajorSecond
+                | Interval::PerfectFourth
+                | Interval::AugmentedFourth
+        )
+    }
+
+    /// Returns Some(modifier) and advances tokens or returnes None if any
+    fn match_modifier(&self, tokens: &mut Peekable<Iter<Token>>) -> Option<Modifier> {
+        match tokens.peek().map(|t| &t.token_type) {
+            Some(TokenType::Flat) => {
+                tokens.next();
+                Some(Modifier::Flat)
+            }
+            Some(TokenType::Sharp) => {
+                tokens.next();
+                Some(Modifier::Sharp)
+            }
+            _ => None,
+        }
+    }
+
+    fn expect_note(&mut self, tokens: &mut Peekable<Iter<Token>>) -> Option<Note> {
+        match &tokens.next()?.token_type {
+            TokenType::Note(n) => {
+                let modifier = self.match_modifier(tokens);
+                Some(Note::new(NoteLiteral::from_string(n), modifier))
+            }
+            _ => None,
+        }
     }
 }
 

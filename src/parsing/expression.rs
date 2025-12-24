@@ -1,5 +1,7 @@
 use std::fmt::{Display, Formatter};
 
+use crate::parsing::expressions::Maj7Exp;
+
 use super::expressions::{
     AddExp, AltExp, AugExp, BassExp, Dim7Exp, DimExp, ExtensionExp, HalfDimExp, MajExp, MinorExp,
     OmitExp, PowerExp, SlashBassExp, SusExp,
@@ -17,6 +19,7 @@ pub enum Exp {
     HalfDim(HalfDimExp),
     Sus(SusExp),
     Maj(MajExp),
+    Maj7(Maj7Exp),
     Extension(ExtensionExp),
     Add(AddExp),
     Aug(AugExp),
@@ -48,6 +51,7 @@ impl Exp {
             Exp::Dim(_) => "Dim".to_string(),
             Exp::Dim7(_) => "Dim7".to_string(),
             Exp::Maj(_) => "Maj".to_string(),
+            Exp::Maj7(_) => "Maj".to_string(),
             Exp::Power(_) => "Power".to_string(),
         }
     }
@@ -63,11 +67,12 @@ impl Exp {
             Exp::HalfDim(_) => 6,
             Exp::Sus(_) => 7,
             Exp::Maj(_) => 8,
-            Exp::Extension(_) => 9,
-            Exp::Add(_) => 10,
-            Exp::Aug(_) => 11,
-            Exp::Omit(_) => 12,
-            Exp::SlashBass(_) => 13,
+            Exp::Maj7(_) => 9,
+            Exp::Extension(_) => 10,
+            Exp::Add(_) => 11,
+            Exp::Aug(_) => 12,
+            Exp::Omit(_) => 13,
+            Exp::SlashBass(_) => 14,
         }
     }
     pub fn from_priority(p: u32) -> String {
@@ -81,11 +86,12 @@ impl Exp {
             6 => "halfDim".to_string(),
             7 => "Sus".to_string(),
             8 => "Maj".to_string(),
-            9 => "Extension".to_string(),
-            10 => "Add".to_string(),
-            11 => "Aug".to_string(),
-            12 => "Omit".to_string(),
-            13 => "SlashBass".to_string(),
+            9 => "Maj".to_string(),
+            10 => "Extension".to_string(),
+            11 => "Add".to_string(),
+            12 => "Aug".to_string(),
+            13 => "Omit".to_string(),
+            14 => "SlashBass".to_string(),
             _ => panic!("Invalid priority"),
         }
     }

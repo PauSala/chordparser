@@ -347,6 +347,16 @@ impl MajExp {
         }
     }
 }
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct Maj7Exp;
+impl Maj7Exp {
+    pub fn execute(&self, i: &mut Vec<Interval>) {
+        if !i.contains(&Interval::MajorSeventh) {
+            i.push(Interval::MajorSeventh);
+        }
+    }
+}
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MinorExp;
 impl MinorExp {

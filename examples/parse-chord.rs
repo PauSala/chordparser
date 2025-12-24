@@ -14,7 +14,7 @@ pub fn main() {
             let d5_midi_code = 74;
             // Create a voicing with ninth at top
             let midi_codes = generate_voicing(&chord, Some(d5_midi_code));
-            // Save the midi file, for example to open it with GarageBand or any music software
+            // Save the midi file
             to_midi_file(&midi_codes, Path::new("my_chord"), 120, 4);
         }
         Err(e) => {
