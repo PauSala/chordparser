@@ -314,10 +314,6 @@ impl Parser {
             self.context = Context::start_group(GroupKind::Add);
         }
 
-        let modifier = self
-            .match_modifier(tokens)
-            .map_or(String::new(), |m| m.to_string());
-
         // Extension after optional modifier
         if let Some(Token {
             token_type: TokenType::Extension(ext),
@@ -325,8 +321,13 @@ impl Parser {
             ..
         }) = tokens.next_if(|t| self.is_extension(t))
         {
-            let id = format!("{}{}", modifier, ext);
-            match Interval::from_chord_notation(&id) {
+            let interval = format!(
+                "{}{}",
+                self.match_modifier(tokens)
+                    .map_or(String::new(), |m| m.to_string()),
+                ext
+            );
+            match Interval::from_chord_notation(&interval) {
                 Some(interval) => self
                     .ast
                     .expressions
