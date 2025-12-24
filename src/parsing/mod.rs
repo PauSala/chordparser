@@ -3,7 +3,6 @@ pub(crate) mod ast;
 pub(crate) mod expression;
 pub(crate) mod expressions;
 pub(crate) mod lexer;
-pub mod parser;
 pub mod parser_error;
 pub(crate) mod token;
 
@@ -247,21 +246,19 @@ impl Parser {
     }
 
     fn aug(&mut self, tokens: &mut Peekable<Iter<Token>>) {
-        if self.expect_peek(TokenType::Extension("5".to_owned()), tokens) {
-            tokens.next();
-            self.ast.expressions.push(Exp::Aug(AugExp));
-            return;
-        }
+        let _ = tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == "5"));
         self.ast.expressions.push(Exp::Aug(AugExp));
     }
 
     fn dim(&mut self, tokens: &mut Peekable<Iter<Token>>) {
-        if self.expect_peek(TokenType::Extension("7".to_owned()), tokens) {
-            tokens.next();
+        if tokens
+            .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == "7"))
+            .is_some()
+        {
             self.ast.expressions.push(Exp::Dim7(Dim7Exp));
-            return;
+        } else {
+            self.ast.expressions.push(Exp::Dim(DimExp));
         }
-        self.ast.expressions.push(Exp::Dim(DimExp));
     }
 
     fn rparen(&mut self, pos: usize) {
@@ -408,10 +405,7 @@ impl Parser {
     fn extension(&mut self, ext: &str, token: &Token) {
         if ext == "5" && self.context == Context::None {
             self.ast.expressions.push(Exp::Power(PowerExp));
-            return;
-        }
-        let interval = Interval::from_chord_notation(ext);
-        if let Some(int) = interval {
+        } else if let Some(int) = Interval::from_chord_notation(ext) {
             self.add_interval(int, token.pos);
         } else {
             self.errors.push(ParserError::InvalidExtension(token.pos));
