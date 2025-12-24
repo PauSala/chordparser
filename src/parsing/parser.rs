@@ -69,6 +69,12 @@ pub struct NewParser {
     context: Context,
 }
 
+impl Default for NewParser {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NewParser {
     pub fn new() -> NewParser {
         NewParser {
@@ -168,12 +174,8 @@ impl NewParser {
                 }
             }
             Context::Group(g) if g.active => match g.kind {
-                GroupKind::Omit => {
-                    self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos)));
-                }
-                GroupKind::Add => {
-                    self.ast.expressions.push(Exp::Add(AddExp::new(int, pos)));
-                }
+                GroupKind::Omit => self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos))),
+                GroupKind::Add => self.ast.expressions.push(Exp::Add(AddExp::new(int, pos))),
             },
             _ => match int {
                 // This is for the C4 as Csus case
