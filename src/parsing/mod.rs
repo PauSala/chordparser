@@ -398,6 +398,11 @@ impl Parser {
         }
     }
 
+    fn add_sus_exp(&mut self, int: Interval) {
+        self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
+        self.context = Context::None;
+    }
+
     fn extension(&mut self, ext: &str, token: &Token) {
         if ext == "5" && self.context == Context::None {
             self.ast.expressions.push(Exp::Power(PowerExp));
@@ -466,11 +471,6 @@ impl Parser {
 
     fn expect_peek(&self, expected: TokenType, tokens: &mut Peekable<Iter<Token>>) -> bool {
         matches!(tokens.peek(), Some(token) if token.token_type == expected)
-    }
-
-    fn add_sus_exp(&mut self, int: Interval) {
-        self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
-        self.context = Context::None;
     }
 
     fn allowed_sus_interval(&self, int: Interval) -> bool {
