@@ -142,7 +142,7 @@ impl Lexer {
             let substring = &s[start..end];
             if self.reg_alt.is_match(substring) {
                 self.add_token(
-                    TokenType::Extension(substring.to_string()),
+                    TokenType::Extension(substring.parse().unwrap_or(0)),
                     pos + start,
                     substring.len(),
                 );

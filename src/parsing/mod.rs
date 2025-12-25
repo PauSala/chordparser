@@ -186,8 +186,8 @@ impl Parser {
             ..
         }) = tokens.next_if(|t| self.is_extension(t))
         {
-            match a.as_str() {
-                "9" => self
+            match a {
+                9 => self
                     .ast
                     .expressions
                     .push(Exp::Add(AddExp::new(Interval::Ninth, *pos))),
@@ -216,7 +216,7 @@ impl Parser {
 
     fn hyphen(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize) {
         if tokens
-            .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == "5"))
+            .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &5))
             .is_some()
         {
             self.ast.expressions.push(Exp::Extension(ExtensionExp {
@@ -229,13 +229,13 @@ impl Parser {
     }
 
     fn aug(&mut self, tokens: &mut Peekable<Iter<Token>>) {
-        let _ = tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == "5"));
+        let _ = tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &5));
         self.ast.expressions.push(Exp::Aug(AugExp));
     }
 
     fn dim(&mut self, tokens: &mut Peekable<Iter<Token>>) {
         if tokens
-            .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == "7"))
+            .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &7))
             .is_some()
         {
             self.ast.expressions.push(Exp::Dim7(Dim7Exp));
@@ -286,7 +286,7 @@ impl Parser {
             self.context = Context::start_group(GroupKind::Omit);
         }
 
-        if self.consume_extension_if(tokens, "5", |s| {
+        if self.consume_extension_if(tokens, 5, |s| {
             s.ast.expressions.push(Exp::Omit(OmitExp::new(
                 Interval::PerfectFifth,
                 token.pos + token.len,
@@ -295,7 +295,7 @@ impl Parser {
             return;
         }
 
-        if self.consume_extension_if(tokens, "3", |s| {
+        if self.consume_extension_if(tokens, 3, |s| {
             s.ast.expressions.push(Exp::Omit(OmitExp::new(
                 Interval::MajorThird,
                 token.pos + token.len,
@@ -342,7 +342,7 @@ impl Parser {
             .is_some()
         {
             if tokens
-                .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == "7"))
+                .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &7))
                 .is_some()
             {
                 self.ast.expressions.push(Exp::Add(AddExp::new(
@@ -403,10 +403,10 @@ impl Parser {
         self.context = Context::None;
     }
 
-    fn extension(&mut self, ext: &str, token: &Token) {
-        if ext == "5" && self.context == Context::None {
+    fn extension(&mut self, ext: &u8, token: &Token) {
+        if *ext == 5 && self.context == Context::None {
             self.ast.expressions.push(Exp::Power(PowerExp));
-        } else if let Some(int) = Interval::from_chord_notation(ext) {
+        } else if let Some(int) = Interval::from_chord_notation(&ext.to_string()) {
             self.add_interval(int, token.pos);
         } else {
             self.errors.push(ParserError::InvalidExtension(token.pos));
@@ -450,7 +450,7 @@ impl Parser {
     fn consume_extension_if<F>(
         &mut self,
         tokens: &mut Peekable<Iter<Token>>,
-        target: &str,
+        target: u8,
         f: F,
     ) -> bool
     where
@@ -460,7 +460,7 @@ impl Parser {
             token_type: TokenType::Extension(..),
             ..
         }) =
-            tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == target))
+            tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &target))
         {
             f(self);
             true
