@@ -424,8 +424,6 @@ impl Ast {
         self.interval_set();
         self.set_intervals();
 
-        dbg!(&self);
-
         let notes = self.notes();
         let mut semitones = Vec::new();
         let mut semantic_intervals = Vec::new();
