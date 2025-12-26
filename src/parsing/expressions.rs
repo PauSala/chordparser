@@ -155,14 +155,12 @@ impl SlashBassExp {
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct BassExp;
-
 impl Expression for BassExp {
     fn pass(&self, _ast: &mut super::ast::Ast) {}
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct DimExp;
-
 impl Expression for DimExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
         ast.quality = Quality::Dim;
@@ -171,7 +169,6 @@ impl Expression for DimExp {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Dim7Exp;
-
 impl Expression for Dim7Exp {
     fn pass(&self, ast: &mut super::ast::Ast) {
         ast.quality = Quality::Dim7;
@@ -180,7 +177,6 @@ impl Expression for Dim7Exp {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct HalfDimExp;
-
 impl Expression for HalfDimExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
         ast.quality = Quality::HalfDim;
@@ -190,7 +186,6 @@ impl Expression for HalfDimExp {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MajExp;
-
 impl Expression for MajExp {
     fn pass(&self, _ast: &mut super::ast::Ast) {}
 }
