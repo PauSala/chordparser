@@ -1,12 +1,9 @@
-use std::{
-    collections::{HashMap, HashSet},
-    mem,
-};
+use std::{collections::HashMap, mem};
 
 use crate::{
     chord::{
         Chord,
-        intervals::Interval,
+        intervals::{Interval, IntervalSet},
         note::{Note, NoteLiteral},
     },
     parsing::parser_error::ParserErrors,
@@ -41,7 +38,7 @@ pub enum Quality {
 }
 
 impl Quality {
-    fn build(&self, intervals: &mut HashSet<Interval>) {
+    fn build(&self, intervals: &mut IntervalSet) {
         match self {
             Quality::Major => {}
             Quality::Minor => {
@@ -93,7 +90,7 @@ pub struct Ast {
     pub(crate) sixth: Option<Interval>,
     pub(crate) seventh: Option<Interval>,
     pub(crate) extension_cap: Option<Interval>,
-    pub(crate) interval_set: HashSet<Interval>,
+    pub(crate) interval_set: IntervalSet,
 }
 
 impl Ast {
@@ -105,10 +102,7 @@ impl Ast {
             self.interval_set.remove(&Interval::MajorThird);
             return;
         }
-
-        for exp in &expressions {
-            exp.pass(self);
-        }
+        expressions.iter().for_each(|exp| exp.pass(self));
         self.expressions = expressions;
 
         // Set quality intervals
@@ -233,7 +227,7 @@ impl Ast {
     }
 
     fn set_intervals(&mut self) {
-        self.norm_intervals = self.interval_set.iter().cloned().collect();
+        self.norm_intervals = self.interval_set.iter().collect();
         self.norm_intervals.sort_by_key(|i| i.st());
         self.intervals = self.norm_intervals.clone();
         if let Some(Exp::Sus(sus_exp)) = self.expressions.iter().find(|e| matches!(e, Exp::Sus(_)))

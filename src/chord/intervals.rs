@@ -1,11 +1,12 @@
 //! Useful abstractions to work with intervals
 
+use enum_bitset::EnumBitset;
 use serde::Deserialize;
 use serde::ser::{Serialize, Serializer};
 use std::fmt::Display;
 
 /// Enum representing all possible intervals of a chord
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Hash, EnumBitset)]
 #[repr(u8)]
 pub enum Interval {
     Unison,
