@@ -105,8 +105,7 @@ impl Ast {
         }
 
         if let Some(sus) = self.sus {
-            self.interval_set.remove(Interval::MajorThird);
-            self.interval_set.remove(Interval::MinorThird);
+            Self::remove_thirds(&mut self.interval_set);
             self.interval_set.insert(sus);
         }
 
@@ -129,10 +128,7 @@ impl Ast {
                     self.interval_set.remove(Interval::AugmentedFifth);
                     self.interval_set.remove(Interval::DiminishedFifth);
                 }
-                Interval::MajorThird => {
-                    self.interval_set.remove(Interval::MinorThird);
-                    self.interval_set.remove(Interval::MajorThird);
-                }
+                Interval::MajorThird => Self::remove_thirds(&mut self.interval_set),
                 _ => {}
             }
         }
@@ -144,6 +140,11 @@ impl Ast {
             }
             self.interval_set.insert(*add);
         }
+    }
+
+    fn remove_thirds(interval_set: &mut IntervalSet) {
+        interval_set.remove(Interval::MinorThird);
+        interval_set.remove(Interval::MajorThird);
     }
 
     fn seventh(&self) -> Interval {
