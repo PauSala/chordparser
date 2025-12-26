@@ -96,15 +96,9 @@ impl Expression for SusExp {
                 ast.is_sus = true;
                 ast.sus = Some(self.interval);
             }
-            Interval::AugmentedFourth => {
-                ast.alts.push(Interval::SharpEleventh);
-            }
-            Interval::MinorSecond => {
-                ast.alts.push(Interval::FlatNinth);
-            }
-            Interval::MajorSecond => {
-                ast.alts.push(Interval::Ninth);
-            }
+            Interval::AugmentedFourth => ast.alts.push(Interval::SharpEleventh),
+            Interval::MinorSecond => ast.alts.push(Interval::FlatNinth),
+            Interval::MajorSecond => ast.alts.push(Interval::Ninth),
             _ => {}
         }
     }
