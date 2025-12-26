@@ -176,31 +176,23 @@ impl Ast {
                 self.interval_set.insert(cap);
             }
 
-            let caps_to_add: Vec<Interval> = match self.quality {
-                Quality::Major => match cap {
-                    Interval::Thirteenth => vec![Interval::Ninth, seventh],
-                    Interval::Eleventh => vec![Interval::Ninth, seventh],
-                    Interval::Ninth => {
-                        if let Some(_) = self.sixth {
-                            vec![]
-                        } else {
-                            vec![seventh]
-                        }
+            let thirteenth = if self.quality == Quality::Major {
+                vec![Interval::Ninth, seventh]
+            } else {
+                vec![Interval::Eleventh, Interval::Ninth, seventh]
+            };
+
+            let caps_to_add: Vec<Interval> = match cap {
+                Interval::Thirteenth => thirteenth,
+                Interval::Eleventh => vec![Interval::Ninth, seventh],
+                Interval::Ninth => {
+                    if let Some(_) = self.sixth {
+                        vec![]
+                    } else {
+                        vec![seventh]
                     }
-                    _ => vec![],
-                },
-                _ => match cap {
-                    Interval::Thirteenth => vec![Interval::Eleventh, Interval::Ninth, seventh],
-                    Interval::Eleventh => vec![Interval::Ninth, seventh],
-                    Interval::Ninth => {
-                        if let Some(_) = self.sixth {
-                            vec![]
-                        } else {
-                            vec![seventh]
-                        }
-                    }
-                    _ => vec![],
-                },
+                }
+                _ => vec![],
             };
 
             for interval in caps_to_add {
