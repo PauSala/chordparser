@@ -142,7 +142,6 @@ impl Ast {
 
     fn build(&mut self) {
         let expressions = mem::take(&mut self.expressions);
-
         if expressions.iter().any(|exp| matches!(exp, Exp::Bass(..))) {
             self.interval_set.remove(Interval::PerfectFifth);
             self.interval_set.remove(Interval::MajorThird);
