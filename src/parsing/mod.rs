@@ -610,7 +610,8 @@ impl Parser {
         // Pair dim <-> 7
         for (i, token) in tokens.iter().enumerate() {
             match token.token_type {
-                TokenType::Maj | TokenType::Maj7 => {
+                // TODO: handle Maj7 somehow, taking in account that it should not eat a 7 id it already do it.
+                TokenType::Maj => {
                     if let Some(s) = pending_sevens.pop() {
                         paired_with.insert(i, s);
                         paired_with.insert(s, i);

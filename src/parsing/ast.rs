@@ -23,7 +23,6 @@ pub enum Quality {
     Dim,
     HalfDim,
     Dim7,
-    Aug,
     Power,
 }
 
@@ -54,10 +53,6 @@ impl Quality {
                 intervals.insert(Interval::MinorThird);
                 intervals.insert(Interval::DiminishedFifth);
                 intervals.insert(Interval::DiminishedSeventh);
-            }
-            Quality::Aug => {
-                intervals.remove(&Interval::PerfectFifth);
-                intervals.insert(Interval::AugmentedFifth);
             }
             Quality::Power => {
                 intervals.remove(&Interval::MajorThird);
@@ -90,6 +85,13 @@ pub struct Ast {
 impl Ast {
     fn interval_set(&mut self) {
         let expressions = mem::take(&mut self.expressions);
+
+        if expressions.iter().any(|exp| matches!(exp, Exp::Bass(..))) {
+            self.interval_set.remove(&Interval::PerfectFifth);
+            self.interval_set.remove(&Interval::MajorThird);
+            return;
+        }
+
         for exp in &expressions {
             exp.pass(self);
         }
@@ -117,7 +119,7 @@ impl Ast {
         // Alts
         for alt in &self.alts {
             match alt {
-                Interval::DiminishedFifth | Interval::AugmentedFifth => {
+                Interval::DiminishedFifth | Interval::AugmentedFifth | Interval::FlatThirteenth => {
                     self.interval_set.remove(&Interval::PerfectFifth);
                     self.interval_set.insert(*alt);
                 }
@@ -143,7 +145,7 @@ impl Ast {
                     self.interval_set.remove(&Interval::AugmentedFifth);
                     self.interval_set.remove(&Interval::DiminishedFifth);
                 }
-                Interval::MinorThird => {
+                Interval::MajorThird => {
                     self.interval_set.remove(&Interval::MinorThird);
                     self.interval_set.remove(&Interval::MajorThird);
                 }
@@ -164,38 +166,39 @@ impl Ast {
         .into_iter()
         .collect();
 
+        let seventh = if self
+            .expressions
+            .iter()
+            .any(|exp| matches!(exp, Exp::Maj7(..) | Exp::Maj(..)))
+        {
+            Interval::MajorSeventh
+        } else {
+            Interval::MinorSeventh
+        };
+
         if let Some(cap) = self.extension_cap {
+            self.interval_set.insert(cap);
             let caps_to_add: Vec<Interval> = match self.quality {
                 Quality::Major => match cap {
-                    Interval::Thirteenth => vec![
-                        Interval::Thirteenth,
-                        Interval::Ninth,
-                        Interval::MinorSeventh,
-                    ],
+                    Interval::Thirteenth => vec![Interval::Ninth, seventh],
+                    Interval::Eleventh => vec![Interval::Ninth, seventh],
                     Interval::Ninth => {
                         if let Some(_) = self.sixth {
-                            vec![Interval::Ninth]
+                            vec![]
                         } else {
-                            vec![Interval::Ninth, Interval::MinorSeventh]
+                            vec![seventh]
                         }
                     }
                     _ => vec![],
                 },
                 _ => match cap {
-                    Interval::Thirteenth => vec![
-                        Interval::Thirteenth,
-                        Interval::Eleventh,
-                        Interval::Ninth,
-                        Interval::MinorSeventh,
-                    ],
-                    Interval::Eleventh => {
-                        vec![Interval::Eleventh, Interval::Ninth, Interval::MinorSeventh]
-                    }
+                    Interval::Thirteenth => vec![Interval::Eleventh, Interval::Ninth, seventh],
+                    Interval::Eleventh => vec![Interval::Ninth, seventh],
                     Interval::Ninth => {
                         if let Some(_) = self.sixth {
-                            vec![Interval::Ninth]
+                            vec![]
                         } else {
-                            vec![Interval::Ninth, Interval::MinorSeventh]
+                            vec![seventh]
                         }
                     }
                     _ => vec![],
@@ -407,7 +410,7 @@ impl Ast {
         self.interval_set();
         self.set_intervals();
 
-        dbg!(&self);
+        // dbg!(&self);
 
         let notes = self.notes();
         let mut semitones = Vec::new();

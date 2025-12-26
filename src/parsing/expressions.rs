@@ -26,7 +26,10 @@ impl Expression for ExtensionExp {
             | Interval::SharpEleventh
             | Interval::FlatThirteenth => ast.alts.push(self.interval),
             Interval::MajorSixth | Interval::MinorSixth => ast.sixth = Some(self.interval),
-            Interval::MinorSeventh => ast.seventh = Some(Interval::MinorSeventh),
+            Interval::MinorSeventh => {
+                ast.seventh = Some(Interval::MinorSeventh);
+                ast.alts.push(self.interval);
+            }
             Interval::Ninth | Interval::Eleventh | Interval::Thirteenth => {
                 ast.extension_cap = Some(
                     self.interval
@@ -88,7 +91,22 @@ pub struct SusExp {
 impl Expression for SusExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
         ast.omits.push(Interval::MajorThird);
-        ast.sus = Some(self.interval);
+        match self.interval {
+            Interval::PerfectFourth => {
+                ast.is_sus = true;
+                ast.sus = Some(self.interval);
+            }
+            Interval::AugmentedFourth => {
+                ast.alts.push(Interval::SharpEleventh);
+            }
+            Interval::MinorSecond => {
+                ast.alts.push(Interval::FlatNinth);
+            }
+            Interval::MajorSecond => {
+                ast.alts.push(Interval::Ninth);
+            }
+            _ => {}
+        }
     }
 }
 
@@ -202,7 +220,7 @@ impl Expression for MinorExp {
 pub struct AugExp;
 impl Expression for AugExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.quality = Quality::Aug;
+        ast.alts.push(Interval::AugmentedFifth);
     }
 }
 
