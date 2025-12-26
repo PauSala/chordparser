@@ -219,7 +219,7 @@ impl Parser {
 
     fn hyphen(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize) {
         if tokens
-            .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &5))
+            .next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == 5))
             .is_some()
         {
             self.ast.expressions.push(Exp::Extension(ExtensionExp {
@@ -232,13 +232,13 @@ impl Parser {
     }
 
     fn aug(&mut self, tokens: &mut Peekable<Iter<Token>>) {
-        let _ = tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &5));
+        let _ = tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == 5));
         self.ast.expressions.push(Exp::Aug(AugExp));
     }
 
     fn dim(&mut self, tokens: &mut Peekable<Iter<Token>>) {
         if tokens
-            .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &7))
+            .next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == 7))
             .is_some()
         {
             self.ast.expressions.push(Exp::Dim7(Dim7Exp));
@@ -453,8 +453,7 @@ impl Parser {
         if let Some(Token {
             token_type: TokenType::Extension(..),
             ..
-        }) =
-            tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &target))
+        }) = tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == target))
         {
             f(self);
             true

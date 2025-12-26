@@ -34,6 +34,13 @@ pub enum Interval {
     Thirteenth,
 }
 
+impl IntervalSet {
+    pub fn replace(&mut self, a: Interval, b: Interval) {
+        self.remove(a);
+        self.insert(b);
+    }
+}
+
 impl Interval {
     /// Returns the semitone representation of the interval
     /// # Arguments

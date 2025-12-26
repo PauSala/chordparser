@@ -41,32 +41,22 @@ impl Quality {
     fn build(&self, intervals: &mut IntervalSet) {
         match self {
             Quality::Major => {}
-            Quality::Minor => {
-                intervals.remove(&Interval::MajorThird);
-                intervals.insert(Interval::MinorThird);
-            }
-            Quality::Dim => {
-                intervals.remove(&Interval::MajorThird);
-                intervals.remove(&Interval::PerfectFifth);
-                intervals.insert(Interval::MinorThird);
-                intervals.insert(Interval::DiminishedFifth);
-            }
-            Quality::HalfDim => {
-                intervals.remove(&Interval::MajorThird);
-                intervals.remove(&Interval::PerfectFifth);
-                intervals.insert(Interval::MinorThird);
-                intervals.insert(Interval::DiminishedFifth);
-                intervals.insert(Interval::MinorSeventh);
-            }
-            Quality::Dim7 => {
-                intervals.remove(&Interval::MajorThird);
-                intervals.remove(&Interval::PerfectFifth);
-                intervals.insert(Interval::MinorThird);
-                intervals.insert(Interval::DiminishedFifth);
-                intervals.insert(Interval::DiminishedSeventh);
-            }
             Quality::Power => {
                 intervals.remove(&Interval::MajorThird);
+            }
+            Quality::Minor => {
+                intervals.replace(Interval::MajorThird, Interval::MinorThird);
+            }
+            // Group all "Diminished" variants
+            Quality::Dim | Quality::HalfDim | Quality::Dim7 => {
+                intervals.replace(Interval::MajorThird, Interval::MinorThird);
+                intervals.replace(Interval::PerfectFifth, Interval::DiminishedFifth);
+
+                if *self == Quality::HalfDim {
+                    intervals.insert(Interval::MinorSeventh);
+                } else if *self == Quality::Dim7 {
+                    intervals.insert(Interval::DiminishedSeventh);
+                }
             }
         }
     }
