@@ -67,14 +67,14 @@ impl Quality {
     }
 
     fn is_min(rbs: &[bool; 24]) -> bool {
-        !(!rbs[3] || rbs[4] || Quality::is_dim(rbs) || rbs[6] && rbs[9])
-            || (rbs[3] && (rbs[10] || rbs[11]))
+        rbs[3] && ((!rbs[4] && !Quality::is_dim(rbs) && !(rbs[6] && rbs[9])) || rbs[10] || rbs[11])
     }
+
     fn is_aug(rbs: &[bool; 24]) -> bool {
         !rbs[3] && !rbs[6] && rbs[8] && !rbs[10]
     }
     fn is_dim(rbs: &[bool; 24]) -> bool {
-        rbs[6] && !rbs[10] && !rbs[4] && (!(!rbs[3] || !rbs[9] && !rbs[6]) || (rbs[6] && rbs[9]))
+        rbs[6] && !rbs[10] && !rbs[4] && (rbs[3] || rbs[9])
     }
     fn is_dom(rbs: &[bool; 24]) -> bool {
         !rbs[3] && rbs[10]
