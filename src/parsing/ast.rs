@@ -80,6 +80,66 @@ pub struct Ast {
 }
 
 impl Ast {
+    pub(crate) fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
+        self.set_intervals();
+        let notes = self.notes();
+        let mut semitones = Vec::new();
+        let mut semantic_intervals = Vec::new();
+        let note_literals = notes.iter().map(|a| a.to_string()).collect();
+
+        let mut rbs = [false; 24];
+        for e in &self.norm_intervals {
+            let v = e.st();
+            rbs[v as usize] = true;
+            semantic_intervals.push(e.to_semantic_interval().numeric());
+        }
+
+        for e in &self.intervals {
+            let v = e.st();
+            semitones.push(v);
+        }
+
+        if !self.is_valid() {
+            return Err(ParserErrors::new(self.errors.clone()));
+        }
+
+        Ok(Chord::builder(name, self.root)
+            .descriptor(&self.descriptor(name))
+            .bass(self.bass)
+            .notes(notes)
+            .note_literals(note_literals)
+            .rbs(rbs)
+            .semitones(semitones)
+            .semantic_intervals(semantic_intervals)
+            .normalized_intervals(self.norm_intervals.clone())
+            .intervals(self.intervals.clone())
+            .is_sus(self.is_sus)
+            .build())
+    }
+
+    fn set_intervals(&mut self) {
+        self.build();
+        self.norm_intervals = self.interval_set.iter().collect();
+        self.norm_intervals.sort_by_key(|i| i.st());
+        self.intervals = self.norm_intervals.clone();
+        if let Some(Exp::Sus(sus_exp)) = self.expressions.iter().find(|e| matches!(e, Exp::Sus(_)))
+        {
+            self.intervals = self
+                .intervals
+                .iter()
+                .map(|i| match (sus_exp.interval, i) {
+                    (Interval::MinorSecond, Interval::FlatNinth) => Interval::MinorSecond,
+                    (Interval::MajorSecond, Interval::Ninth) => Interval::MajorSecond,
+                    (Interval::AugmentedFourth, Interval::SharpEleventh) => {
+                        Interval::AugmentedFourth
+                    }
+                    _ => *i,
+                })
+                .collect();
+            self.intervals.sort_by_key(|i| i.st());
+        }
+    }
+
     fn build(&mut self) {
         let expressions = mem::take(&mut self.expressions);
 
@@ -188,28 +248,6 @@ impl Ast {
                     self.interval_set.insert(interval);
                 }
             }
-        }
-    }
-
-    fn set_intervals(&mut self) {
-        self.norm_intervals = self.interval_set.iter().collect();
-        self.norm_intervals.sort_by_key(|i| i.st());
-        self.intervals = self.norm_intervals.clone();
-        if let Some(Exp::Sus(sus_exp)) = self.expressions.iter().find(|e| matches!(e, Exp::Sus(_)))
-        {
-            self.intervals = self
-                .intervals
-                .iter()
-                .map(|i| match (sus_exp.interval, i) {
-                    (Interval::MinorSecond, Interval::FlatNinth) => Interval::MinorSecond,
-                    (Interval::MajorSecond, Interval::Ninth) => Interval::MajorSecond,
-                    (Interval::AugmentedFourth, Interval::SharpEleventh) => {
-                        Interval::AugmentedFourth
-                    }
-                    _ => *i,
-                })
-                .collect();
-            self.intervals.sort_by_key(|i| i.st());
         }
     }
 
@@ -377,45 +415,6 @@ impl Ast {
             None => "".to_string(),
         };
         name.replace(&format!("{}{}", self.root.literal, modifier_str), "")
-    }
-
-    pub(crate) fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
-        self.build();
-        self.set_intervals();
-
-        let notes = self.notes();
-        let mut semitones = Vec::new();
-        let mut semantic_intervals = Vec::new();
-        let note_literals = notes.iter().map(|a| a.to_string()).collect();
-
-        let mut rbs = [false; 24];
-        for e in &self.norm_intervals {
-            let v = e.st();
-            rbs[v as usize] = true;
-            semantic_intervals.push(e.to_semantic_interval().numeric());
-        }
-
-        for e in &self.intervals {
-            let v = e.st();
-            semitones.push(v);
-        }
-
-        if !self.is_valid() {
-            return Err(ParserErrors::new(self.errors.clone()));
-        }
-
-        Ok(Chord::builder(name, self.root)
-            .descriptor(&self.descriptor(name))
-            .bass(self.bass)
-            .notes(notes)
-            .note_literals(note_literals)
-            .rbs(rbs)
-            .semitones(semitones)
-            .semantic_intervals(semantic_intervals)
-            .normalized_intervals(self.norm_intervals.clone())
-            .intervals(self.intervals.clone())
-            .is_sus(self.is_sus)
-            .build())
     }
 }
 
