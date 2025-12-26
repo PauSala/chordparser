@@ -554,7 +554,7 @@ impl Parser {
         // Pair dim <-> 7
         for (i, token) in tokens.iter().enumerate() {
             match &token.token_type {
-                // TODO: handle Maj7 somehow, taking in account that it should not eat a 7 id it already do it.
+                // TODO: handle Maj7 somehow, taking in account that it should not eat a 7 id it already did.
                 t if *t == match_token => {
                     if let Some(s) = pending_sevens.pop() {
                         paired_with.insert(i, s);
