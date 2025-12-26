@@ -1,6 +1,9 @@
 use core::panic;
 
-use crate::chord::{intervals::Interval, note::Note};
+use crate::{
+    chord::{intervals::Interval, note::Note},
+    parsing::{ast::Quality, expression::Expression},
+};
 
 use super::expression::Exp;
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -118,10 +121,22 @@ impl ExtensionExp {
     }
 }
 
+impl Expression for ExtensionExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        todo!()
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AddExp {
     pub interval: Interval,
     pub target_pos: usize,
+}
+
+impl Expression for AddExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        todo!()
+    }
 }
 
 impl AddExp {
@@ -165,6 +180,12 @@ pub struct SusExp {
     pub interval: Interval,
 }
 
+impl Expression for SusExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        todo!()
+    }
+}
+
 impl SusExp {
     pub fn new(interval: Interval) -> Self {
         Self { interval }
@@ -188,6 +209,13 @@ pub struct OmitExp {
     pub interval: Interval,
     pub target_pos: usize,
 }
+
+impl Expression for OmitExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        todo!()
+    }
+}
+
 impl OmitExp {
     pub fn new(interval: Interval, target_pos: usize) -> Self {
         Self {
@@ -207,6 +235,13 @@ impl OmitExp {
 pub struct SlashBassExp {
     pub note: Note,
 }
+
+impl Expression for SlashBassExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        todo!()
+    }
+}
+
 impl SlashBassExp {
     pub fn new(note: Note) -> Self {
         Self { note }
@@ -215,8 +250,19 @@ impl SlashBassExp {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct BassExp;
 
+impl Expression for BassExp {
+    fn pass(&self, _ast: &mut super::ast::Ast) {}
+}
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct DimExp;
+
+impl Expression for DimExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.quality = Quality::Dim;
+    }
+}
+
 impl DimExp {
     pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
         if !i.contains(&Interval::MinorThird)
@@ -250,6 +296,13 @@ impl DimExp {
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Dim7Exp;
+
+impl Expression for Dim7Exp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.quality = Quality::Dim7;
+    }
+}
+
 impl Dim7Exp {
     pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
         if !i.contains(&Interval::MinorThird)
@@ -286,6 +339,13 @@ impl Dim7Exp {
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct HalfDimExp;
+
+impl Expression for HalfDimExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        todo!()
+    }
+}
+
 impl HalfDimExp {
     pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
         if !i.contains(&Interval::MinorThird)
@@ -322,6 +382,13 @@ impl HalfDimExp {
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MajExp;
+
+impl Expression for MajExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        todo!()
+    }
+}
+
 impl MajExp {
     pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
         if exp.iter().any(|e| {
@@ -350,6 +417,11 @@ impl MajExp {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Maj7Exp;
+impl Expression for Maj7Exp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        todo!()
+    }
+}
 impl Maj7Exp {
     pub fn execute(&self, i: &mut Vec<Interval>) {
         if !i.contains(&Interval::MajorSeventh) {
@@ -359,6 +431,11 @@ impl Maj7Exp {
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MinorExp;
+impl Expression for MinorExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.quality = Quality::Minor;
+    }
+}
 impl MinorExp {
     pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
         if !i.contains(&Interval::MinorThird)
@@ -379,6 +456,11 @@ impl MinorExp {
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AugExp;
+impl Expression for AugExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        todo!()
+    }
+}
 impl AugExp {
     pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
         if !i.contains(&Interval::AugmentedFifth)
@@ -398,6 +480,16 @@ impl AugExp {
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AltExp;
+impl Expression for AltExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.omits.push(Interval::PerfectFifth);
+        ast.seventh = Some(Interval::MinorSeventh);
+        ast.alts.push(Interval::FlatNinth);
+        ast.alts.push(Interval::SharpNinth);
+        ast.alts.push(Interval::SharpEleventh);
+        ast.alts.push(Interval::FlatThirteenth);
+    }
+}
 impl AltExp {
     pub fn execute(&self, i: &mut Vec<Interval>) {
         i.push(Interval::MinorSeventh);
@@ -410,6 +502,11 @@ impl AltExp {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PowerExp;
+impl Expression for PowerExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.is_power = true
+    }
+}
 impl PowerExp {
     pub fn execute(&self, i: &mut Vec<Interval>) {
         i.push(Interval::PerfectFifth);

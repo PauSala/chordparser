@@ -21,6 +21,7 @@ pub enum Quality {
     Major,
     Minor,
     Dim,
+    Dim7,
     HalfDim,
     Aug,
     Power,
@@ -43,10 +44,15 @@ pub struct Ast {
     pub(crate) sus: Option<Interval>,
     pub(crate) seventh: Option<Interval>,
     pub(crate) extension_cap: Option<Interval>,
+    pub(crate) is_power: bool,
 }
 
 impl Ast {
     fn set_intervals(&mut self) {
+        for exp in self.expressions.clone().into_iter() {
+            exp.pass(self);
+        }
+
         self.expressions.sort();
         self.expressions.iter().for_each(|e| match e {
             Exp::Minor(min) => min.execute(&mut self.norm_intervals, &self.expressions),
@@ -361,6 +367,7 @@ impl Default for Ast {
             extension_cap: None,
             alts: Default::default(),
             sus: Default::default(),
+            is_power: Default::default(),
         }
     }
 }
