@@ -47,7 +47,6 @@ impl Quality {
             Quality::Minor => {
                 intervals.replace(Interval::MajorThird, Interval::MinorThird);
             }
-            // Group all "Diminished" variants
             Quality::Dim | Quality::HalfDim | Quality::Dim7 => {
                 intervals.replace(Interval::MajorThird, Interval::MinorThird);
                 intervals.replace(Interval::PerfectFifth, Interval::DiminishedFifth);
