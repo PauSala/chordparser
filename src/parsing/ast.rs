@@ -14,6 +14,18 @@ use crate::{
 
 use super::{expression::Exp, parser_error::ParserError};
 
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[repr(u8)]
+pub enum Quality {
+    #[default]
+    Major,
+    Minor,
+    Dim,
+    HalfDim,
+    Aug,
+    Power,
+}
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Ast {
     pub(crate) root: Note,
@@ -23,6 +35,14 @@ pub struct Ast {
     pub(crate) intervals: Vec<Interval>,
     pub(crate) is_sus: bool,
     pub(crate) errors: Vec<ParserError>,
+
+    pub(crate) quality: Quality,
+    pub(crate) omits: Vec<Interval>,
+    pub(crate) adds: Vec<Interval>,
+    pub(crate) alts: Vec<Interval>,
+    pub(crate) sus: Option<Interval>,
+    pub(crate) seventh: Option<Interval>,
+    pub(crate) extension_cap: Option<Interval>,
 }
 
 impl Ast {
@@ -333,6 +353,14 @@ impl Default for Ast {
             intervals: vec![],
             is_sus: false,
             errors: Vec::new(),
+
+            quality: Quality::Major,
+            omits: Default::default(),
+            adds: Default::default(),
+            seventh: None,
+            extension_cap: None,
+            alts: Default::default(),
+            sus: Default::default(),
         }
     }
 }
