@@ -163,8 +163,8 @@ impl Ast {
         let seventh = self.seventh();
         if let Some(cap) = self.extension_cap {
             if self.quality == Quality::Major && cap == Interval::Eleventh {
-                self.interval_set.remove(Interval::MajorThird);
-                self.interval_set.insert(Interval::PerfectFourth);
+                self.interval_set
+                    .replace(Interval::MajorThird, Interval::PerfectFourth);
             } else {
                 self.interval_set.insert(cap);
             }
