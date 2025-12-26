@@ -23,22 +23,23 @@ pub enum ChordQuality {
     Bass,
 }
 
-static MAJ_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4]);
-static MAJ6_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc9]);
-static MAJ7_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc11]);
-static DOMT_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc10]);
+const POW_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc7]);
+const MAJ_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4]);
+const MAJ6_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc9]);
+const MAJ7_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc11]);
+const DOM7_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc10]);
 
-static MIN_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3]);
-static MIN6_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc9]);
-static MIN7_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc10]);
-static MIMA7SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc11]);
+const MIN_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3]);
+const MIN6_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc9]);
+const MIN7_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc10]);
+const MIMA7SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc11]);
 
-static AUG_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc8]);
-static DIM_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc6]);
-static DIM7_SET: PitchClassSet =
+const AUG_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc8]);
+const DIM_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc6]);
+const DIM7_SET: PitchClassSet =
     PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc6, PitchClass::Pc9]);
 
-static QUALITY_SETS: &[(ChordQuality, PitchClassSet)] = &[
+const QUALITY_SETS: &[(ChordQuality, PitchClassSet)] = &[
     (ChordQuality::Diminished7, DIM7_SET),
     (ChordQuality::Diminished, DIM_SET),
     (ChordQuality::Augmented, AUG_SET),
@@ -46,10 +47,11 @@ static QUALITY_SETS: &[(ChordQuality, PitchClassSet)] = &[
     (ChordQuality::Minor7, MIN7_SET),
     (ChordQuality::Minor6, MIN6_SET),
     (ChordQuality::Minor, MIN_SET),
-    (ChordQuality::Dominant7, DOMT_SET),
+    (ChordQuality::Dominant7, DOM7_SET),
     (ChordQuality::Major7, MAJ7_SET),
     (ChordQuality::Major6, MAJ6_SET),
     (ChordQuality::Major, MAJ_SET),
+    (ChordQuality::Power, POW_SET),
 ];
 
 impl From<&PitchClassSet> for ChordQuality {
@@ -59,7 +61,7 @@ impl From<&PitchClassSet> for ChordQuality {
                 return *quality;
             }
         }
-        panic!("No matching ChordQuality for {:?}", value);
+        ChordQuality::Bass
     }
 }
 
