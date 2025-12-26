@@ -118,7 +118,6 @@ impl Lexer {
 
             start += 1;
             if end == start {
-                // dbg!(start, end, substring, pos);
                 errors.push((TokenType::Illegal, (pos + start - 1)));
                 start = 0;
                 end -= 1;
