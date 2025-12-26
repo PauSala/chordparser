@@ -14,6 +14,20 @@ use crate::{
 
 use super::{expression::Exp, parser_error::ParserError};
 
+use std::sync::LazyLock;
+
+static CONFLICT_MAP: LazyLock<HashMap<Interval, Vec<Interval>>> = LazyLock::new(|| {
+    HashMap::from([
+        (
+            Interval::Ninth,
+            vec![Interval::FlatNinth, Interval::SharpNinth],
+        ),
+        (Interval::Eleventh, vec![Interval::SharpEleventh]),
+        (Interval::Thirteenth, vec![Interval::FlatThirteenth]),
+        (Interval::MinorSeventh, vec![Interval::DiminishedSeventh]),
+    ])
+});
+
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
 #[repr(u8)]
 pub enum Quality {
@@ -153,7 +167,6 @@ impl Ast {
             if *add == Interval::FlatThirteenth {
                 self.interval_set.remove(&Interval::PerfectFifth);
             }
-            dbg!(&add);
             self.interval_set.insert(*add);
         }
     }
@@ -171,18 +184,6 @@ impl Ast {
     }
 
     fn extension_caps(&mut self) {
-        let conflict_map: HashMap<Interval, Vec<Interval>> = [
-            (
-                Interval::Ninth,
-                vec![Interval::FlatNinth, Interval::SharpNinth],
-            ),
-            (Interval::Eleventh, vec![Interval::SharpEleventh]),
-            (Interval::Thirteenth, vec![Interval::FlatThirteenth]),
-            (Interval::MinorSeventh, vec![Interval::DiminishedSeventh]),
-        ]
-        .into_iter()
-        .collect();
-
         let seventh = self.seventh();
         if let Some(cap) = self.extension_cap {
             if self.quality == Quality::Major && cap == Interval::Eleventh {
@@ -220,8 +221,7 @@ impl Ast {
             };
 
             for interval in caps_to_add {
-                let conflicts = conflict_map.get(&interval).cloned().unwrap_or_default();
-
+                let conflicts = CONFLICT_MAP.get(&interval).cloned().unwrap_or_default();
                 let blocked = self.interval_set.contains(&interval)
                     || conflicts.iter().any(|c| self.interval_set.contains(c));
 
