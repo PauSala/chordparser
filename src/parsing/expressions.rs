@@ -153,27 +153,6 @@ impl SlashBassExp {
         Self { note }
     }
 }
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct BassExp;
-impl Expression for BassExp {
-    fn pass(&self, _ast: &mut super::ast::Ast) {}
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct DimExp;
-impl Expression for DimExp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.base_form = BaseForm::Dim;
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Dim7Exp;
-impl Expression for Dim7Exp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.base_form = BaseForm::Dim7;
-    }
-}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct HalfDimExp;

@@ -12,8 +12,8 @@ use std::{iter::Peekable, slice::Iter};
 use ast::Ast;
 use expression::Exp;
 use expressions::{
-    AddExp, AltExp, AugExp, BassExp, Dim7Exp, DimExp, ExtensionExp, HalfDimExp, MajExp, MinorExp,
-    OmitExp, PowerExp, SlashBassExp, SusExp,
+    AddExp, AltExp, AugExp, ExtensionExp, HalfDimExp, MajExp, MinorExp, OmitExp, PowerExp,
+    SlashBassExp, SusExp,
 };
 use lexer::Lexer;
 use parser_error::{ParserError, ParserErrors};
@@ -160,7 +160,7 @@ impl Parser {
             TokenType::Flat => self.modifier(tokens, Modifier::Flat, token, ast),
             TokenType::Aug => self.aug(tokens, ast),
             TokenType::Dim => self.dim(tokens, ast),
-            TokenType::Dim7 => ast.expressions.push(Exp::Dim7(Dim7Exp)),
+            TokenType::Dim7 => ast.expressions.push(Exp::Dim7),
             TokenType::HalfDim => ast.expressions.push(Exp::HalfDim(HalfDimExp)),
             TokenType::Extension(ext) => self.extension(ext, token, ast),
             TokenType::Add => self.add(token, tokens, ast),
@@ -175,7 +175,7 @@ impl Parser {
             TokenType::LParent => self.lparen(tokens, token.pos, ast),
             TokenType::RParent => self.rparen(token.pos),
             TokenType::Comma => self.comma(),
-            TokenType::Bass => ast.expressions.push(Exp::Bass(BassExp)),
+            TokenType::Bass => ast.expressions.push(Exp::Bass),
             TokenType::Illegal => self.errors.push(ParserError::IllegalToken(token.pos)),
             TokenType::Eof => (),
         }
@@ -237,9 +237,9 @@ impl Parser {
             .next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == 7))
             .is_some()
         {
-            ast.expressions.push(Exp::Dim7(Dim7Exp));
+            ast.expressions.push(Exp::Dim7);
         } else {
-            ast.expressions.push(Exp::Dim(DimExp));
+            ast.expressions.push(Exp::Dim);
         }
     }
 
