@@ -132,11 +132,6 @@ impl Ast {
         // Caps
         self.extension_caps();
 
-        // Adds
-        for add in &self.adds {
-            self.interval_set.insert(*add);
-        }
-
         // Omits
         for omit in &self.omits {
             match omit {
@@ -152,6 +147,27 @@ impl Ast {
                 _ => {}
             }
         }
+
+        // Adds
+        for add in &self.adds {
+            if *add == Interval::FlatThirteenth {
+                self.interval_set.remove(&Interval::PerfectFifth);
+            }
+            dbg!(&add);
+            self.interval_set.insert(*add);
+        }
+    }
+
+    fn seventh(&self) -> Interval {
+        if self
+            .expressions
+            .iter()
+            .any(|exp| matches!(exp, Exp::Maj7(..) | Exp::Maj(..)))
+        {
+            Interval::MajorSeventh
+        } else {
+            Interval::MinorSeventh
+        }
     }
 
     fn extension_caps(&mut self) {
@@ -162,22 +178,20 @@ impl Ast {
             ),
             (Interval::Eleventh, vec![Interval::SharpEleventh]),
             (Interval::Thirteenth, vec![Interval::FlatThirteenth]),
+            (Interval::MinorSeventh, vec![Interval::DiminishedSeventh]),
         ]
         .into_iter()
         .collect();
 
-        let seventh = if self
-            .expressions
-            .iter()
-            .any(|exp| matches!(exp, Exp::Maj7(..) | Exp::Maj(..)))
-        {
-            Interval::MajorSeventh
-        } else {
-            Interval::MinorSeventh
-        };
-
+        let seventh = self.seventh();
         if let Some(cap) = self.extension_cap {
-            self.interval_set.insert(cap);
+            if self.quality == Quality::Major && cap == Interval::Eleventh {
+                self.interval_set.remove(&Interval::MajorThird);
+                self.interval_set.insert(Interval::PerfectFourth);
+            } else {
+                self.interval_set.insert(cap);
+            }
+
             let caps_to_add: Vec<Interval> = match self.quality {
                 Quality::Major => match cap {
                     Interval::Thirteenth => vec![Interval::Ninth, seventh],
@@ -410,7 +424,7 @@ impl Ast {
         self.interval_set();
         self.set_intervals();
 
-        // dbg!(&self);
+        dbg!(&self);
 
         let notes = self.notes();
         let mut semitones = Vec::new();

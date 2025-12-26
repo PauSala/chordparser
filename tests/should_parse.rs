@@ -61,8 +61,8 @@ use test_case::test_case;
 #[test_case("C--56/9", vec!["C", "Eb", "Gb", "A", "D"])]
 #[test_case("C-69", vec!["C", "Eb", "G", "A", "D"])]
 #[test_case("Cminor69", vec!["C", "Eb", "G", "A", "D"])]
-#[test_case("Cminor611", vec!["C", "Eb", "G", "A", "D", "F"])]
-#[test_case("Cminor613", vec!["C", "Eb", "G", "A", "D", "F", "A"])]
+#[test_case("Cminor611", vec!["C", "Eb", "G", "A", "Bb", "D", "F"])]
+#[test_case("Cminor613", vec!["C", "Eb", "G", "A", "Bb", "D", "F", "A"])]
 #[test_case("C-6/9", vec!["C", "Eb", "G", "A", "D"])]
 #[test_case("Cmi69add11", vec!["C", "Eb", "G", "A", "D", "F"])]
 #[test_case("Cmi(#5)", vec!["C", "Eb", "G#"])]
@@ -108,8 +108,8 @@ use test_case::test_case;
 #[test_case("C9(b5,b13)", vec!["C", "E", "Gb", "Bb", "D", "Ab"])]
 #[test_case("C9(#5,#11)", vec!["C", "E", "G#", "Bb", "D", "F#"])]
 #[test_case("C9#11", vec!["C", "E", "G", "Bb", "D", "F#"])]
-#[test_case("C11", vec!["C", "G", "Bb", "D", "F"])]
-#[test_case("C11(b9)", vec!["C", "G", "Bb", "Db", "F"])]
+#[test_case("C11", vec!["C", "F", "G", "Bb", "D"])]
+#[test_case("C11(b9)", vec!["C", "F", "G", "Bb", "Db"])]
 #[test_case("C13", vec!["C", "E", "G", "Bb", "D", "A"])]
 #[test_case("C(b13)", vec!["C", "E", "Ab"])]
 #[test_case("C7b13", vec!["C", "E", "Bb", "Ab"])]
@@ -224,6 +224,7 @@ fn test_notes(i: &str, expected: Vec<&str>) {
     match res {
         Ok(chord) => {
             let literals = &chord.note_literals;
+            dbg!(i);
             assert_eq!(literals, &expected);
             for n in notes {
                 let t = chord.transpose_to(&n);
