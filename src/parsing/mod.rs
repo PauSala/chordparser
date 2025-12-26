@@ -1,5 +1,6 @@
 //! # Chord parsing module
 pub(crate) mod ast;
+pub mod chord_quality;
 pub(crate) mod expression;
 pub(crate) mod expressions;
 pub(crate) mod lexer;
