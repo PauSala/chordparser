@@ -80,7 +80,7 @@ pub struct Ast {
 }
 
 impl Ast {
-    pub(crate) fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
+    pub(crate) fn build_chord(mut self, name: &str) -> Result<Chord, ParserErrors> {
         self.set_intervals();
         let notes = self.notes();
         let mut semitones = Vec::new();
@@ -100,7 +100,7 @@ impl Ast {
         }
 
         if !self.is_valid() {
-            return Err(ParserErrors::new(self.errors.clone()));
+            return Err(ParserErrors::new(self.errors));
         }
 
         Ok(Chord::builder(name, self.root)
@@ -111,8 +111,8 @@ impl Ast {
             .rbs(rbs)
             .semitones(semitones)
             .semantic_intervals(semantic_intervals)
-            .normalized_intervals(self.norm_intervals.clone())
-            .intervals(self.intervals.clone())
+            .normalized_intervals(self.norm_intervals)
+            .intervals(self.intervals)
             .is_sus(self.is_sus)
             .build())
     }
@@ -408,7 +408,7 @@ impl Ast {
         notes
     }
 
-    pub fn descriptor(&mut self, name: &str) -> String {
+    pub fn descriptor(&self, name: &str) -> String {
         let modifier_str = match &self.root.modifier {
             Some(m) => m.to_string(),
             None => "".to_string(),
