@@ -35,9 +35,9 @@ pub enum Interval {
 }
 
 impl IntervalSet {
-    pub fn replace(&mut self, a: Interval, b: Interval) {
-        self.remove(a);
-        self.insert(b);
+    pub fn replace(&mut self, remove: Interval, add: Interval) {
+        self.remove(remove);
+        self.insert(add);
     }
 }
 

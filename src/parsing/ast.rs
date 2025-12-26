@@ -117,12 +117,9 @@ impl Ast {
         for alt in &self.alts {
             match alt {
                 Interval::DiminishedFifth | Interval::AugmentedFifth | Interval::FlatThirteenth => {
-                    self.interval_set.remove(&Interval::PerfectFifth);
-                    self.interval_set.insert(*alt);
+                    self.interval_set.replace(Interval::PerfectFifth, *alt)
                 }
-                _ => {
-                    self.interval_set.insert(*alt);
-                }
+                _ => self.interval_set.insert(*alt),
             }
         }
 
