@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, mem};
 
 use crate::{
     chord::{
@@ -22,7 +22,6 @@ pub enum Quality {
     Minor,
     Dim,
     Dim7,
-    HalfDim,
     Aug,
     Power,
 }
@@ -42,16 +41,20 @@ pub struct Ast {
     pub(crate) adds: Vec<Interval>,
     pub(crate) alts: Vec<Interval>,
     pub(crate) sus: Option<Interval>,
+    pub(crate) sixth: Option<Interval>,
     pub(crate) seventh: Option<Interval>,
     pub(crate) extension_cap: Option<Interval>,
-    pub(crate) is_power: bool,
 }
 
 impl Ast {
     fn set_intervals(&mut self) {
-        for exp in self.expressions.clone().into_iter() {
+        let expressions = mem::take(&mut self.expressions);
+        for exp in &expressions {
             exp.pass(self);
         }
+        self.expressions = expressions;
+
+        dbg!(&self);
 
         self.expressions.sort();
         self.expressions.iter().for_each(|e| match e {
@@ -367,7 +370,7 @@ impl Default for Ast {
             extension_cap: None,
             alts: Default::default(),
             sus: Default::default(),
-            is_power: Default::default(),
+            sixth: Default::default(),
         }
     }
 }

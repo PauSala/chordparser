@@ -123,7 +123,25 @@ impl ExtensionExp {
 
 impl Expression for ExtensionExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        todo!()
+        match self.interval {
+            Interval::PerfectFourth
+            | Interval::AugmentedFourth
+            | Interval::DiminishedFifth
+            | Interval::AugmentedFifth
+            | Interval::FlatNinth
+            | Interval::SharpNinth
+            | Interval::SharpEleventh
+            | Interval::FlatThirteenth => ast.alts.push(self.interval),
+            Interval::MajorSixth | Interval::MinorSixth => ast.sixth = Some(self.interval),
+            Interval::MinorSeventh => ast.seventh = Some(Interval::MinorSeventh),
+            Interval::Ninth | Interval::Eleventh | Interval::Thirteenth => {
+                ast.extension_cap = Some(
+                    self.interval
+                        .max(ast.extension_cap.unwrap_or(Interval::Unison)),
+                )
+            }
+            _ => {}
+        }
     }
 }
 
@@ -135,7 +153,7 @@ pub struct AddExp {
 
 impl Expression for AddExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        todo!()
+        ast.adds.push(self.interval);
     }
 }
 
@@ -182,7 +200,8 @@ pub struct SusExp {
 
 impl Expression for SusExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        todo!()
+        ast.omits.push(Interval::MajorThird);
+        ast.sus = Some(self.interval);
     }
 }
 
@@ -212,7 +231,7 @@ pub struct OmitExp {
 
 impl Expression for OmitExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        todo!()
+        ast.omits.push(self.interval);
     }
 }
 
@@ -231,14 +250,14 @@ impl OmitExp {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct SlashBassExp {
     pub note: Note,
 }
 
 impl Expression for SlashBassExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        todo!()
+        ast.bass = Some(self.note)
     }
 }
 
@@ -342,7 +361,7 @@ pub struct HalfDimExp;
 
 impl Expression for HalfDimExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        todo!()
+        ast.quality = Quality::Dim;
     }
 }
 
@@ -384,9 +403,7 @@ impl HalfDimExp {
 pub struct MajExp;
 
 impl Expression for MajExp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
-        todo!()
-    }
+    fn pass(&self, _ast: &mut super::ast::Ast) {}
 }
 
 impl MajExp {
@@ -419,7 +436,7 @@ impl MajExp {
 pub struct Maj7Exp;
 impl Expression for Maj7Exp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        todo!()
+        ast.seventh = Some(Interval::MajorSeventh);
     }
 }
 impl Maj7Exp {
@@ -458,7 +475,7 @@ impl MinorExp {
 pub struct AugExp;
 impl Expression for AugExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        todo!()
+        ast.quality = Quality::Aug;
     }
 }
 impl AugExp {
@@ -504,7 +521,7 @@ impl AltExp {
 pub struct PowerExp;
 impl Expression for PowerExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.is_power = true
+        ast.quality = Quality::Power;
     }
 }
 impl PowerExp {

@@ -131,7 +131,7 @@ impl Display for NoteLiteral {
 pub type NoteMatcher = Vec<(NoteLiteral, Option<Modifier>)>;
 
 /// Represents a note modifier. It can be sharp, flat, double sharp or double flat.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 #[repr(u8)]
 pub enum Modifier {
     Sharp,
@@ -152,7 +152,7 @@ impl Display for Modifier {
 }
 
 /// Represents a musical note, splited into its literal and its modifier if any.
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 pub struct Note {
     pub literal: NoteLiteral,
     pub modifier: Option<Modifier>,

@@ -33,7 +33,6 @@ pub enum Exp {
 
 impl Exp {
     pub(crate) fn pass(&self, ast: &mut Ast) {
-        return;
         match self {
             Exp::Power(exp) => exp.pass(ast),
             Exp::Alt(exp) => exp.pass(ast),
