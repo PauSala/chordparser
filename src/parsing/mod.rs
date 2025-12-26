@@ -6,7 +6,7 @@ pub(crate) mod lexer;
 pub mod parser_error;
 pub(crate) mod token;
 
-use std::{collections::HashMap, iter::Peekable, slice::Iter};
+use std::{iter::Peekable, slice::Iter};
 
 use ast::Ast;
 use expression::Exp;
@@ -547,67 +547,44 @@ impl Parser {
         match_token: TokenType,
         insert_token_type: TokenType,
     ) -> Vec<Token> {
-        let mut pending_maj = Vec::<usize>::new();
-        let mut pending_sevens = Vec::<usize>::new();
-        let mut paired_with = HashMap::<usize, usize>::new();
+        let mut out: Vec<Token> = Vec::with_capacity(tokens.len());
+        let mut pending_match = Vec::new();
+        let mut pending_seven = Vec::new();
 
-        // Pair dim <-> 7
-        for (i, token) in tokens.iter().enumerate() {
+        for token in tokens {
+            let current_idx = out.len();
+
             match &token.token_type {
-                // TODO: handle Maj7 somehow, taking in account that it should not eat a 7 id it already did.
                 t if *t == match_token => {
-                    if let Some(s) = pending_sevens.pop() {
-                        paired_with.insert(i, s);
-                        paired_with.insert(s, i);
+                    if let Some(prev_idx) = pending_seven.pop() {
+                        out[prev_idx] =
+                            self.merge_tokens(&out[prev_idx], token, &insert_token_type);
                     } else {
-                        pending_maj.push(i);
+                        pending_match.push(current_idx);
+                        out.push(token.clone());
                     }
                 }
-
                 TokenType::Extension(7) => {
-                    if let Some(d) = pending_maj.pop() {
-                        paired_with.insert(i, d);
-                        paired_with.insert(d, i);
+                    if let Some(prev_idx) = pending_match.pop() {
+                        out[prev_idx] =
+                            self.merge_tokens(&out[prev_idx], token, &insert_token_type);
                     } else {
-                        pending_sevens.push(i);
+                        pending_seven.push(current_idx);
+                        out.push(token.clone());
                     }
                 }
-
-                _ => {}
+                _ => out.push(token.clone()),
             }
         }
-
-        // rebuild token list
-        let mut out = Vec::with_capacity(tokens.len());
-        let mut used = vec![false; tokens.len()];
-
-        for i in 0..tokens.len() {
-            if used[i] {
-                continue;
-            }
-
-            if let Some(&j) = paired_with.get(&i) {
-                if used[j] {
-                    continue;
-                }
-
-                let start = i.min(j);
-                let end = i.max(j);
-
-                used[i] = true;
-                used[j] = true;
-
-                out.push(Token {
-                    token_type: insert_token_type.clone(),
-                    pos: tokens[start].pos.min(tokens[end].pos),
-                    len: tokens[start].len + tokens[end].len,
-                });
-            } else {
-                out.push(tokens[i].clone());
-            }
-        }
-
         out
+    }
+
+    fn merge_tokens(&self, t1: &Token, t2: &Token, new_type: &TokenType) -> Token {
+        Token {
+            token_type: new_type.clone(),
+            pos: t1.pos.min(t2.pos),
+            len: t1.len,
+        }
     }
 }
 
