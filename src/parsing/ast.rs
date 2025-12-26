@@ -1,4 +1,7 @@
-use std::{collections::HashMap, mem};
+use std::{
+    collections::{HashMap, HashSet},
+    mem,
+};
 
 use crate::{
     chord::{
@@ -27,6 +30,45 @@ pub enum Quality {
     Power,
 }
 
+impl Quality {
+    fn build(&self, intervals: &mut HashSet<Interval>) {
+        match self {
+            Quality::Major => {}
+            Quality::Minor => {
+                intervals.remove(&Interval::MajorThird);
+                intervals.insert(Interval::MinorThird);
+            }
+            Quality::Dim => {
+                intervals.remove(&Interval::MajorThird);
+                intervals.remove(&Interval::PerfectFifth);
+                intervals.insert(Interval::MinorThird);
+                intervals.insert(Interval::DiminishedFifth);
+            }
+            Quality::HalfDim => {
+                intervals.remove(&Interval::MajorThird);
+                intervals.remove(&Interval::PerfectFifth);
+                intervals.insert(Interval::MinorThird);
+                intervals.insert(Interval::DiminishedFifth);
+                intervals.insert(Interval::MinorSeventh);
+            }
+            Quality::Dim7 => {
+                intervals.remove(&Interval::MajorThird);
+                intervals.remove(&Interval::PerfectFifth);
+                intervals.insert(Interval::MinorThird);
+                intervals.insert(Interval::DiminishedFifth);
+                intervals.insert(Interval::DiminishedSeventh);
+            }
+            Quality::Aug => {
+                intervals.remove(&Interval::PerfectFifth);
+                intervals.insert(Interval::AugmentedFifth);
+            }
+            Quality::Power => {
+                intervals.remove(&Interval::MajorThird);
+            }
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Ast {
     pub(crate) root: Note,
@@ -45,18 +87,126 @@ pub struct Ast {
     pub(crate) sixth: Option<Interval>,
     pub(crate) seventh: Option<Interval>,
     pub(crate) extension_cap: Option<Interval>,
+    pub(crate) new_intervals: HashSet<Interval>,
 }
 
 impl Ast {
-    fn set_intervals(&mut self) {
+    fn new_set_intervals(&mut self) {
         let expressions = mem::take(&mut self.expressions);
         for exp in &expressions {
             exp.pass(self);
         }
         self.expressions = expressions;
 
-        dbg!(&self);
+        // Set quality intervals
+        self.quality.build(&mut self.new_intervals);
 
+        // Set seventh
+        if let Some(seventh) = self.seventh {
+            self.new_intervals.insert(seventh);
+        }
+
+        // Set sixth
+        if let Some(sixth) = self.sixth {
+            self.new_intervals.insert(sixth);
+        }
+
+        if let Some(sus) = self.sus {
+            self.new_intervals.remove(&Interval::MajorThird);
+            self.new_intervals.remove(&Interval::MinorThird);
+            self.new_intervals.insert(sus);
+        }
+
+        // Alts
+        for alt in &self.alts {
+            match alt {
+                Interval::DiminishedFifth | Interval::AugmentedFifth => {
+                    self.new_intervals.remove(&Interval::PerfectFifth);
+                    self.new_intervals.insert(*alt);
+                }
+                _ => {
+                    self.new_intervals.insert(*alt);
+                }
+            }
+        }
+
+        // Caps
+        self.extension_caps();
+
+        // Adds
+        for add in &self.adds {
+            self.new_intervals.insert(*add);
+        }
+
+        // Omits
+        for omit in &self.omits {
+            match omit {
+                Interval::PerfectFifth => {
+                    self.new_intervals.remove(&Interval::PerfectFifth);
+                    self.new_intervals.remove(&Interval::AugmentedFifth);
+                    self.new_intervals.remove(&Interval::DiminishedFifth);
+                }
+                Interval::MinorThird => {
+                    self.new_intervals.remove(&Interval::MinorThird);
+                    self.new_intervals.remove(&Interval::MajorThird);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn extension_caps(&mut self) {
+        let conflict_map: HashMap<Interval, Vec<Interval>> = [
+            (
+                Interval::Ninth,
+                vec![Interval::FlatNinth, Interval::SharpNinth],
+            ),
+            (Interval::Eleventh, vec![Interval::SharpEleventh]),
+            (Interval::Thirteenth, vec![Interval::FlatThirteenth]),
+        ]
+        .into_iter()
+        .collect();
+
+        if let Some(cap) = self.extension_cap {
+            let caps_to_add: Vec<Interval> = match self.quality {
+                Quality::Major => match cap {
+                    Interval::Thirteenth => vec![
+                        Interval::Thirteenth,
+                        Interval::Ninth,
+                        Interval::MinorSeventh,
+                    ],
+                    Interval::Ninth => vec![Interval::Ninth, Interval::MinorSeventh],
+                    _ => vec![],
+                },
+                _ => match cap {
+                    Interval::Thirteenth => vec![
+                        Interval::Thirteenth,
+                        Interval::Eleventh,
+                        Interval::Ninth,
+                        Interval::MinorSeventh,
+                    ],
+                    Interval::Eleventh => {
+                        vec![Interval::Eleventh, Interval::Ninth, Interval::MinorSeventh]
+                    }
+                    Interval::Ninth => vec![Interval::Ninth, Interval::MinorSeventh],
+                    _ => vec![],
+                },
+            };
+
+            for interval in caps_to_add {
+                let conflicts = conflict_map.get(&interval).cloned().unwrap_or_default();
+
+                let blocked = self.new_intervals.contains(&interval)
+                    || conflicts.iter().any(|c| self.new_intervals.contains(c));
+
+                if !blocked {
+                    self.new_intervals.insert(interval);
+                }
+            }
+        }
+    }
+
+    fn set_intervals(&mut self) {
         self.expressions.sort();
         self.expressions.iter().for_each(|e| match e {
             Exp::Minor(min) => min.execute(&mut self.norm_intervals, &self.expressions),
@@ -316,7 +466,16 @@ impl Ast {
     }
 
     pub(crate) fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
+        self.new_set_intervals();
         self.set_intervals();
+
+        let new_int = self.new_intervals.clone();
+        let mut new_int: Vec<_> = new_int.iter().collect();
+        new_int.sort_by_key(|i| i.st());
+
+        dbg!(&self.norm_intervals);
+        dbg!(&new_int);
+
         let notes = self.notes();
         let mut semitones = Vec::new();
         let mut semantic_intervals = Vec::new();
@@ -372,6 +531,13 @@ impl Default for Ast {
             alts: Default::default(),
             sus: Default::default(),
             sixth: Default::default(),
+            new_intervals: vec![
+                Interval::Unison,
+                Interval::MajorThird,
+                Interval::PerfectFifth,
+            ]
+            .into_iter()
+            .collect(),
         }
     }
 }

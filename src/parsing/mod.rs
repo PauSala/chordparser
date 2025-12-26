@@ -122,7 +122,6 @@ impl Parser {
         let tokens = self.pre_process(&binding);
         let mut tokens = tokens.iter().peekable();
 
-        dbg!(&tokens);
         self.read_root(&mut tokens);
         self.read_tokens(&mut tokens);
         if !self.errors.is_empty() {

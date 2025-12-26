@@ -60,7 +60,7 @@ impl Exp {
         }
     }
 
-    pub fn stringify(&self) -> String {
+    fn stringify(&self) -> String {
         match self {
             Exp::Extension(_) => "Extension".to_string(),
             Exp::Add(_) => "Add".to_string(),

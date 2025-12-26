@@ -5,7 +5,7 @@ use serde::ser::{Serialize, Serializer};
 use std::fmt::Display;
 
 /// Enum representing all possible intervals of a chord
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Hash)]
 #[repr(u8)]
 pub enum Interval {
     Unison,
