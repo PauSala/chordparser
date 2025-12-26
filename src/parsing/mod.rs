@@ -6,7 +6,7 @@ pub(crate) mod lexer;
 pub mod parser_error;
 pub(crate) mod token;
 
-use std::{iter::Peekable, slice::Iter};
+use std::{collections::HashMap, iter::Peekable, slice::Iter};
 
 use ast::Ast;
 use expression::Exp;
@@ -119,8 +119,7 @@ impl Parser {
     /// - Slash notation is used for anything other than 9 (6/9) or bass notation.
     pub fn parse(&mut self, input: &str) -> Result<Chord, ParserErrors> {
         let binding = self.lexer.scan_tokens(input);
-        let folded = self.fold_maj7(binding);
-        let tokens = self.collapse_dim7(folded);
+        let tokens = self.pre_process(&binding);
         let mut tokens = tokens.iter().peekable();
 
         dbg!(&tokens);
@@ -132,92 +131,6 @@ impl Parser {
         let res = self.ast.build_chord(input);
         self.cleanup();
         res
-    }
-
-    fn fold_maj7(&self, tokens: Vec<Token>) -> Vec<Token> {
-        let mut out = Vec::with_capacity(tokens.len());
-        let mut i = 0;
-
-        while i < tokens.len() {
-            match (&tokens[i].token_type, tokens.get(i + 1)) {
-                (TokenType::Maj, Some(next))
-                    if matches!(next.token_type, TokenType::Extension(7)) =>
-                {
-                    out.push(Token {
-                        token_type: TokenType::Maj7,
-                        pos: tokens[i].pos,
-                        len: tokens[i].len + next.len,
-                    });
-                    i += 2;
-                }
-
-                _ => {
-                    out.push(tokens[i].clone());
-                    i += 1;
-                }
-            }
-        }
-
-        out
-    }
-
-    fn collapse_dim7(&self, tokens: Vec<Token>) -> Vec<Token> {
-        let mut used = vec![false; tokens.len()];
-        let mut pairs = Vec::new();
-
-        // collect indices
-        let dims: Vec<usize> = tokens
-            .iter()
-            .enumerate()
-            .filter(|(_, t)| matches!(t.token_type, TokenType::Dim))
-            .map(|(i, _)| i)
-            .collect();
-
-        let sevens: Vec<usize> = tokens
-            .iter()
-            .enumerate()
-            .filter(|(_, t)| matches!(t.token_type, TokenType::Extension(7)))
-            .map(|(i, _)| i)
-            .collect();
-
-        // pair dims with nearest unpaired 7
-        for &d in &dims {
-            if let Some((s, _)) = sevens
-                .iter()
-                .filter(|&&s| !used[s])
-                .map(|&s| (s, (s as isize - d as isize).abs()))
-                .min_by_key(|(_, dist)| *dist)
-            {
-                used[d] = true;
-                used[s] = true;
-                pairs.push((d.min(s), d.max(s)));
-            }
-        }
-
-        // rebuild token stream
-        let mut out = Vec::new();
-        let mut i = 0;
-
-        while i < tokens.len() {
-            if used[i] {
-                // insert Dim7 at the earliest index of the pair
-                if let Some(&(start, end)) = pairs.iter().find(|&&(start, _end)| start == i) {
-                    let len = tokens[start].len + tokens[end].len;
-                    out.push(Token {
-                        token_type: TokenType::Dim7,
-                        pos: tokens[start].pos.min(tokens[end].pos),
-                        len,
-                    });
-                }
-                i += 1;
-                continue;
-            }
-
-            out.push(tokens[i].clone());
-            i += 1;
-        }
-
-        out
     }
 
     fn cleanup(&mut self) {
@@ -597,6 +510,103 @@ impl Parser {
             }
             _ => None,
         }
+    }
+
+    fn pre_process(&self, tokens: &[Token]) -> Vec<Token> {
+        let tokens = self.fold_maj7(tokens);
+        self.fold_dim7(&tokens)
+    }
+
+    /// Fold Maj + consecutive 7 into Maj7 Token
+    fn fold_maj7(&self, tokens: &[Token]) -> Vec<Token> {
+        let mut out = Vec::with_capacity(tokens.len());
+        let mut i = 0;
+
+        while i < tokens.len() {
+            match (&tokens[i].token_type, tokens.get(i + 1)) {
+                (TokenType::Maj, Some(next))
+                    if matches!(next.token_type, TokenType::Extension(7)) =>
+                {
+                    out.push(Token {
+                        token_type: TokenType::Maj7,
+                        pos: tokens[i].pos,
+                        len: tokens[i].len + next.len,
+                    });
+                    i += 2;
+                }
+
+                _ => {
+                    out.push(tokens[i].clone());
+                    i += 1;
+                }
+            }
+        }
+
+        out
+    }
+
+    /// Fold any remainig 7 anywhere with any dim token
+    fn fold_dim7(&self, tokens: &[Token]) -> Vec<Token> {
+        let mut pending_dims = Vec::<usize>::new();
+        let mut pending_sevens = Vec::<usize>::new();
+        let mut paired_with = HashMap::<usize, usize>::new();
+
+        // Pair dim <-> 7
+        for (i, token) in tokens.iter().enumerate() {
+            match token.token_type {
+                TokenType::Dim => {
+                    if let Some(s) = pending_sevens.pop() {
+                        paired_with.insert(i, s);
+                        paired_with.insert(s, i);
+                    } else {
+                        pending_dims.push(i);
+                    }
+                }
+
+                TokenType::Extension(7) => {
+                    if let Some(d) = pending_dims.pop() {
+                        paired_with.insert(i, d);
+                        paired_with.insert(d, i);
+                    } else {
+                        pending_sevens.push(i);
+                    }
+                }
+
+                _ => {}
+            }
+        }
+
+        // rebuild token list
+        let mut out = Vec::with_capacity(tokens.len());
+        let mut used = vec![false; tokens.len()];
+
+        for i in 0..tokens.len() {
+            if used[i] {
+                continue;
+            }
+
+            if let Some(&j) = paired_with.get(&i) {
+                if used[j] {
+                    continue;
+                }
+
+                let start = i.min(j);
+                let end = i.max(j);
+
+                used[i] = true;
+                used[j] = true;
+
+                out.push(Token {
+                    token_type: TokenType::Dim7,
+                    pos: tokens[start].pos.min(tokens[end].pos),
+                    len: tokens[start].len + tokens[end].len,
+                });
+            } else {
+                out.push(tokens[i].clone());
+            }
+        }
+
+        out
     }
 }
 
