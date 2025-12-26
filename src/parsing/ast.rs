@@ -114,14 +114,12 @@ impl Ast {
         }
 
         // Alts
-        for alt in &self.alts {
-            match alt {
-                Interval::DiminishedFifth | Interval::AugmentedFifth | Interval::FlatThirteenth => {
-                    self.interval_set.replace(Interval::PerfectFifth, *alt)
-                }
-                _ => self.interval_set.insert(*alt),
+        self.alts.iter().for_each(|alt| match alt {
+            Interval::DiminishedFifth | Interval::AugmentedFifth | Interval::FlatThirteenth => {
+                self.interval_set.replace(Interval::PerfectFifth, *alt)
             }
-        }
+            _ => self.interval_set.insert(*alt),
+        });
 
         // Caps
         self.extension_caps();
