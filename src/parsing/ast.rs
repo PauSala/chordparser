@@ -9,10 +9,7 @@ use crate::{
         intervals::Interval,
         note::{Note, NoteLiteral},
     },
-    parsing::{
-        expressions::{BassExp, OmitExp, PowerExp},
-        parser_error::ParserErrors,
-    },
+    parsing::parser_error::ParserErrors,
 };
 
 use super::{expression::Exp, parser_error::ParserError};
@@ -87,11 +84,11 @@ pub struct Ast {
     pub(crate) sixth: Option<Interval>,
     pub(crate) seventh: Option<Interval>,
     pub(crate) extension_cap: Option<Interval>,
-    pub(crate) new_intervals: HashSet<Interval>,
+    pub(crate) interval_set: HashSet<Interval>,
 }
 
 impl Ast {
-    fn new_set_intervals(&mut self) {
+    fn interval_set(&mut self) {
         let expressions = mem::take(&mut self.expressions);
         for exp in &expressions {
             exp.pass(self);
@@ -99,33 +96,33 @@ impl Ast {
         self.expressions = expressions;
 
         // Set quality intervals
-        self.quality.build(&mut self.new_intervals);
+        self.quality.build(&mut self.interval_set);
 
         // Set seventh
         if let Some(seventh) = self.seventh {
-            self.new_intervals.insert(seventh);
+            self.interval_set.insert(seventh);
         }
 
         // Set sixth
         if let Some(sixth) = self.sixth {
-            self.new_intervals.insert(sixth);
+            self.interval_set.insert(sixth);
         }
 
         if let Some(sus) = self.sus {
-            self.new_intervals.remove(&Interval::MajorThird);
-            self.new_intervals.remove(&Interval::MinorThird);
-            self.new_intervals.insert(sus);
+            self.interval_set.remove(&Interval::MajorThird);
+            self.interval_set.remove(&Interval::MinorThird);
+            self.interval_set.insert(sus);
         }
 
         // Alts
         for alt in &self.alts {
             match alt {
                 Interval::DiminishedFifth | Interval::AugmentedFifth => {
-                    self.new_intervals.remove(&Interval::PerfectFifth);
-                    self.new_intervals.insert(*alt);
+                    self.interval_set.remove(&Interval::PerfectFifth);
+                    self.interval_set.insert(*alt);
                 }
                 _ => {
-                    self.new_intervals.insert(*alt);
+                    self.interval_set.insert(*alt);
                 }
             }
         }
@@ -135,20 +132,20 @@ impl Ast {
 
         // Adds
         for add in &self.adds {
-            self.new_intervals.insert(*add);
+            self.interval_set.insert(*add);
         }
 
         // Omits
         for omit in &self.omits {
             match omit {
                 Interval::PerfectFifth => {
-                    self.new_intervals.remove(&Interval::PerfectFifth);
-                    self.new_intervals.remove(&Interval::AugmentedFifth);
-                    self.new_intervals.remove(&Interval::DiminishedFifth);
+                    self.interval_set.remove(&Interval::PerfectFifth);
+                    self.interval_set.remove(&Interval::AugmentedFifth);
+                    self.interval_set.remove(&Interval::DiminishedFifth);
                 }
                 Interval::MinorThird => {
-                    self.new_intervals.remove(&Interval::MinorThird);
-                    self.new_intervals.remove(&Interval::MajorThird);
+                    self.interval_set.remove(&Interval::MinorThird);
+                    self.interval_set.remove(&Interval::MajorThird);
                 }
                 _ => {}
             }
@@ -175,7 +172,13 @@ impl Ast {
                         Interval::Ninth,
                         Interval::MinorSeventh,
                     ],
-                    Interval::Ninth => vec![Interval::Ninth, Interval::MinorSeventh],
+                    Interval::Ninth => {
+                        if let Some(_) = self.sixth {
+                            vec![Interval::Ninth]
+                        } else {
+                            vec![Interval::Ninth, Interval::MinorSeventh]
+                        }
+                    }
                     _ => vec![],
                 },
                 _ => match cap {
@@ -188,7 +191,13 @@ impl Ast {
                     Interval::Eleventh => {
                         vec![Interval::Eleventh, Interval::Ninth, Interval::MinorSeventh]
                     }
-                    Interval::Ninth => vec![Interval::Ninth, Interval::MinorSeventh],
+                    Interval::Ninth => {
+                        if let Some(_) = self.sixth {
+                            vec![Interval::Ninth]
+                        } else {
+                            vec![Interval::Ninth, Interval::MinorSeventh]
+                        }
+                    }
                     _ => vec![],
                 },
             };
@@ -196,51 +205,18 @@ impl Ast {
             for interval in caps_to_add {
                 let conflicts = conflict_map.get(&interval).cloned().unwrap_or_default();
 
-                let blocked = self.new_intervals.contains(&interval)
-                    || conflicts.iter().any(|c| self.new_intervals.contains(c));
+                let blocked = self.interval_set.contains(&interval)
+                    || conflicts.iter().any(|c| self.interval_set.contains(c));
 
                 if !blocked {
-                    self.new_intervals.insert(interval);
+                    self.interval_set.insert(interval);
                 }
             }
         }
     }
 
     fn set_intervals(&mut self) {
-        self.expressions.sort();
-        self.expressions.iter().for_each(|e| match e {
-            Exp::Minor(min) => min.execute(&mut self.norm_intervals, &self.expressions),
-            Exp::Dim7(dim) => dim.execute(&mut self.norm_intervals, &self.expressions),
-            Exp::Dim(dim) => dim.execute(&mut self.norm_intervals, &self.expressions),
-            Exp::HalfDim(half) => half.execute(&mut self.norm_intervals, &self.expressions),
-            Exp::Sus(sus) => {
-                sus.execute(&mut self.norm_intervals);
-                self.is_sus = true;
-            }
-            Exp::Maj(maj) => maj.execute(&mut self.norm_intervals, &self.expressions),
-            Exp::Maj7(maj) => maj.execute(&mut self.norm_intervals),
-            Exp::Extension(ext) => ext.execute(
-                &mut self.norm_intervals,
-                &mut self.is_sus,
-                &self.expressions,
-            ),
-            Exp::Add(add) => add.execute(&mut self.norm_intervals),
-            Exp::Aug(aug) => aug.execute(&mut self.norm_intervals, &self.expressions),
-            Exp::SlashBass(bass) => self.bass = Some(bass.note.clone()),
-            Exp::Alt(alt) => alt.execute(&mut self.norm_intervals),
-            Exp::Power(pw) => {
-                if self.expressions.len() != 1 {
-                    self.errors.push(ParserError::InvalidPowerExpression);
-                } else {
-                    pw.execute(&mut self.norm_intervals)
-                }
-            }
-            Exp::Bass(_) => (),
-            _ => (),
-        });
-
-        self.add_third();
-        self.add_five();
+        self.norm_intervals = self.interval_set.iter().cloned().collect();
         self.norm_intervals.sort_by_key(|i| i.st());
         self.intervals = self.norm_intervals.clone();
         if let Some(Exp::Sus(sus_exp)) = self.expressions.iter().find(|e| matches!(e, Exp::Sus(_)))
@@ -258,44 +234,6 @@ impl Ast {
                 })
                 .collect();
             self.intervals.sort_by_key(|i| i.st());
-        }
-    }
-
-    fn add_third(&mut self) {
-        if !self.norm_intervals.contains(&Interval::MajorThird)
-            && !self.norm_intervals.contains(&Interval::MinorThird)
-            && !self.is_sus
-            && !self.expressions.iter().any(|exp| {
-                matches!(
-                    exp,
-                    Exp::Omit(OmitExp {
-                        interval: Interval::MajorThird,
-                        ..
-                    }) | Exp::Power(PowerExp)
-                        | Exp::Bass(BassExp)
-                )
-            })
-        {
-            self.norm_intervals.push(Interval::MajorThird);
-        }
-    }
-
-    fn add_five(&mut self) {
-        if !self.norm_intervals.contains(&Interval::DiminishedFifth)
-            && !self.norm_intervals.contains(&Interval::PerfectFifth)
-            && !self.norm_intervals.contains(&Interval::AugmentedFifth)
-            && !self.norm_intervals.contains(&Interval::FlatThirteenth)
-            && !self.expressions.iter().any(|exp| {
-                matches!(
-                    exp,
-                    Exp::Omit(OmitExp {
-                        interval: Interval::PerfectFifth,
-                        ..
-                    }) | Exp::Bass(BassExp)
-                )
-            })
-        {
-            self.norm_intervals.push(Interval::PerfectFifth);
         }
     }
 
@@ -466,15 +404,10 @@ impl Ast {
     }
 
     pub(crate) fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
-        self.new_set_intervals();
+        self.interval_set();
         self.set_intervals();
 
-        let new_int = self.new_intervals.clone();
-        let mut new_int: Vec<_> = new_int.iter().collect();
-        new_int.sort_by_key(|i| i.st());
-
-        dbg!(&self.norm_intervals);
-        dbg!(&new_int);
+        dbg!(&self);
 
         let notes = self.notes();
         let mut semitones = Vec::new();
@@ -531,7 +464,7 @@ impl Default for Ast {
             alts: Default::default(),
             sus: Default::default(),
             sixth: Default::default(),
-            new_intervals: vec![
+            interval_set: vec![
                 Interval::Unison,
                 Interval::MajorThird,
                 Interval::PerfectFifth,
