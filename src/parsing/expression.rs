@@ -1,11 +1,15 @@
 use std::fmt::{Display, Formatter};
 
-use crate::parsing::expressions::Maj7Exp;
+use crate::parsing::{ast::Ast, expressions::Maj7Exp};
 
 use super::expressions::{
     AddExp, AltExp, AugExp, BassExp, Dim7Exp, DimExp, ExtensionExp, HalfDimExp, MajExp, MinorExp,
     OmitExp, PowerExp, SlashBassExp, SusExp,
 };
+
+pub(crate) trait Expression {
+    fn pass(&self, ast: &mut Ast);
+}
 
 #[derive(Debug, PartialEq, Clone)]
 #[repr(u8)]
@@ -28,6 +32,26 @@ pub enum Exp {
 }
 
 impl Exp {
+    pub(crate) fn pass(&self, ast: &mut Ast) {
+        match self {
+            Exp::Power(exp) => exp.pass(ast),
+            Exp::Alt(exp) => exp.pass(ast),
+            Exp::Bass(exp) => exp.pass(ast),
+            Exp::Minor(exp) => exp.pass(ast),
+            Exp::Dim7(exp) => exp.pass(ast),
+            Exp::Dim(exp) => exp.pass(ast),
+            Exp::HalfDim(exp) => exp.pass(ast),
+            Exp::Sus(exp) => exp.pass(ast),
+            Exp::Maj(exp) => exp.pass(ast),
+            Exp::Maj7(exp) => exp.pass(ast),
+            Exp::Extension(exp) => exp.pass(ast),
+            Exp::Add(exp) => exp.pass(ast),
+            Exp::Aug(exp) => exp.pass(ast),
+            Exp::Omit(exp) => exp.pass(ast),
+            Exp::SlashBass(exp) => exp.pass(ast),
+        }
+    }
+
     pub fn validate(&self) -> (bool, usize) {
         match self {
             Exp::Omit(exp) => exp.isvalid(),
@@ -36,7 +60,7 @@ impl Exp {
         }
     }
 
-    pub fn stringify(&self) -> String {
+    fn stringify(&self) -> String {
         match self {
             Exp::Extension(_) => "Extension".to_string(),
             Exp::Add(_) => "Add".to_string(),

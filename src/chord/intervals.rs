@@ -1,11 +1,12 @@
 //! Useful abstractions to work with intervals
 
+use enum_bitset::EnumBitset;
 use serde::Deserialize;
 use serde::ser::{Serialize, Serializer};
 use std::fmt::Display;
 
 /// Enum representing all possible intervals of a chord
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Deserialize)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Hash, EnumBitset)]
 #[repr(u8)]
 pub enum Interval {
     Unison,
@@ -31,6 +32,13 @@ pub enum Interval {
     SharpEleventh,
     FlatThirteenth,
     Thirteenth,
+}
+
+impl IntervalSet {
+    pub fn replace(&mut self, remove: Interval, add: Interval) {
+        self.remove(remove);
+        self.insert(add);
+    }
 }
 
 impl Interval {

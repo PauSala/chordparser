@@ -47,7 +47,7 @@ impl Lexer {
             Some(c) => match c {
                 '#' | '♯' => self.add_token(TokenType::Sharp, self.current, 1),
                 '♭' => self.add_token(TokenType::Flat, self.current, 1),
-                '△' | '^' => self.add_token(TokenType::Maj7, self.current, 1),
+                '△' | '^' | 'Δ' => self.add_token(TokenType::Maj7, self.current, 1),
                 '-' => self.add_token(TokenType::Hyphen, self.current, 1),
                 '°' => self.add_token(TokenType::Dim, self.current, 1),
                 'ø' => self.add_token(TokenType::HalfDim, self.current, 1),
@@ -118,7 +118,6 @@ impl Lexer {
 
             start += 1;
             if end == start {
-                // dbg!(start, end, substring, pos);
                 errors.push((TokenType::Illegal, (pos + start - 1)));
                 start = 0;
                 end -= 1;

@@ -78,7 +78,6 @@ impl Context {
 pub struct Parser {
     lexer: Lexer,
     errors: Vec<ParserError>,
-    ast: Ast,
     open_parent_count: i16,
     context: Context,
 }
@@ -88,7 +87,6 @@ impl Parser {
         Parser {
             lexer: Lexer::new(),
             errors: Vec::new(),
-            ast: Ast::default(),
             open_parent_count: 0,
             context: Context::None,
         }
@@ -118,68 +116,71 @@ impl Parser {
     /// - There are more than one sus modifier.
     /// - Slash notation is used for anything other than 9 (6/9) or bass notation.
     pub fn parse(&mut self, input: &str) -> Result<Chord, ParserErrors> {
+        let mut ast = Ast::default();
         let binding = self.lexer.scan_tokens(input);
-        let mut tokens = binding.iter().peekable();
-        self.read_root(&mut tokens);
-        self.read_tokens(&mut tokens);
+        let tokens = self.pre_process(&binding);
+        let mut tokens = tokens.iter().peekable();
+
+        self.read_root(&mut tokens, &mut ast);
+        self.read_tokens(&mut tokens, &mut ast);
         if !self.errors.is_empty() {
             return Err(ParserErrors::new(self.errors.clone()));
         }
-        let res = self.ast.build_chord(input);
+        let res = ast.build_chord(input);
         self.cleanup();
         res
     }
 
     fn cleanup(&mut self) {
         self.errors.clear();
-        self.ast = Ast::default();
         self.open_parent_count = 0;
         self.context = Context::None;
     }
 
-    fn read_root(&mut self, tokens: &mut Peekable<Iter<Token>>) {
+    fn read_root(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
         match self.expect_note(tokens) {
-            Some(note) => self.ast.root = note,
+            Some(note) => ast.root = note,
             None => self.errors.push(ParserError::MissingRootNote),
         }
     }
 
-    fn read_tokens(&mut self, tokens: &mut Peekable<Iter<Token>>) {
+    fn read_tokens(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
         let mut next = tokens.next();
         while next.is_some() {
-            self.process_token(next.unwrap(), tokens);
+            self.process_token(next.unwrap(), tokens, ast);
             next = tokens.next();
         }
     }
 
-    fn process_token(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
+    fn process_token(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
         match &token.token_type {
             TokenType::Note(_) => self.note(token),
-            TokenType::Sharp => self.modifier(tokens, Modifier::Sharp, token),
-            TokenType::Flat => self.modifier(tokens, Modifier::Flat, token),
-            TokenType::Aug => self.aug(tokens),
-            TokenType::Dim => self.dim(tokens),
-            TokenType::HalfDim => self.ast.expressions.push(Exp::HalfDim(HalfDimExp)),
-            TokenType::Extension(ext) => self.extension(ext, token),
-            TokenType::Add => self.add(token, tokens),
-            TokenType::Omit => self.omit(token, tokens),
-            TokenType::Alt => self.ast.expressions.push(Exp::Alt(AltExp)),
-            TokenType::Sus => self.sus(tokens),
-            TokenType::Minor => self.ast.expressions.push(Exp::Minor(MinorExp)),
-            TokenType::Hyphen => self.hyphen(tokens, token.pos),
-            TokenType::Maj => self.ast.expressions.push(Exp::Maj(MajExp)),
-            TokenType::Maj7 => self.ast.expressions.push(Exp::Maj7(Maj7Exp)),
-            TokenType::Slash => self.slash(tokens, token),
-            TokenType::LParent => self.lparen(tokens, token.pos),
+            TokenType::Sharp => self.modifier(tokens, Modifier::Sharp, token, ast),
+            TokenType::Flat => self.modifier(tokens, Modifier::Flat, token, ast),
+            TokenType::Aug => self.aug(tokens, ast),
+            TokenType::Dim => self.dim(tokens, ast),
+            TokenType::Dim7 => ast.expressions.push(Exp::Dim7(Dim7Exp)),
+            TokenType::HalfDim => ast.expressions.push(Exp::HalfDim(HalfDimExp)),
+            TokenType::Extension(ext) => self.extension(ext, token, ast),
+            TokenType::Add => self.add(token, tokens, ast),
+            TokenType::Omit => self.omit(token, tokens, ast),
+            TokenType::Alt => ast.expressions.push(Exp::Alt(AltExp)),
+            TokenType::Sus => self.sus(tokens, ast),
+            TokenType::Minor => ast.expressions.push(Exp::Minor(MinorExp)),
+            TokenType::Hyphen => self.hyphen(tokens, token.pos, ast),
+            TokenType::Maj => ast.expressions.push(Exp::Maj(MajExp)),
+            TokenType::Maj7 => ast.expressions.push(Exp::Maj7(Maj7Exp)),
+            TokenType::Slash => self.slash(tokens, token, ast),
+            TokenType::LParent => self.lparen(tokens, token.pos, ast),
             TokenType::RParent => self.rparen(token.pos),
             TokenType::Comma => self.comma(),
-            TokenType::Bass => self.ast.expressions.push(Exp::Bass(BassExp)),
+            TokenType::Bass => ast.expressions.push(Exp::Bass(BassExp)),
             TokenType::Illegal => self.errors.push(ParserError::IllegalToken(token.pos)),
             TokenType::Eof => (),
         }
     }
 
-    fn slash(&mut self, tokens: &mut Peekable<Iter<Token>>, token: &Token) {
+    fn slash(&mut self, tokens: &mut Peekable<Iter<Token>>, token: &Token, ast: &mut Ast) {
         if let Some(Token {
             token_type: TokenType::Extension(a),
             pos,
@@ -187,8 +188,7 @@ impl Parser {
         }) = tokens.next_if(|t| self.is_extension(t))
         {
             match a {
-                9 => self
-                    .ast
+                9 => ast
                     .expressions
                     .push(Exp::Add(AddExp::new(Interval::Ninth, *pos))),
                 _ => {
@@ -198,9 +198,7 @@ impl Parser {
                 }
             }
         } else if let Some(b) = self.expect_note(tokens) {
-            self.ast
-                .expressions
-                .push(Exp::SlashBass(SlashBassExp::new(b)));
+            ast.expressions.push(Exp::SlashBass(SlashBassExp::new(b)));
         } else {
             let next_pos = tokens.peek().map_or(token.pos, |t| t.pos);
             self.errors
@@ -214,33 +212,33 @@ impl Parser {
         }
     }
 
-    fn hyphen(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize) {
+    fn hyphen(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize, ast: &mut Ast) {
         if tokens
-            .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &5))
+            .next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == 5))
             .is_some()
         {
-            self.ast.expressions.push(Exp::Extension(ExtensionExp {
+            ast.expressions.push(Exp::Extension(ExtensionExp {
                 interval: Interval::DiminishedFifth,
                 pos,
             }));
         } else {
-            self.ast.expressions.push(Exp::Minor(MinorExp));
+            ast.expressions.push(Exp::Minor(MinorExp));
         }
     }
 
-    fn aug(&mut self, tokens: &mut Peekable<Iter<Token>>) {
-        let _ = tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &5));
-        self.ast.expressions.push(Exp::Aug(AugExp));
+    fn aug(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
+        let _ = tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == 5));
+        ast.expressions.push(Exp::Aug(AugExp));
     }
 
-    fn dim(&mut self, tokens: &mut Peekable<Iter<Token>>) {
+    fn dim(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
         if tokens
-            .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &7))
+            .next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == 7))
             .is_some()
         {
-            self.ast.expressions.push(Exp::Dim7(Dim7Exp));
+            ast.expressions.push(Exp::Dim7(Dim7Exp));
         } else {
-            self.ast.expressions.push(Exp::Dim(DimExp));
+            ast.expressions.push(Exp::Dim(DimExp));
         }
     }
 
@@ -253,7 +251,7 @@ impl Parser {
         self.open_parent_count -= 1;
     }
 
-    fn lparen(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize) {
+    fn lparen(&mut self, tokens: &mut Peekable<Iter<Token>>, pos: usize, ast: &mut Ast) {
         self.open_parent_count += 1;
         self.context = Context::None;
         while let Some(token) = tokens.next() {
@@ -273,7 +271,7 @@ impl Parser {
                 _ => (),
             }
             // Process next tokens
-            self.process_token(token, tokens);
+            self.process_token(token, tokens, ast);
         }
     }
 
@@ -281,13 +279,13 @@ impl Parser {
         self.context = self.context.on_comma();
     }
 
-    fn omit(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
+    fn omit(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
         if self.open_parent_count > 0 {
             self.context = Context::start_group(GroupKind::Omit);
         }
 
-        if self.consume_extension_if(tokens, 5, |s| {
-            s.ast.expressions.push(Exp::Omit(OmitExp::new(
+        if self.consume_extension_if(tokens, 5, || {
+            ast.expressions.push(Exp::Omit(OmitExp::new(
                 Interval::PerfectFifth,
                 token.pos + token.len,
             )));
@@ -295,8 +293,8 @@ impl Parser {
             return;
         }
 
-        if self.consume_extension_if(tokens, 3, |s| {
-            s.ast.expressions.push(Exp::Omit(OmitExp::new(
+        if self.consume_extension_if(tokens, 3, || {
+            ast.expressions.push(Exp::Omit(OmitExp::new(
                 Interval::MajorThird,
                 token.pos + token.len,
             )));
@@ -309,7 +307,7 @@ impl Parser {
         )));
     }
 
-    fn add(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>) {
+    fn add(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
         if self.open_parent_count > 0 {
             self.context = Context::start_group(GroupKind::Add);
         }
@@ -325,34 +323,22 @@ impl Parser {
             ..
         }) = tokens.next_if(|t| self.is_extension(t))
         {
-            let id = format!("{}{}", modifier, ext);
-            match Interval::from_chord_notation(&id) {
-                Some(interval) => self
-                    .ast
-                    .expressions
-                    .push(Exp::Add(AddExp::new(interval, *pos))),
+            match Interval::from_chord_notation(&format!("{}{}", modifier, ext)) {
+                Some(interval) => ast.expressions.push(Exp::Add(AddExp::new(interval, *pos))),
                 None => self.errors.push(ParserError::InvalidExtension(token.pos)),
             }
             return;
         }
 
-        // Maj7 (Maj followed by Extension("7"))
+        // Maj7
         if tokens
-            .next_if(|t| matches!(t.token_type, TokenType::Maj))
+            .next_if(|t| matches!(t.token_type, TokenType::Maj7))
             .is_some()
         {
-            if tokens
-                .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &7))
-                .is_some()
-            {
-                self.ast.expressions.push(Exp::Add(AddExp::new(
-                    Interval::MajorSeventh,
-                    token.pos + token.len,
-                )));
-            } else {
-                self.errors
-                    .push(ParserError::IllegalAddTarget((token.pos, token.len)));
-            }
+            ast.expressions.push(Exp::Add(AddExp::new(
+                Interval::MajorSeventh,
+                token.pos + token.len,
+            )));
             return;
         }
 
@@ -360,7 +346,13 @@ impl Parser {
             .push(ParserError::MissingAddTarget((token.pos, token.len)));
     }
 
-    fn modifier(&mut self, tokens: &mut Peekable<Iter<Token>>, modifier: Modifier, token: &Token) {
+    fn modifier(
+        &mut self,
+        tokens: &mut Peekable<Iter<Token>>,
+        modifier: Modifier,
+        token: &Token,
+        ast: &mut Ast,
+    ) {
         let extension = match tokens.next_if(|t| self.is_extension(t)) {
             Some(Token {
                 token_type: TokenType::Extension(ext),
@@ -373,7 +365,7 @@ impl Parser {
         };
 
         match Interval::from_chord_notation(&format!("{}{}", modifier, extension)) {
-            Some(int) => self.add_interval(int, token.pos),
+            Some(int) => self.add_interval(int, token.pos, ast),
             None => self
                 .errors
                 .push(ParserError::InvalidExtension(token.pos + 1)),
@@ -384,30 +376,29 @@ impl Parser {
         matches!(token.token_type, TokenType::Extension(_))
     }
 
-    fn sus(&mut self, tokens: &mut Peekable<Iter<Token>>) {
+    fn sus(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
         self.context = Context::Sus;
 
         if !matches!(
             tokens.peek().map(|t| &t.token_type),
             Some(TokenType::Extension(_) | TokenType::Sharp | TokenType::Flat)
         ) {
-            self.ast
-                .expressions
+            ast.expressions
                 .push(Exp::Sus(SusExp::new(Interval::PerfectFourth)));
             self.context = Context::None;
         }
     }
 
-    fn add_sus_exp(&mut self, int: Interval) {
-        self.ast.expressions.push(Exp::Sus(SusExp::new(int)));
+    fn add_sus_exp(&mut self, int: Interval, ast: &mut Ast) {
+        ast.expressions.push(Exp::Sus(SusExp::new(int)));
         self.context = Context::None;
     }
 
-    fn extension(&mut self, ext: &u8, token: &Token) {
+    fn extension(&mut self, ext: &u8, token: &Token, ast: &mut Ast) {
         if *ext == 5 && self.context == Context::None {
-            self.ast.expressions.push(Exp::Power(PowerExp));
+            ast.expressions.push(Exp::Power(PowerExp));
         } else if let Some(int) = Interval::from_chord_notation(&ext.to_string()) {
-            self.add_interval(int, token.pos);
+            self.add_interval(int, token.pos, ast);
         } else {
             self.errors.push(ParserError::InvalidExtension(token.pos));
         }
@@ -417,30 +408,28 @@ impl Parser {
         self.errors.push(ParserError::UnexpectedNote(token.pos));
     }
 
-    fn add_interval(&mut self, int: Interval, pos: usize) {
+    fn add_interval(&mut self, int: Interval, pos: usize, ast: &mut Ast) {
         match self.context {
             Context::Sus => {
                 if self.allowed_sus_interval(int) {
-                    self.add_sus_exp(int);
+                    self.add_sus_exp(int, ast);
                 } else {
                     // Csus13 -> here we receive a 13, sus needs to be pushed
-                    self.add_sus_exp(Interval::PerfectFourth);
-                    self.ast
-                        .expressions
+                    self.add_sus_exp(Interval::PerfectFourth, ast);
+                    ast.expressions
                         .push(Exp::Extension(ExtensionExp::new(int, pos)));
                 }
             }
             Context::Group(g) if g.active => match g.kind {
-                GroupKind::Omit => self.ast.expressions.push(Exp::Omit(OmitExp::new(int, pos))),
-                GroupKind::Add => self.ast.expressions.push(Exp::Add(AddExp::new(int, pos))),
+                GroupKind::Omit => ast.expressions.push(Exp::Omit(OmitExp::new(int, pos))),
+                GroupKind::Add => ast.expressions.push(Exp::Add(AddExp::new(int, pos))),
             },
             _ => match int {
                 // This is for the C4 as Csus case
-                Interval::PerfectFourth => self.ast.expressions.push(Exp::Sus(SusExp::new(int))),
+                Interval::PerfectFourth => ast.expressions.push(Exp::Sus(SusExp::new(int))),
                 // #4 is not allowed
                 Interval::AugmentedFourth => self.errors.push(ParserError::InvalidExtension(pos)),
-                _ => self
-                    .ast
+                _ => ast
                     .expressions
                     .push(Exp::Extension(ExtensionExp::new(int, pos))),
             },
@@ -454,15 +443,14 @@ impl Parser {
         f: F,
     ) -> bool
     where
-        F: FnOnce(&mut Self),
+        F: FnOnce(),
     {
         if let Some(Token {
             token_type: TokenType::Extension(..),
             ..
-        }) =
-            tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &target))
+        }) = tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == target))
         {
-            f(self);
+            f();
             true
         } else {
             false
@@ -505,6 +493,89 @@ impl Parser {
                 Some(Note::new(NoteLiteral::from_string(n), modifier))
             }
             _ => None,
+        }
+    }
+
+    /// Normalizes the token stream by collapsing 7ths if possible
+    fn pre_process(&self, tokens: &[Token]) -> Vec<Token> {
+        self.fold_7(
+            &self.fold_7(&self.concat_maj7(tokens), TokenType::Dim, TokenType::Dim7),
+            TokenType::Maj,
+            TokenType::Maj7,
+        )
+    }
+
+    /// Fold Maj + consecutive 7 into Maj7 Token, including ([Δ |^] + 7)
+    fn concat_maj7(&self, tokens: &[Token]) -> Vec<Token> {
+        let mut out = Vec::with_capacity(tokens.len());
+        let mut i = 0;
+
+        while i < tokens.len() {
+            match (&tokens[i].token_type, tokens.get(i + 1)) {
+                (TokenType::Maj | TokenType::Maj7, Some(next))
+                    if matches!(next.token_type, TokenType::Extension(7)) =>
+                {
+                    out.push(Token {
+                        token_type: TokenType::Maj7,
+                        pos: tokens[i].pos,
+                        len: tokens[i].len + next.len,
+                    });
+                    i += 2;
+                }
+
+                _ => {
+                    out.push(tokens[i].clone());
+                    i += 1;
+                }
+            }
+        }
+
+        out
+    }
+
+    fn fold_7(
+        &self,
+        tokens: &[Token],
+        match_token: TokenType,
+        insert_token_type: TokenType,
+    ) -> Vec<Token> {
+        let mut out: Vec<Token> = Vec::with_capacity(tokens.len());
+        let mut pending_match = Vec::new();
+        let mut pending_seven = Vec::new();
+
+        for token in tokens {
+            let current_idx = out.len();
+
+            match &token.token_type {
+                t if *t == match_token => {
+                    if let Some(prev_idx) = pending_seven.pop() {
+                        out[prev_idx] =
+                            self.merge_tokens(&out[prev_idx], token, &insert_token_type);
+                    } else {
+                        pending_match.push(current_idx);
+                        out.push(token.clone());
+                    }
+                }
+                TokenType::Extension(7) => {
+                    if let Some(prev_idx) = pending_match.pop() {
+                        out[prev_idx] =
+                            self.merge_tokens(&out[prev_idx], token, &insert_token_type);
+                    } else {
+                        pending_seven.push(current_idx);
+                        out.push(token.clone());
+                    }
+                }
+                _ => out.push(token.clone()),
+            }
+        }
+        out
+    }
+
+    fn merge_tokens(&self, t1: &Token, t2: &Token, new_type: &TokenType) -> Token {
+        Token {
+            token_type: new_type.clone(),
+            pos: t1.pos.min(t2.pos),
+            len: t1.len,
         }
     }
 }

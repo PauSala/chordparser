@@ -1,18 +1,62 @@
-use std::collections::HashMap;
-
+use super::{expression::Exp, parser_error::ParserError};
 use crate::{
     chord::{
         Chord,
-        intervals::Interval,
+        intervals::{Interval, IntervalSet},
         note::{Note, NoteLiteral},
     },
-    parsing::{
-        expressions::{BassExp, OmitExp, PowerExp},
-        parser_error::ParserErrors,
-    },
+    parsing::parser_error::ParserErrors,
 };
+use std::sync::LazyLock;
+use std::{collections::HashMap, mem};
 
-use super::{expression::Exp, parser_error::ParserError};
+static CONFLICT_MAP: LazyLock<HashMap<Interval, Vec<Interval>>> = LazyLock::new(|| {
+    HashMap::from([
+        (
+            Interval::Ninth,
+            vec![Interval::FlatNinth, Interval::SharpNinth],
+        ),
+        (Interval::Eleventh, vec![Interval::SharpEleventh]),
+        (Interval::Thirteenth, vec![Interval::FlatThirteenth]),
+        (Interval::MinorSeventh, vec![Interval::DiminishedSeventh]),
+    ])
+});
+
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[repr(u8)]
+pub enum Quality {
+    #[default]
+    Major,
+    Minor,
+    Dim,
+    HalfDim,
+    Dim7,
+    Power,
+}
+
+impl Quality {
+    fn build(&self, intervals: &mut IntervalSet) {
+        match self {
+            Quality::Major => {}
+            Quality::Power => {
+                intervals.remove(Interval::MajorThird);
+            }
+            Quality::Minor => {
+                intervals.replace(Interval::MajorThird, Interval::MinorThird);
+            }
+            Quality::Dim | Quality::HalfDim | Quality::Dim7 => {
+                intervals.replace(Interval::MajorThird, Interval::MinorThird);
+                intervals.replace(Interval::PerfectFifth, Interval::DiminishedFifth);
+
+                if *self == Quality::HalfDim {
+                    intervals.insert(Interval::MinorSeventh);
+                } else if *self == Quality::Dim7 {
+                    intervals.insert(Interval::DiminishedSeventh);
+                }
+            }
+        }
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Ast {
@@ -23,44 +67,59 @@ pub struct Ast {
     pub(crate) intervals: Vec<Interval>,
     pub(crate) is_sus: bool,
     pub(crate) errors: Vec<ParserError>,
+
+    pub(crate) quality: Quality,
+    pub(crate) omits: Vec<Interval>,
+    pub(crate) adds: Vec<Interval>,
+    pub(crate) alts: Vec<Interval>,
+    pub(crate) sus: Option<Interval>,
+    pub(crate) sixth: Option<Interval>,
+    pub(crate) seventh: Option<Interval>,
+    pub(crate) extension_cap: Option<Interval>,
+    pub(crate) interval_set: IntervalSet,
 }
 
 impl Ast {
-    fn set_intervals(&mut self) {
-        self.expressions.sort();
-        self.expressions.iter().for_each(|e| match e {
-            Exp::Minor(min) => min.execute(&mut self.norm_intervals, &self.expressions),
-            Exp::Dim7(dim) => dim.execute(&mut self.norm_intervals, &self.expressions),
-            Exp::Dim(dim) => dim.execute(&mut self.norm_intervals, &self.expressions),
-            Exp::HalfDim(half) => half.execute(&mut self.norm_intervals, &self.expressions),
-            Exp::Sus(sus) => {
-                sus.execute(&mut self.norm_intervals);
-                self.is_sus = true;
-            }
-            Exp::Maj(maj) => maj.execute(&mut self.norm_intervals, &self.expressions),
-            Exp::Maj7(maj) => maj.execute(&mut self.norm_intervals),
-            Exp::Extension(ext) => ext.execute(
-                &mut self.norm_intervals,
-                &mut self.is_sus,
-                &self.expressions,
-            ),
-            Exp::Add(add) => add.execute(&mut self.norm_intervals),
-            Exp::Aug(aug) => aug.execute(&mut self.norm_intervals, &self.expressions),
-            Exp::SlashBass(bass) => self.bass = Some(bass.note.clone()),
-            Exp::Alt(alt) => alt.execute(&mut self.norm_intervals),
-            Exp::Power(pw) => {
-                if self.expressions.len() != 1 {
-                    self.errors.push(ParserError::InvalidPowerExpression);
-                } else {
-                    pw.execute(&mut self.norm_intervals)
-                }
-            }
-            Exp::Bass(_) => (),
-            _ => (),
-        });
+    pub(crate) fn build_chord(mut self, name: &str) -> Result<Chord, ParserErrors> {
+        self.set_intervals();
+        let notes = self.notes();
+        let mut semitones = Vec::new();
+        let mut semantic_intervals = Vec::new();
+        let note_literals = notes.iter().map(|a| a.to_string()).collect();
 
-        self.add_third();
-        self.add_five();
+        let mut rbs = [false; 24];
+        for e in &self.norm_intervals {
+            let v = e.st();
+            rbs[v as usize] = true;
+            semantic_intervals.push(e.to_semantic_interval().numeric());
+        }
+
+        for e in &self.intervals {
+            let v = e.st();
+            semitones.push(v);
+        }
+
+        if !self.is_valid() {
+            return Err(ParserErrors::new(self.errors));
+        }
+
+        Ok(Chord::builder(name, self.root)
+            .descriptor(&self.descriptor(name))
+            .bass(self.bass)
+            .notes(notes)
+            .note_literals(note_literals)
+            .rbs(rbs)
+            .semitones(semitones)
+            .semantic_intervals(semantic_intervals)
+            .normalized_intervals(self.norm_intervals)
+            .intervals(self.intervals)
+            .is_sus(self.is_sus)
+            .build())
+    }
+
+    fn set_intervals(&mut self) {
+        self.build();
+        self.norm_intervals = self.interval_set.iter().collect();
         self.norm_intervals.sort_by_key(|i| i.st());
         self.intervals = self.norm_intervals.clone();
         if let Some(Exp::Sus(sus_exp)) = self.expressions.iter().find(|e| matches!(e, Exp::Sus(_)))
@@ -81,41 +140,113 @@ impl Ast {
         }
     }
 
-    fn add_third(&mut self) {
-        if !self.norm_intervals.contains(&Interval::MajorThird)
-            && !self.norm_intervals.contains(&Interval::MinorThird)
-            && !self.is_sus
-            && !self.expressions.iter().any(|exp| {
-                matches!(
-                    exp,
-                    Exp::Omit(OmitExp {
-                        interval: Interval::MajorThird,
-                        ..
-                    }) | Exp::Power(PowerExp)
-                        | Exp::Bass(BassExp)
-                )
-            })
-        {
-            self.norm_intervals.push(Interval::MajorThird);
+    fn build(&mut self) {
+        let expressions = mem::take(&mut self.expressions);
+        if expressions.iter().any(|exp| matches!(exp, Exp::Bass(..))) {
+            self.interval_set.remove(Interval::PerfectFifth);
+            self.interval_set.remove(Interval::MajorThird);
+            return;
+        }
+        expressions.iter().for_each(|exp| exp.pass(self));
+        self.expressions = expressions;
+
+        // Set quality intervals
+        self.quality.build(&mut self.interval_set);
+
+        // Set seventh
+        if let Some(seventh) = self.seventh {
+            self.interval_set.insert(seventh);
+        }
+
+        // Set sixth
+        if let Some(sixth) = self.sixth {
+            self.interval_set.insert(sixth);
+        }
+
+        if let Some(sus) = self.sus {
+            Self::remove_thirds(&mut self.interval_set);
+            self.interval_set.insert(sus);
+        }
+
+        // Alts
+        self.alts.iter().for_each(|alt| match alt {
+            Interval::DiminishedFifth | Interval::AugmentedFifth | Interval::FlatThirteenth => {
+                self.interval_set.replace(Interval::PerfectFifth, *alt)
+            }
+            _ => self.interval_set.insert(*alt),
+        });
+
+        // Caps
+        self.extension_caps();
+
+        // Omits
+        for omit in &self.omits {
+            match omit {
+                Interval::PerfectFifth => {
+                    self.interval_set.remove(Interval::PerfectFifth);
+                    self.interval_set.remove(Interval::AugmentedFifth);
+                    self.interval_set.remove(Interval::DiminishedFifth);
+                }
+                Interval::MajorThird => Self::remove_thirds(&mut self.interval_set),
+                _ => {}
+            }
+        }
+
+        // Adds
+        for add in &self.adds {
+            if *add == Interval::FlatThirteenth {
+                self.interval_set.remove(Interval::PerfectFifth);
+            }
+            self.interval_set.insert(*add);
         }
     }
 
-    fn add_five(&mut self) {
-        if !self.norm_intervals.contains(&Interval::DiminishedFifth)
-            && !self.norm_intervals.contains(&Interval::PerfectFifth)
-            && !self.norm_intervals.contains(&Interval::AugmentedFifth)
-            && !self.norm_intervals.contains(&Interval::FlatThirteenth)
-            && !self.expressions.iter().any(|exp| {
-                matches!(
-                    exp,
-                    Exp::Omit(OmitExp {
-                        interval: Interval::PerfectFifth,
-                        ..
-                    }) | Exp::Bass(BassExp)
-                )
-            })
-        {
-            self.norm_intervals.push(Interval::PerfectFifth);
+    fn remove_thirds(interval_set: &mut IntervalSet) {
+        interval_set.remove(Interval::MinorThird);
+        interval_set.remove(Interval::MajorThird);
+    }
+
+    fn extension_caps(&mut self) {
+        if let Some(cap) = self.extension_cap {
+            if self.quality == Quality::Major && cap == Interval::Eleventh {
+                self.interval_set
+                    .replace(Interval::MajorThird, Interval::PerfectFourth);
+            } else {
+                self.interval_set.insert(cap);
+            }
+
+            let seventh = if self
+                .expressions
+                .iter()
+                .any(|exp| matches!(exp, Exp::Maj7(..) | Exp::Maj(..)))
+            {
+                Interval::MajorSeventh
+            } else {
+                Interval::MinorSeventh
+            };
+
+            let thirteenth = if self.quality == Quality::Major {
+                vec![Interval::Ninth, seventh]
+            } else {
+                vec![Interval::Eleventh, Interval::Ninth, seventh]
+            };
+
+            let caps_to_add: Vec<Interval> = match cap {
+                Interval::Thirteenth => thirteenth,
+                Interval::Eleventh => vec![Interval::Ninth, seventh],
+                Interval::Ninth => self.sixth.map_or(vec![seventh], |_| vec![]),
+                _ => vec![],
+            };
+
+            for interval in caps_to_add {
+                let conflicts = CONFLICT_MAP.get(&interval).cloned().unwrap_or_default();
+                let blocked = self.interval_set.contains(interval)
+                    || conflicts.iter().any(|c| self.interval_set.contains(c));
+
+                if !blocked {
+                    self.interval_set.insert(interval);
+                }
+            }
         }
     }
 
@@ -277,49 +408,12 @@ impl Ast {
         notes
     }
 
-    pub fn descriptor(&mut self, name: &str) -> String {
+    pub fn descriptor(&self, name: &str) -> String {
         let modifier_str = match &self.root.modifier {
             Some(m) => m.to_string(),
             None => "".to_string(),
         };
         name.replace(&format!("{}{}", self.root.literal, modifier_str), "")
-    }
-
-    pub(crate) fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
-        self.set_intervals();
-        let notes = self.notes();
-        let mut semitones = Vec::new();
-        let mut semantic_intervals = Vec::new();
-        let note_literals = notes.iter().map(|a| a.to_string()).collect();
-
-        let mut rbs = [false; 24];
-        for e in &self.norm_intervals {
-            let v = e.st();
-            rbs[v as usize] = true;
-            semantic_intervals.push(e.to_semantic_interval().numeric());
-        }
-
-        for e in &self.intervals {
-            let v = e.st();
-            semitones.push(v);
-        }
-
-        if !self.is_valid() {
-            return Err(ParserErrors::new(self.errors.clone()));
-        }
-
-        Ok(Chord::builder(name, self.root.clone())
-            .descriptor(&self.descriptor(name))
-            .bass(self.bass.clone())
-            .notes(notes)
-            .note_literals(note_literals)
-            .rbs(rbs)
-            .semitones(semitones)
-            .semantic_intervals(semantic_intervals)
-            .normalized_intervals(self.norm_intervals.clone())
-            .intervals(self.intervals.clone())
-            .is_sus(self.is_sus)
-            .build())
     }
 }
 
@@ -333,6 +427,22 @@ impl Default for Ast {
             intervals: vec![],
             is_sus: false,
             errors: Vec::new(),
+
+            quality: Quality::Major,
+            omits: Default::default(),
+            adds: Default::default(),
+            seventh: None,
+            extension_cap: None,
+            alts: Default::default(),
+            sus: Default::default(),
+            sixth: Default::default(),
+            interval_set: vec![
+                Interval::Unison,
+                Interval::MajorThird,
+                Interval::PerfectFifth,
+            ]
+            .into_iter()
+            .collect(),
         }
     }
 }

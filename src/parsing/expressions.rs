@@ -1,8 +1,8 @@
-use core::panic;
+use crate::{
+    chord::{intervals::Interval, note::Note},
+    parsing::{ast::Quality, expression::Expression},
+};
 
-use crate::chord::{intervals::Interval, note::Note};
-
-use super::expression::Exp;
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ExtensionExp {
     pub interval: Interval,
@@ -12,108 +12,31 @@ impl ExtensionExp {
     pub fn new(interval: Interval, pos: usize) -> Self {
         Self { interval, pos }
     }
-    fn include_seventh(&self, i: &mut Vec<Interval>) {
-        if !i.contains(&Interval::MajorSixth)
-            && !i.contains(&Interval::MinorSeventh)
-            && !i.contains(&Interval::MajorSeventh)
-            && !i.contains(&Interval::DiminishedSeventh)
-        {
-            i.push(Interval::MinorSeventh);
-        }
-    }
-    fn include_ninth(&self, i: &mut Vec<Interval>) {
-        if !i.contains(&Interval::Ninth)
-            && !i.contains(&Interval::FlatNinth)
-            && !i.contains(&Interval::SharpNinth)
-        {
-            i.push(Interval::Ninth);
-        }
-    }
-    fn include_eleventh(&self, i: &mut Vec<Interval>) {
-        if !i.contains(&Interval::Eleventh)
-            && !i.contains(&Interval::SharpEleventh)
-            && i.contains(&Interval::MinorThird)
-        {
-            i.push(Interval::Eleventh);
-        }
-    }
-    pub fn execute(&self, i: &mut Vec<Interval>, is_sus: &mut bool, exp: &[Exp]) {
+}
+
+impl Expression for ExtensionExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
         match self.interval {
             Interval::PerfectFourth
             | Interval::AugmentedFourth
-            | Interval::MinorSixth
+            | Interval::DiminishedFifth
+            | Interval::AugmentedFifth
             | Interval::FlatNinth
             | Interval::SharpNinth
             | Interval::SharpEleventh
-            | Interval::FlatThirteenth => {
-                if !i.contains(&self.interval) {
-                    i.push(self.interval);
-                }
-            }
-            Interval::AugmentedFifth => {
-                if !i.contains(&self.interval)
-                    && !exp.iter().any(|e| {
-                        matches!(
-                            e,
-                            Exp::Omit(OmitExp {
-                                interval: Interval::PerfectFifth,
-                                ..
-                            })
-                        )
-                    })
-                {
-                    i.push(self.interval);
-                }
-            }
-            Interval::DiminishedFifth => {
-                if !i.contains(&self.interval)
-                    && !exp.iter().any(|e| {
-                        matches!(
-                            e,
-                            Exp::Omit(OmitExp {
-                                interval: Interval::PerfectFifth,
-                                ..
-                            })
-                        )
-                    })
-                {
-                    i.push(self.interval);
-                }
-            }
-            Interval::MajorSixth => {
-                if !i.contains(&self.interval) && !i.contains(&Interval::Thirteenth) {
-                    i.push(self.interval);
-                }
-            }
+            | Interval::FlatThirteenth => ast.alts.push(self.interval),
+            Interval::MajorSixth | Interval::MinorSixth => ast.sixth = Some(self.interval),
             Interval::MinorSeventh => {
-                if !i.contains(&self.interval)
-                    && !i.contains(&Interval::MajorSeventh)
-                    && !i.contains(&Interval::DiminishedSeventh)
-                {
-                    i.push(self.interval);
-                }
+                ast.seventh = Some(Interval::MinorSeventh);
+                ast.alts.push(self.interval);
             }
-            Interval::Ninth => {
-                self.include_seventh(i);
-                i.push(Interval::Ninth);
+            Interval::Ninth | Interval::Eleventh | Interval::Thirteenth => {
+                ast.extension_cap = Some(
+                    self.interval
+                        .max(ast.extension_cap.unwrap_or(Interval::Unison)),
+                )
             }
-            Interval::Eleventh => {
-                self.include_seventh(i);
-                self.include_ninth(i);
-                if !i.contains(&self.interval) {
-                    i.push(self.interval);
-                }
-                *is_sus = !i.contains(&Interval::MinorThird);
-            }
-            Interval::Thirteenth => {
-                self.include_seventh(i);
-                self.include_ninth(i);
-                self.include_eleventh(i);
-                if !i.contains(&self.interval) {
-                    i.push(self.interval);
-                }
-            }
-            _ => (),
+            _ => {}
         }
     }
 }
@@ -122,6 +45,12 @@ impl ExtensionExp {
 pub struct AddExp {
     pub interval: Interval,
     pub target_pos: usize,
+}
+
+impl Expression for AddExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.adds.push(self.interval);
+    }
 }
 
 impl AddExp {
@@ -152,12 +81,6 @@ impl AddExp {
             self.target_pos,
         )
     }
-
-    pub fn execute(&self, i: &mut Vec<Interval>) {
-        if !i.contains(&self.interval) {
-            i.push(self.interval);
-        }
-    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -165,21 +88,25 @@ pub struct SusExp {
     pub interval: Interval,
 }
 
+impl Expression for SusExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.omits.push(Interval::MajorThird);
+        match self.interval {
+            Interval::PerfectFourth => {
+                ast.is_sus = true;
+                ast.sus = Some(self.interval);
+            }
+            Interval::AugmentedFourth => ast.alts.push(Interval::SharpEleventh),
+            Interval::MinorSecond => ast.alts.push(Interval::FlatNinth),
+            Interval::MajorSecond => ast.alts.push(Interval::Ninth),
+            _ => {}
+        }
+    }
+}
+
 impl SusExp {
     pub fn new(interval: Interval) -> Self {
         Self { interval }
-    }
-    pub fn execute(&self, i: &mut Vec<Interval>) {
-        let interval = match self.interval {
-            Interval::MinorSecond => Interval::FlatNinth,
-            Interval::MajorSecond => Interval::Ninth,
-            Interval::PerfectFourth => Interval::PerfectFourth,
-            Interval::AugmentedFourth => Interval::SharpEleventh,
-            _ => panic!("Invalid sus interval, this should not happen"),
-        };
-        if !i.contains(&interval) {
-            i.push(interval);
-        }
     }
 }
 
@@ -188,6 +115,13 @@ pub struct OmitExp {
     pub interval: Interval,
     pub target_pos: usize,
 }
+
+impl Expression for OmitExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.omits.push(self.interval);
+    }
+}
+
 impl OmitExp {
     pub fn new(interval: Interval, target_pos: usize) -> Self {
         Self {
@@ -203,10 +137,17 @@ impl OmitExp {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct SlashBassExp {
     pub note: Note,
 }
+
+impl Expression for SlashBassExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.bass = Some(self.note)
+    }
+}
+
 impl SlashBassExp {
     pub fn new(note: Note) -> Self {
         Self { note }
@@ -214,204 +155,81 @@ impl SlashBassExp {
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct BassExp;
+impl Expression for BassExp {
+    fn pass(&self, _ast: &mut super::ast::Ast) {}
+}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct DimExp;
-impl DimExp {
-    pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
-        if !i.contains(&Interval::MinorThird)
-            && !exp.iter().any(|e| {
-                matches!(
-                    e,
-                    Exp::Omit(OmitExp {
-                        interval: Interval::MajorThird,
-                        ..
-                    })
-                )
-            })
-            && !exp.iter().any(|e| matches!(e, Exp::Sus(SusExp { .. })))
-        {
-            i.push(Interval::MinorThird);
-        }
-        if !i.contains(&Interval::DiminishedFifth)
-            && !exp.iter().any(|e| {
-                matches!(
-                    e,
-                    Exp::Omit(OmitExp {
-                        interval: Interval::PerfectFifth,
-                        ..
-                    })
-                )
-            })
-        {
-            i.push(Interval::DiminishedFifth);
-        }
+impl Expression for DimExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.quality = Quality::Dim;
     }
 }
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Dim7Exp;
-impl Dim7Exp {
-    pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
-        if !i.contains(&Interval::MinorThird)
-            && !exp.iter().any(|e| {
-                matches!(
-                    e,
-                    Exp::Omit(OmitExp {
-                        interval: Interval::MajorThird,
-                        ..
-                    })
-                )
-            })
-            && !exp.iter().any(|e| matches!(e, Exp::Sus(SusExp { .. })))
-        {
-            i.push(Interval::MinorThird);
-        }
-        if !i.contains(&Interval::DiminishedFifth)
-            && !exp.iter().any(|e| {
-                matches!(
-                    e,
-                    Exp::Omit(OmitExp {
-                        interval: Interval::PerfectFifth,
-                        ..
-                    })
-                )
-            })
-        {
-            i.push(Interval::DiminishedFifth);
-        }
-        if !i.contains(&Interval::DiminishedSeventh) {
-            i.push(Interval::DiminishedSeventh);
-        }
+impl Expression for Dim7Exp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.quality = Quality::Dim7;
     }
 }
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct HalfDimExp;
-impl HalfDimExp {
-    pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
-        if !i.contains(&Interval::MinorThird)
-            && !exp.iter().any(|e| {
-                matches!(
-                    e,
-                    Exp::Omit(OmitExp {
-                        interval: Interval::MajorThird,
-                        ..
-                    })
-                )
-            })
-            && !exp.iter().any(|e| matches!(e, Exp::Sus(SusExp { .. })))
-        {
-            i.push(Interval::MinorThird);
-        }
-        if !i.contains(&Interval::DiminishedFifth)
-            && !exp.iter().any(|e| {
-                matches!(
-                    e,
-                    Exp::Omit(OmitExp {
-                        interval: Interval::PerfectFifth,
-                        ..
-                    })
-                )
-            })
-        {
-            i.push(Interval::DiminishedFifth);
-        }
-        if !i.contains(&Interval::MinorSeventh) {
-            i.push(Interval::MinorSeventh);
-        }
+impl Expression for HalfDimExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.quality = Quality::HalfDim;
+        ast.seventh = Some(Interval::MinorSeventh);
     }
 }
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MajExp;
-impl MajExp {
-    pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
-        if exp.iter().any(|e| {
-            matches!(
-                e,
-                Exp::Extension(ExtensionExp {
-                    interval: Interval::MinorSeventh,
-                    ..
-                }) | Exp::Extension(ExtensionExp {
-                    interval: Interval::Ninth,
-                    ..
-                }) | Exp::Extension(ExtensionExp {
-                    interval: Interval::Eleventh,
-                    ..
-                }) | Exp::Extension(ExtensionExp {
-                    interval: Interval::Thirteenth,
-                    ..
-                })
-            )
-        }) && !i.contains(&Interval::MajorSeventh)
-        {
-            i.push(Interval::MajorSeventh);
-        }
-    }
+impl Expression for MajExp {
+    fn pass(&self, _ast: &mut super::ast::Ast) {}
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Maj7Exp;
-impl Maj7Exp {
-    pub fn execute(&self, i: &mut Vec<Interval>) {
-        if !i.contains(&Interval::MajorSeventh) {
-            i.push(Interval::MajorSeventh);
-        }
+impl Expression for Maj7Exp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.seventh = Some(Interval::MajorSeventh);
     }
 }
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MinorExp;
-impl MinorExp {
-    pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
-        if !i.contains(&Interval::MinorThird)
-            && !exp.iter().any(|e| {
-                matches!(
-                    e,
-                    Exp::Omit(OmitExp {
-                        interval: Interval::MajorThird,
-                        ..
-                    })
-                )
-            })
-            && !exp.iter().any(|e| matches!(e, Exp::Sus(SusExp { .. })))
-        {
-            i.push(Interval::MinorThird);
-        }
+impl Expression for MinorExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.quality = Quality::Minor;
     }
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AugExp;
-impl AugExp {
-    pub fn execute(&self, i: &mut Vec<Interval>, exp: &[Exp]) {
-        if !i.contains(&Interval::AugmentedFifth)
-            && !exp.iter().any(|e| {
-                matches!(
-                    e,
-                    Exp::Omit(OmitExp {
-                        interval: Interval::PerfectFifth,
-                        ..
-                    })
-                )
-            })
-        {
-            i.push(Interval::AugmentedFifth);
-        }
+impl Expression for AugExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.alts.push(Interval::AugmentedFifth);
     }
 }
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AltExp;
-impl AltExp {
-    pub fn execute(&self, i: &mut Vec<Interval>) {
-        i.push(Interval::MinorSeventh);
-        i.push(Interval::FlatNinth);
-        i.push(Interval::SharpNinth);
-        i.push(Interval::SharpEleventh);
-        i.push(Interval::FlatThirteenth);
+impl Expression for AltExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.omits.push(Interval::PerfectFifth);
+        ast.seventh = Some(Interval::MinorSeventh);
+        ast.alts.push(Interval::FlatNinth);
+        ast.alts.push(Interval::SharpNinth);
+        ast.alts.push(Interval::SharpEleventh);
+        ast.alts.push(Interval::FlatThirteenth);
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PowerExp;
-impl PowerExp {
-    pub fn execute(&self, i: &mut Vec<Interval>) {
-        i.push(Interval::PerfectFifth);
+impl Expression for PowerExp {
+    fn pass(&self, ast: &mut super::ast::Ast) {
+        ast.quality = Quality::Power;
     }
 }

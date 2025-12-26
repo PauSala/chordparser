@@ -90,7 +90,7 @@ use test_case::test_case;
 #[test_case("Csusdim", "Csus(b5)")]
 #[test_case("Csusdim7", "Cdim7sus")]
 #[test_case("Csusdim7omit5", "C6sus(omit5)")] //Cdim67
-#[test_case("Cdim67", "Cmin7(b5,add6)")]
+#[test_case("Cdim67", "Cdim7")]
 #[test_case("Csusdim7maj7", "Cdim7sus(addMaj7)")]
 #[test_case("C+susMaj76", "C6sus(#5,addMaj7)")]
 fn test_normalize(input: &str, expected: &str) {
