@@ -80,7 +80,7 @@ pub struct Ast {
 }
 
 impl Ast {
-    fn interval_set(&mut self) {
+    fn build(&mut self) {
         let expressions = mem::take(&mut self.expressions);
 
         if expressions.iter().any(|exp| matches!(exp, Exp::Bass(..))) {
@@ -147,20 +147,7 @@ impl Ast {
         interval_set.remove(Interval::MajorThird);
     }
 
-    fn seventh(&self) -> Interval {
-        if self
-            .expressions
-            .iter()
-            .any(|exp| matches!(exp, Exp::Maj7(..) | Exp::Maj(..)))
-        {
-            Interval::MajorSeventh
-        } else {
-            Interval::MinorSeventh
-        }
-    }
-
     fn extension_caps(&mut self) {
-        let seventh = self.seventh();
         if let Some(cap) = self.extension_cap {
             if self.quality == Quality::Major && cap == Interval::Eleventh {
                 self.interval_set
@@ -168,6 +155,16 @@ impl Ast {
             } else {
                 self.interval_set.insert(cap);
             }
+
+            let seventh = if self
+                .expressions
+                .iter()
+                .any(|exp| matches!(exp, Exp::Maj7(..) | Exp::Maj(..)))
+            {
+                Interval::MajorSeventh
+            } else {
+                Interval::MinorSeventh
+            };
 
             let thirteenth = if self.quality == Quality::Major {
                 vec![Interval::Ninth, seventh]
@@ -383,7 +380,7 @@ impl Ast {
     }
 
     pub(crate) fn build_chord(&mut self, name: &str) -> Result<Chord, ParserErrors> {
-        self.interval_set();
+        self.build();
         self.set_intervals();
 
         let notes = self.notes();
