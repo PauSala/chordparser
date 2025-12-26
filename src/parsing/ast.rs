@@ -22,42 +22,6 @@ static CONFLICT_MAP: LazyLock<HashMap<Interval, Vec<Interval>>> = LazyLock::new(
     ])
 });
 
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
-#[repr(u8)]
-pub enum Quality {
-    #[default]
-    Major,
-    Minor,
-    Dim,
-    HalfDim,
-    Dim7,
-    Power,
-}
-
-impl Quality {
-    fn build(&self, intervals: &mut IntervalSet) {
-        match self {
-            Quality::Major => {}
-            Quality::Power => {
-                intervals.remove(Interval::MajorThird);
-            }
-            Quality::Minor => {
-                intervals.replace(Interval::MajorThird, Interval::MinorThird);
-            }
-            Quality::Dim | Quality::HalfDim | Quality::Dim7 => {
-                intervals.replace(Interval::MajorThird, Interval::MinorThird);
-                intervals.replace(Interval::PerfectFifth, Interval::DiminishedFifth);
-
-                if *self == Quality::HalfDim {
-                    intervals.insert(Interval::MinorSeventh);
-                } else if *self == Quality::Dim7 {
-                    intervals.insert(Interval::DiminishedSeventh);
-                }
-            }
-        }
-    }
-}
-
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Ast {
     pub(crate) root: Note,
@@ -68,7 +32,7 @@ pub struct Ast {
     pub(crate) is_sus: bool,
     pub(crate) errors: Vec<ParserError>,
 
-    pub(crate) quality: Quality,
+    pub(crate) base_form: BaseForm,
     pub(crate) omits: Vec<Interval>,
     pub(crate) adds: Vec<Interval>,
     pub(crate) alts: Vec<Interval>,
@@ -151,7 +115,7 @@ impl Ast {
         self.expressions = expressions;
 
         // Set quality intervals
-        self.quality.build(&mut self.interval_set);
+        self.base_form.build(&mut self.interval_set);
 
         // Set seventh
         if let Some(seventh) = self.seventh {
@@ -208,7 +172,7 @@ impl Ast {
 
     fn extension_caps(&mut self) {
         if let Some(cap) = self.extension_cap {
-            if self.quality == Quality::Major && cap == Interval::Eleventh {
+            if self.base_form == BaseForm::Major && cap == Interval::Eleventh {
                 self.interval_set
                     .replace(Interval::MajorThird, Interval::PerfectFourth);
             } else {
@@ -225,7 +189,7 @@ impl Ast {
                 Interval::MinorSeventh
             };
 
-            let thirteenth = if self.quality == Quality::Major {
+            let thirteenth = if self.base_form == BaseForm::Major {
                 vec![Interval::Ninth, seventh]
             } else {
                 vec![Interval::Eleventh, Interval::Ninth, seventh]
@@ -428,7 +392,7 @@ impl Default for Ast {
             is_sus: false,
             errors: Vec::new(),
 
-            quality: Quality::Major,
+            base_form: BaseForm::Major,
             omits: Default::default(),
             adds: Default::default(),
             seventh: None,
@@ -443,6 +407,42 @@ impl Default for Ast {
             ]
             .into_iter()
             .collect(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[repr(u8)]
+pub(crate) enum BaseForm {
+    #[default]
+    Major,
+    Minor,
+    Dim,
+    HalfDim,
+    Dim7,
+    Power,
+}
+
+impl BaseForm {
+    fn build(&self, intervals: &mut IntervalSet) {
+        match self {
+            BaseForm::Major => {}
+            BaseForm::Power => {
+                intervals.remove(Interval::MajorThird);
+            }
+            BaseForm::Minor => {
+                intervals.replace(Interval::MajorThird, Interval::MinorThird);
+            }
+            BaseForm::Dim | BaseForm::HalfDim | BaseForm::Dim7 => {
+                intervals.replace(Interval::MajorThird, Interval::MinorThird);
+                intervals.replace(Interval::PerfectFifth, Interval::DiminishedFifth);
+
+                if *self == BaseForm::HalfDim {
+                    intervals.insert(Interval::MinorSeventh);
+                } else if *self == BaseForm::Dim7 {
+                    intervals.insert(Interval::DiminishedSeventh);
+                }
+            }
         }
     }
 }

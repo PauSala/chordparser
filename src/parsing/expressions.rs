@@ -1,6 +1,6 @@
 use crate::{
     chord::{intervals::Interval, note::Note},
-    parsing::{ast::Quality, expression::Expression},
+    parsing::{ast::BaseForm, expression::Expression},
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -163,7 +163,7 @@ impl Expression for BassExp {
 pub struct DimExp;
 impl Expression for DimExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.quality = Quality::Dim;
+        ast.base_form = BaseForm::Dim;
     }
 }
 
@@ -171,7 +171,7 @@ impl Expression for DimExp {
 pub struct Dim7Exp;
 impl Expression for Dim7Exp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.quality = Quality::Dim7;
+        ast.base_form = BaseForm::Dim7;
     }
 }
 
@@ -179,7 +179,7 @@ impl Expression for Dim7Exp {
 pub struct HalfDimExp;
 impl Expression for HalfDimExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.quality = Quality::HalfDim;
+        ast.base_form = BaseForm::HalfDim;
         ast.seventh = Some(Interval::MinorSeventh);
     }
 }
@@ -202,7 +202,7 @@ impl Expression for Maj7Exp {
 pub struct MinorExp;
 impl Expression for MinorExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.quality = Quality::Minor;
+        ast.base_form = BaseForm::Minor;
     }
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -230,6 +230,6 @@ impl Expression for AltExp {
 pub struct PowerExp;
 impl Expression for PowerExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.quality = Quality::Power;
+        ast.base_form = BaseForm::Power;
     }
 }
