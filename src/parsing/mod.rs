@@ -329,8 +329,7 @@ impl Parser {
             ..
         }) = tokens.next_if(|t| self.is_extension(t))
         {
-            let id = format!("{}{}", modifier, ext);
-            match Interval::from_chord_notation(&id) {
+            match Interval::from_chord_notation(&format!("{}{}", modifier, ext)) {
                 Some(interval) => self
                     .ast
                     .expressions
@@ -340,23 +339,15 @@ impl Parser {
             return;
         }
 
-        // Maj7 (Maj followed by Extension("7"))
+        // Maj7
         if tokens
-            .next_if(|t| matches!(t.token_type, TokenType::Maj))
+            .next_if(|t| matches!(t.token_type, TokenType::Maj7))
             .is_some()
         {
-            if tokens
-                .next_if(|t| matches!(t.token_type, TokenType::Extension(ref e) if e == &7))
-                .is_some()
-            {
-                self.ast.expressions.push(Exp::Add(AddExp::new(
-                    Interval::MajorSeventh,
-                    token.pos + token.len,
-                )));
-            } else {
-                self.errors
-                    .push(ParserError::IllegalAddTarget((token.pos, token.len)));
-            }
+            self.ast.expressions.push(Exp::Add(AddExp::new(
+                Interval::MajorSeventh,
+                token.pos + token.len,
+            )));
             return;
         }
 
@@ -513,8 +504,7 @@ impl Parser {
     }
 
     fn pre_process(&self, tokens: &[Token]) -> Vec<Token> {
-        let tokens = self.fold_maj7(tokens);
-        self.fold_dim7(&tokens)
+        self.fold_dim7(&self.fold_maj7(tokens))
     }
 
     /// Fold Maj + consecutive 7 into Maj7 Token
@@ -545,7 +535,7 @@ impl Parser {
         out
     }
 
-    /// Fold any remainig 7 anywhere with any dim token
+    /// Fold any remainig 7 with any dim token
     fn fold_dim7(&self, tokens: &[Token]) -> Vec<Token> {
         let mut pending_dims = Vec::<usize>::new();
         let mut pending_sevens = Vec::<usize>::new();
