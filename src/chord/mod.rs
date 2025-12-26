@@ -91,7 +91,7 @@ impl Chord {
             origin.push_str(&self.descriptor);
         }
 
-        Chord::builder(&origin, transpose_to.clone())
+        Chord::builder(&origin, *transpose_to)
             .descriptor(&self.descriptor)
             .bass(bass)
             .notes(notes)

@@ -1,5 +1,4 @@
-use std::{collections::HashMap, mem};
-
+use super::{expression::Exp, parser_error::ParserError};
 use crate::{
     chord::{
         Chord,
@@ -8,10 +7,8 @@ use crate::{
     },
     parsing::parser_error::ParserErrors,
 };
-
-use super::{expression::Exp, parser_error::ParserError};
-
 use std::sync::LazyLock;
+use std::{collections::HashMap, mem};
 
 static CONFLICT_MAP: LazyLock<HashMap<Interval, Vec<Interval>>> = LazyLock::new(|| {
     HashMap::from([
@@ -42,7 +39,7 @@ impl Quality {
         match self {
             Quality::Major => {}
             Quality::Power => {
-                intervals.remove(&Interval::MajorThird);
+                intervals.remove(Interval::MajorThird);
             }
             Quality::Minor => {
                 intervals.replace(Interval::MajorThird, Interval::MinorThird);
@@ -87,8 +84,8 @@ impl Ast {
         let expressions = mem::take(&mut self.expressions);
 
         if expressions.iter().any(|exp| matches!(exp, Exp::Bass(..))) {
-            self.interval_set.remove(&Interval::PerfectFifth);
-            self.interval_set.remove(&Interval::MajorThird);
+            self.interval_set.remove(Interval::PerfectFifth);
+            self.interval_set.remove(Interval::MajorThird);
             return;
         }
         expressions.iter().for_each(|exp| exp.pass(self));
@@ -108,8 +105,8 @@ impl Ast {
         }
 
         if let Some(sus) = self.sus {
-            self.interval_set.remove(&Interval::MajorThird);
-            self.interval_set.remove(&Interval::MinorThird);
+            self.interval_set.remove(Interval::MajorThird);
+            self.interval_set.remove(Interval::MinorThird);
             self.interval_set.insert(sus);
         }
 
@@ -128,13 +125,13 @@ impl Ast {
         for omit in &self.omits {
             match omit {
                 Interval::PerfectFifth => {
-                    self.interval_set.remove(&Interval::PerfectFifth);
-                    self.interval_set.remove(&Interval::AugmentedFifth);
-                    self.interval_set.remove(&Interval::DiminishedFifth);
+                    self.interval_set.remove(Interval::PerfectFifth);
+                    self.interval_set.remove(Interval::AugmentedFifth);
+                    self.interval_set.remove(Interval::DiminishedFifth);
                 }
                 Interval::MajorThird => {
-                    self.interval_set.remove(&Interval::MinorThird);
-                    self.interval_set.remove(&Interval::MajorThird);
+                    self.interval_set.remove(Interval::MinorThird);
+                    self.interval_set.remove(Interval::MajorThird);
                 }
                 _ => {}
             }
@@ -143,7 +140,7 @@ impl Ast {
         // Adds
         for add in &self.adds {
             if *add == Interval::FlatThirteenth {
-                self.interval_set.remove(&Interval::PerfectFifth);
+                self.interval_set.remove(Interval::PerfectFifth);
             }
             self.interval_set.insert(*add);
         }
@@ -165,7 +162,7 @@ impl Ast {
         let seventh = self.seventh();
         if let Some(cap) = self.extension_cap {
             if self.quality == Quality::Major && cap == Interval::Eleventh {
-                self.interval_set.remove(&Interval::MajorThird);
+                self.interval_set.remove(Interval::MajorThird);
                 self.interval_set.insert(Interval::PerfectFourth);
             } else {
                 self.interval_set.insert(cap);
@@ -186,7 +183,7 @@ impl Ast {
 
             for interval in caps_to_add {
                 let conflicts = CONFLICT_MAP.get(&interval).cloned().unwrap_or_default();
-                let blocked = self.interval_set.contains(&interval)
+                let blocked = self.interval_set.contains(interval)
                     || conflicts.iter().any(|c| self.interval_set.contains(c));
 
                 if !blocked {
@@ -409,9 +406,9 @@ impl Ast {
             return Err(ParserErrors::new(self.errors.clone()));
         }
 
-        Ok(Chord::builder(name, self.root.clone())
+        Ok(Chord::builder(name, self.root)
             .descriptor(&self.descriptor(name))
-            .bass(self.bass.clone())
+            .bass(self.bass)
             .notes(notes)
             .note_literals(note_literals)
             .rbs(rbs)

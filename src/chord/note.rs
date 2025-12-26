@@ -180,7 +180,7 @@ impl Note {
     pub fn transpose_to(&self, note: &Note, to: &Note) -> Note {
         let diff = self.get_difference(to);
         let m = self.literal.get_matcher(note.to_semitone(), diff);
-        Note::new(m[0].clone().0, m[0].clone().1)
+        Note::new(m[0].0, m[0].1)
     }
 
     /// Returns the semitone distance taking C as reference.
