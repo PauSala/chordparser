@@ -506,7 +506,11 @@ impl Parser {
     ///
     /// 1. Fold Maj + 7 into Maj7 token
     fn pre_process(&self, tokens: &[Token]) -> Vec<Token> {
-        self.fold_maj7(&self.fold_dim7(&self.concat_maj7(tokens)))
+        self.fold_7(
+            &self.fold_7(&self.concat_maj7(tokens), TokenType::Dim, TokenType::Dim7),
+            TokenType::Maj,
+            TokenType::Maj7,
+        )
     }
 
     /// Fold Maj + consecutive 7 into Maj7 Token, including ([Δ |^] + 7)
@@ -537,81 +541,21 @@ impl Parser {
         out
     }
 
-    /// Fold any remainig 7 with any dim token
-    fn fold_dim7(&self, tokens: &[Token]) -> Vec<Token> {
-        let mut pending_dims = Vec::<usize>::new();
-        let mut pending_sevens = Vec::<usize>::new();
-        let mut paired_with = HashMap::<usize, usize>::new();
-
-        // Pair dim <-> 7
-        for (i, token) in tokens.iter().enumerate() {
-            match token.token_type {
-                TokenType::Dim => {
-                    if let Some(s) = pending_sevens.pop() {
-                        paired_with.insert(i, s);
-                        paired_with.insert(s, i);
-                    } else {
-                        pending_dims.push(i);
-                    }
-                }
-
-                TokenType::Extension(7) => {
-                    if let Some(d) = pending_dims.pop() {
-                        paired_with.insert(i, d);
-                        paired_with.insert(d, i);
-                    } else {
-                        pending_sevens.push(i);
-                    }
-                }
-
-                _ => {}
-            }
-        }
-
-        // rebuild token list
-        let mut out = Vec::with_capacity(tokens.len());
-        let mut used = vec![false; tokens.len()];
-
-        for i in 0..tokens.len() {
-            if used[i] {
-                continue;
-            }
-
-            if let Some(&j) = paired_with.get(&i) {
-                if used[j] {
-                    continue;
-                }
-
-                let start = i.min(j);
-                let end = i.max(j);
-
-                used[i] = true;
-                used[j] = true;
-
-                out.push(Token {
-                    token_type: TokenType::Dim7,
-                    pos: tokens[start].pos.min(tokens[end].pos),
-                    len: tokens[start].len + tokens[end].len,
-                });
-            } else {
-                out.push(tokens[i].clone());
-            }
-        }
-
-        out
-    }
-
-    /// Fold any remainig 7 with any dim token
-    fn fold_maj7(&self, tokens: &[Token]) -> Vec<Token> {
+    fn fold_7(
+        &self,
+        tokens: &[Token],
+        match_token: TokenType,
+        insert_token_type: TokenType,
+    ) -> Vec<Token> {
         let mut pending_maj = Vec::<usize>::new();
         let mut pending_sevens = Vec::<usize>::new();
         let mut paired_with = HashMap::<usize, usize>::new();
 
         // Pair dim <-> 7
         for (i, token) in tokens.iter().enumerate() {
-            match token.token_type {
+            match &token.token_type {
                 // TODO: handle Maj7 somehow, taking in account that it should not eat a 7 id it already do it.
-                TokenType::Maj => {
+                t if *t == match_token => {
                     if let Some(s) = pending_sevens.pop() {
                         paired_with.insert(i, s);
                         paired_with.insert(s, i);
@@ -654,7 +598,7 @@ impl Parser {
                 used[j] = true;
 
                 out.push(Token {
-                    token_type: TokenType::Maj7,
+                    token_type: insert_token_type.clone(),
                     pos: tokens[start].pos.min(tokens[end].pos),
                     len: tokens[start].len + tokens[end].len,
                 });
