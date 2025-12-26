@@ -185,13 +185,7 @@ impl Ast {
             let caps_to_add: Vec<Interval> = match cap {
                 Interval::Thirteenth => thirteenth,
                 Interval::Eleventh => vec![Interval::Ninth, seventh],
-                Interval::Ninth => {
-                    if let Some(_) = self.sixth {
-                        vec![]
-                    } else {
-                        vec![seventh]
-                    }
-                }
+                Interval::Ninth => self.sixth.map_or(vec![seventh], |_| vec![]),
                 _ => vec![],
             };
 
