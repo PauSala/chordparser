@@ -361,7 +361,8 @@ pub struct HalfDimExp;
 
 impl Expression for HalfDimExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.quality = Quality::Dim;
+        ast.quality = Quality::HalfDim;
+        ast.seventh = Some(Interval::MinorSeventh);
     }
 }
 

@@ -21,6 +21,7 @@ pub enum Quality {
     Major,
     Minor,
     Dim,
+    HalfDim,
     Dim7,
     Aug,
     Power,
