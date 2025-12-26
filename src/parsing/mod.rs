@@ -503,18 +503,21 @@ impl Parser {
         }
     }
 
+    /// Normalizes the token stream by collapsing 7ths if possible
+    ///
+    /// 1. Fold Maj + 7 into Maj7 token
     fn pre_process(&self, tokens: &[Token]) -> Vec<Token> {
         self.fold_dim7(&self.fold_maj7(tokens))
     }
 
-    /// Fold Maj + consecutive 7 into Maj7 Token
+    /// Fold Maj + consecutive 7 into Maj7 Token, including ([Δ |^] + 7)
     fn fold_maj7(&self, tokens: &[Token]) -> Vec<Token> {
         let mut out = Vec::with_capacity(tokens.len());
         let mut i = 0;
 
         while i < tokens.len() {
             match (&tokens[i].token_type, tokens.get(i + 1)) {
-                (TokenType::Maj, Some(next))
+                (TokenType::Maj | TokenType::Maj7, Some(next))
                     if matches!(next.token_type, TokenType::Extension(7)) =>
                 {
                     out.push(Token {
