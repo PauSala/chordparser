@@ -503,8 +503,6 @@ impl Parser {
     }
 
     /// Normalizes the token stream by collapsing 7ths if possible
-    ///
-    /// 1. Fold Maj + 7 into Maj7 token
     fn pre_process(&self, tokens: &[Token]) -> Vec<Token> {
         self.fold_7(
             &self.fold_7(&self.concat_maj7(tokens), TokenType::Dim, TokenType::Dim7),
