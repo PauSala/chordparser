@@ -2,41 +2,41 @@ use enum_bitset::EnumBitset;
 
 use crate::chord::intervals::{Interval, IntervalSet};
 
-const POW_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc7]);
-const MAJ_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4]);
-const MAJ6_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc9]);
-const MAJ7_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc11]);
-const DOM7_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc10]);
+const POW_SET: PcSet = PcSet::from_array([Pc::Pc7]);
+const MAJ_SET: PcSet = PcSet::from_array([Pc::Pc4]);
+const MAJ6_SET: PcSet = PcSet::from_array([Pc::Pc4, Pc::Pc9]);
+const MAJ7_SET: PcSet = PcSet::from_array([Pc::Pc4, Pc::Pc11]);
+const DOM7_SET: PcSet = PcSet::from_array([Pc::Pc4, Pc::Pc10]);
 
-const MIN_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3]);
-const MIN6_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc9]);
-const MIN7_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc10]);
-const MIMA7SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc11]);
+const MIN_SET: PcSet = PcSet::from_array([Pc::Pc3]);
+const MIN6_SET: PcSet = PcSet::from_array([Pc::Pc3, Pc::Pc9]);
+const MIN7_SET: PcSet = PcSet::from_array([Pc::Pc3, Pc::Pc10]);
+const MIMA7SET: PcSet = PcSet::from_array([Pc::Pc3, Pc::Pc11]);
 
-const AUG_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc8]);
-const DIM_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc6]);
-const DIM7_SET: PitchClassSet =
-    PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc6, PitchClass::Pc9]);
-const SEVENTH_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc10, PitchClass::Pc11]);
-const SUS_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc5, PitchClass::Pc17]);
-const THIRDS_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc4]);
+const AUG_SET: PcSet = PcSet::from_array([Pc::Pc4, Pc::Pc8]);
+const DIM_SET: PcSet = PcSet::from_array([Pc::Pc3, Pc::Pc6]);
+const DIM7_SET: PcSet = PcSet::from_array([Pc::Pc3, Pc::Pc6, Pc::Pc9]);
+const SEVENTH_SET: PcSet = PcSet::from_array([Pc::Pc10, Pc::Pc11]);
+const SUS_SET: PcSet = PcSet::from_array([Pc::Pc5, Pc::Pc17]);
+const THIRDS_SET: PcSet = PcSet::from_array([Pc::Pc3, Pc::Pc4]);
 
-const QUALITY_SETS: &[(ChordQuality, PitchClassSet)] = &[
-    (ChordQuality::Dominant7, DOM7_SET),
-    (ChordQuality::MinorMaj7, MIMA7SET),
-    (ChordQuality::Minor7, MIN7_SET),
-    (ChordQuality::Minor6, MIN6_SET),
-    (ChordQuality::Minor, MIN_SET),
-    (ChordQuality::Major6, MAJ6_SET),
-    (ChordQuality::Major7, MAJ7_SET),
-    (ChordQuality::Major, MAJ_SET),
-    (ChordQuality::Power, POW_SET),
+const QUALITY_SETS: &[(ChordQuality, PcSet)] = &[
+    (ChordQuality::Dom, DOM7_SET),
+    (ChordQuality::MiMaj7, MIMA7SET),
+    (ChordQuality::Mi7, MIN7_SET),
+    (ChordQuality::Mi6, MIN6_SET),
+    (ChordQuality::Mi, MIN_SET),
+    (ChordQuality::Maj6, MAJ6_SET),
+    (ChordQuality::Maj7, MAJ7_SET),
+    (ChordQuality::Maj, MAJ_SET),
+    (ChordQuality::Pow, POW_SET),
 ];
 
 const EMPTY_INTERVAL_SET: IntervalSet = IntervalSet::from_array([]);
 
+/// PitchClass: semitones in two octaves
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, EnumBitset)]
-pub enum PitchClass {
+pub enum Pc {
     Pc0,  // Root
     Pc1,  // m2
     Pc2,  // M2
@@ -64,37 +64,37 @@ pub enum PitchClass {
     Pc23, // M7
 }
 
-impl From<&Interval> for PitchClass {
+impl From<&Interval> for Pc {
     fn from(value: &Interval) -> Self {
         match value {
-            Interval::Unison => PitchClass::Pc0,
-            Interval::MinorSecond => PitchClass::Pc1,
-            Interval::MajorSecond => PitchClass::Pc2,
-            Interval::MinorThird => PitchClass::Pc3,
-            Interval::MajorThird => PitchClass::Pc4,
-            Interval::PerfectFourth => PitchClass::Pc5,
-            Interval::AugmentedFourth | Interval::DiminishedFifth => PitchClass::Pc6,
-            Interval::PerfectFifth => PitchClass::Pc7,
-            Interval::AugmentedFifth | Interval::MinorSixth => PitchClass::Pc8,
-            Interval::MajorSixth | Interval::DiminishedSeventh => PitchClass::Pc9,
-            Interval::MinorSeventh => PitchClass::Pc10,
-            Interval::MajorSeventh => PitchClass::Pc11,
-            Interval::Octave => PitchClass::Pc12,
-            Interval::FlatNinth => PitchClass::Pc13,
-            Interval::Ninth => PitchClass::Pc14,
-            Interval::SharpNinth => PitchClass::Pc15,
-            Interval::Eleventh => PitchClass::Pc18,
-            Interval::SharpEleventh => PitchClass::Pc19,
-            Interval::FlatThirteenth => PitchClass::Pc21,
-            Interval::Thirteenth => PitchClass::Pc22,
+            Interval::Unison => Pc::Pc0,
+            Interval::MinorSecond => Pc::Pc1,
+            Interval::MajorSecond => Pc::Pc2,
+            Interval::MinorThird => Pc::Pc3,
+            Interval::MajorThird => Pc::Pc4,
+            Interval::PerfectFourth => Pc::Pc5,
+            Interval::AugmentedFourth | Interval::DiminishedFifth => Pc::Pc6,
+            Interval::PerfectFifth => Pc::Pc7,
+            Interval::AugmentedFifth | Interval::MinorSixth => Pc::Pc8,
+            Interval::MajorSixth | Interval::DiminishedSeventh => Pc::Pc9,
+            Interval::MinorSeventh => Pc::Pc10,
+            Interval::MajorSeventh => Pc::Pc11,
+            Interval::Octave => Pc::Pc12,
+            Interval::FlatNinth => Pc::Pc13,
+            Interval::Ninth => Pc::Pc14,
+            Interval::SharpNinth => Pc::Pc15,
+            Interval::Eleventh => Pc::Pc18,
+            Interval::SharpEleventh => Pc::Pc19,
+            Interval::FlatThirteenth => Pc::Pc21,
+            Interval::Thirteenth => Pc::Pc22,
         }
     }
 }
 
-impl From<&[Interval]> for PitchClassSet {
+impl From<&[Interval]> for PcSet {
     fn from(value: &[Interval]) -> Self {
-        value.iter().fold(PitchClassSet::new(), |mut acc, int| {
-            acc.insert(Into::<PitchClass>::into(int));
+        value.iter().fold(PcSet::new(), |mut acc, int| {
+            acc.insert(Into::<Pc>::into(int));
             acc
         })
     }
@@ -103,28 +103,28 @@ impl From<&[Interval]> for PitchClassSet {
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 #[repr(u8)]
 pub enum ChordQuality {
-    Major,
-    Major6,
-    Major7,
-    Dominant7,
+    Maj,
+    Maj6,
+    Maj7,
+    Dom,
 
-    Minor,
-    Minor6,
-    Minor7,
-    MinorMaj7,
+    Mi,
+    Mi6,
+    Mi7,
+    MiMaj7,
 
     Augmented,
     Diminished,
     Diminished7,
 
-    Power,
+    Pow,
     Bass,
 }
 
 impl ChordQuality {
-    pub(crate) fn is_sus(&self, ints: &PitchClassSet) -> bool {
+    pub(crate) fn is_sus(&self, ints: &PcSet) -> bool {
         match self {
-            ChordQuality::Power | ChordQuality::Bass => false,
+            ChordQuality::Pow | ChordQuality::Bass => false,
             _ => {
                 ints.intersection(&THIRDS_SET).is_empty() && !ints.intersection(&SUS_SET).is_empty()
             }
@@ -146,13 +146,13 @@ impl ChordQuality {
         const M11: IntervalSet = IntervalSet::from_array([Interval::Eleventh]).union(&DEFAULT);
         const M7_11: IntervalSet = M11.union(&M7);
         match self {
-            ChordQuality::Power | ChordQuality::Bass => &EMPTY_INTERVAL_SET,
-            ChordQuality::Diminished7 | ChordQuality::Diminished | ChordQuality::Minor6 => &M7_11,
-            ChordQuality::Minor | ChordQuality::Minor7 | ChordQuality::MinorMaj7 => &M11,
-            ChordQuality::Major6 => &M7,
-            ChordQuality::Dominant7
-            | ChordQuality::Major7
-            | ChordQuality::Major
+            ChordQuality::Pow | ChordQuality::Bass => &EMPTY_INTERVAL_SET,
+            ChordQuality::Diminished7 | ChordQuality::Diminished | ChordQuality::Mi6 => &M7_11,
+            ChordQuality::Mi | ChordQuality::Mi7 | ChordQuality::MiMaj7 => &M11,
+            ChordQuality::Maj6 => &M7,
+            ChordQuality::Dom
+            | ChordQuality::Maj7
+            | ChordQuality::Maj
             | ChordQuality::Augmented => &DEFAULT,
         }
     }
@@ -181,7 +181,7 @@ impl ChordQuality {
             Interval::FlatThirteenth,
         ]);
         match self {
-            ChordQuality::Power | ChordQuality::Bass => &EMPTY_INTERVAL_SET,
+            ChordQuality::Pow | ChordQuality::Bass => &EMPTY_INTERVAL_SET,
             ChordQuality::Diminished | ChordQuality::Diminished7 => &DIM,
             ChordQuality::Augmented => &AUG,
             _ => &DEFAULT,
@@ -191,30 +191,31 @@ impl ChordQuality {
 
 impl From<&[Interval]> for ChordQuality {
     fn from(value: &[Interval]) -> Self {
-        let pc: PitchClassSet = value.into();
+        let pc: PcSet = value.into();
         (&pc).into()
     }
 }
 
-impl From<&PitchClassSet> for ChordQuality {
-    fn from(value: &PitchClassSet) -> Self {
+impl From<&PcSet> for ChordQuality {
+    fn from(value: &PcSet) -> Self {
         use ChordQuality::*;
         struct Rule {
             quality: ChordQuality,
-            matches: fn(&PitchClassSet) -> bool,
+            matches: fn(&PcSet) -> bool,
         }
+        // Warn: Order matters
         const RULES: &[Rule] = &[
             Rule {
                 quality: Augmented,
                 matches: is_augmented,
             },
             Rule {
-                quality: Diminished,
-                matches: is_diminished,
-            },
-            Rule {
                 quality: Diminished7,
                 matches: is_diminished7,
+            },
+            Rule {
+                quality: Diminished,
+                matches: is_diminished,
             },
         ];
 
@@ -224,27 +225,27 @@ impl From<&PitchClassSet> for ChordQuality {
             }
         }
 
+        // Warn II: Order matters as well
         for (quality, set) in QUALITY_SETS {
             if value.is_superset_of(set) {
                 return *quality;
             }
         }
-
         Bass
     }
 }
 
-fn is_augmented(value: &PitchClassSet) -> bool {
+fn is_augmented(value: &PcSet) -> bool {
     // If it has a 7th ir 6th is not handled as aug.
     value.is_superset_of(&AUG_SET)
         && value.is_disjoint(&SEVENTH_SET)
-        && !value.contains_const(&PitchClass::Pc9)
+        && !value.contains_const(&Pc::Pc9)
 }
-fn is_diminished(value: &PitchClassSet) -> bool {
+fn is_diminished(value: &PcSet) -> bool {
     // no m7, otherwise b5 will be handled as alteration.
-    value.is_superset_of(&DIM_SET) && !value.contains(PitchClass::Pc10)
+    value.is_superset_of(&DIM_SET) && !value.contains(Pc::Pc10)
 }
-fn is_diminished7(value: &PitchClassSet) -> bool {
+fn is_diminished7(value: &PcSet) -> bool {
     // no m7, otherwise b5 will be handled as alteration.
-    value.is_superset_of(&DIM7_SET) && !value.contains(PitchClass::Pc10)
+    value.is_superset_of(&DIM7_SET) && !value.contains(Pc::Pc10)
 }
