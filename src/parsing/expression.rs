@@ -56,6 +56,7 @@ impl Exp {
         }
     }
 
+    /// The third is stored to not lose information about the quality, which could happen for sus or omits.
     pub(crate) fn set_third(&self, ast: &mut Ast) {
         match self {
             Exp::Minor | Exp::Dim | Exp::Dim7 | Exp::HalfDim => {

@@ -46,7 +46,6 @@ pub struct Chord {
     #[serde(skip_serializing)]
     complete_quality: InnerQuality,
     pub quality: Quality,
-    /// Intervals added through the add modifier.
     #[serde(skip_serializing)]
     is_sus: bool,
     #[serde(skip_serializing)]

@@ -110,6 +110,7 @@ impl Parser {
     /// - There are more than one sus modifier.
     /// - Slash notation is used for anything other than 9 (6/9) or bass notation.
     pub fn parse(&mut self, input: &str) -> Result<Chord, ParserErrors> {
+        self.init();
         let mut ast = Ast::default();
         let binding = self.lexer.scan_tokens(input);
         let tokens = self.pre_process(&binding);
@@ -121,11 +122,10 @@ impl Parser {
             return Err(ParserErrors::new(self.errors.clone()));
         }
         let res = ast.build_chord(input);
-        self.cleanup();
         res
     }
 
-    fn cleanup(&mut self) {
+    fn init(&mut self) {
         self.errors.clear();
         self.open_parent_count = 0;
         self.context = Context::None;
