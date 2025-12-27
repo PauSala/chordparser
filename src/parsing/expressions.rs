@@ -153,15 +153,6 @@ impl SlashBassExp {
         Self { note }
     }
 }
-
-// #[derive(Debug, PartialEq, Eq, Clone)]
-// pub struct Maj7Exp;
-// impl Expression for Maj7Exp {
-//     fn pass(&self, ast: &mut super::ast::Ast) {
-//         ast.seventh = Some(Interval::MajorSeventh);
-//     }
-// }
-
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AugExp;
 impl Expression for AugExp {
