@@ -1,6 +1,5 @@
 //! # Chord parsing module
 pub(crate) mod ast;
-pub mod chord_quality;
 pub(crate) mod expression;
 pub(crate) mod expressions;
 pub(crate) mod lexer;
@@ -517,6 +516,7 @@ impl Parser {
                         token_type: TokenType::Maj7,
                         pos: tokens[i].pos,
                         len: tokens[i].len + next.len,
+                        derived: true,
                     });
                     i += 2;
                 }
@@ -545,7 +545,7 @@ impl Parser {
             let current_idx = out.len();
 
             match &token.token_type {
-                t if *t == match_token => {
+                t if *t == match_token && !token.derived => {
                     if let Some(prev_idx) = pending_seven.pop() {
                         out[prev_idx] =
                             self.merge_tokens(&out[prev_idx], token, &insert_token_type);
@@ -574,6 +574,7 @@ impl Parser {
             token_type: new_type.clone(),
             pos: t1.pos.min(t2.pos),
             len: t1.len,
+            derived: true,
         }
     }
 }

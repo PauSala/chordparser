@@ -9,6 +9,7 @@ use serde_json;
 
 use note::Note;
 
+pub mod c_quality;
 pub mod intervals;
 pub(crate) mod normalize;
 pub mod note;
