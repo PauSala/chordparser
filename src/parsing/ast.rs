@@ -37,6 +37,8 @@ pub struct Ast {
     pub(crate) adds: Vec<Interval>,
     pub(crate) alts: Vec<Interval>,
     pub(crate) sus: Option<Interval>,
+    /// The third, either is omited or not
+    pub(crate) third: Option<Interval>,
     pub(crate) sixth: Option<Interval>,
     pub(crate) seventh: Option<Interval>,
     pub(crate) extension_cap: Option<Interval>,
@@ -393,13 +395,14 @@ impl Default for Ast {
             errors: Vec::new(),
 
             base_form: BaseForm::Major,
+            third: Some(Interval::MajorThird),
+            sixth: None,
+            seventh: None,
             omits: Default::default(),
             adds: Default::default(),
-            seventh: None,
             extension_cap: None,
             alts: Default::default(),
             sus: Default::default(),
-            sixth: Default::default(),
             interval_set: vec![
                 Interval::Unison,
                 Interval::MajorThird,
