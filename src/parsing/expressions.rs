@@ -1,6 +1,6 @@
 use crate::{
     chord::{intervals::Interval, note::Note},
-    parsing::{ast::BaseForm, expression::Expression},
+    parsing::expression::Expression,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -155,21 +155,6 @@ impl SlashBassExp {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct HalfDimExp;
-impl Expression for HalfDimExp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.base_form = BaseForm::HalfDim;
-        ast.seventh = Some(Interval::MinorSeventh);
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct MajExp;
-impl Expression for MajExp {
-    fn pass(&self, _ast: &mut super::ast::Ast) {}
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Maj7Exp;
 impl Expression for Maj7Exp {
     fn pass(&self, ast: &mut super::ast::Ast) {
@@ -177,13 +162,6 @@ impl Expression for Maj7Exp {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct MinorExp;
-impl Expression for MinorExp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.base_form = BaseForm::Minor;
-    }
-}
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AugExp;
 impl Expression for AugExp {
@@ -202,13 +180,5 @@ impl Expression for AltExp {
         ast.alts.push(Interval::SharpNinth);
         ast.alts.push(Interval::SharpEleventh);
         ast.alts.push(Interval::FlatThirteenth);
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct PowerExp;
-impl Expression for PowerExp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.base_form = BaseForm::Power;
     }
 }

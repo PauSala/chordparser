@@ -182,7 +182,7 @@ impl Ast {
             let seventh = if self
                 .expressions
                 .iter()
-                .any(|exp| matches!(exp, Exp::Maj7(..) | Exp::Maj(..)))
+                .any(|exp| matches!(exp, Exp::Maj7(..) | Exp::Maj))
             {
                 Interval::MajorSeventh
             } else {

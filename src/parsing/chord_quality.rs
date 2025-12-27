@@ -34,28 +34,31 @@ const MIN6_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, Pitc
 const MIN7_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc10]);
 const MIMA7SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc11]);
 
-const AUG_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc4, PitchClass::Pc8]);
+const AUG_SET: PitchClassSet =
+    PitchClassSet::from_array([PitchClass::Pc0, PitchClass::Pc4, PitchClass::Pc8]);
 const DIM_SET: PitchClassSet = PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc6]);
 const DIM7_SET: PitchClassSet =
     PitchClassSet::from_array([PitchClass::Pc3, PitchClass::Pc6, PitchClass::Pc9]);
 
 const QUALITY_SETS: &[(ChordQuality, PitchClassSet)] = &[
+    (ChordQuality::Dominant7, DOM7_SET),
     (ChordQuality::Diminished7, DIM7_SET),
     (ChordQuality::Diminished, DIM_SET),
-    (ChordQuality::Augmented, AUG_SET),
     (ChordQuality::MinorMaj7, MIMA7SET),
     (ChordQuality::Minor7, MIN7_SET),
     (ChordQuality::Minor6, MIN6_SET),
     (ChordQuality::Minor, MIN_SET),
-    (ChordQuality::Dominant7, DOM7_SET),
-    (ChordQuality::Major7, MAJ7_SET),
     (ChordQuality::Major6, MAJ6_SET),
+    (ChordQuality::Major7, MAJ7_SET),
     (ChordQuality::Major, MAJ_SET),
     (ChordQuality::Power, POW_SET),
 ];
 
 impl From<&PitchClassSet> for ChordQuality {
     fn from(value: &PitchClassSet) -> Self {
+        if value.difference(&AUG_SET).is_empty() {
+            return ChordQuality::Augmented;
+        }
         for (quality, set) in QUALITY_SETS {
             if value.is_superset_of(set) {
                 return *quality;
@@ -83,15 +86,15 @@ pub enum PitchClass {
     Pc12, // Octave (8)
     Pc13, // b9
     Pc14, // 9
-    Pc15, // #9
-    Pc16, // m10 (♭3 octave)
-    Pc17, // M10 (3 octave)
-    Pc18, // 11
-    Pc19, // #11
-    Pc20, // 12 (5 octave)
-    Pc21, // b13
-    Pc22, // 13
-    Pc23, // M14 (7 octave)
+    Pc15, // #9 / ♭3
+    Pc16, // M10 / 3
+    Pc17, // 11
+    Pc18, // #11
+    Pc19, // 12 / 5
+    Pc20, // b13
+    Pc21, // 13
+    Pc22, // m7
+    Pc23, // M7
 }
 
 impl From<&[Interval]> for PitchClassSet {
@@ -124,3 +127,72 @@ impl From<&[Interval]> for PitchClassSet {
         })
     }
 }
+
+// #[cfg(test)]
+// mod tests {
+
+//     use test_case::test_case;
+
+//     use crate::parsing::{
+//         Parser,
+//         chord_quality::{ChordQuality, PitchClassSet},
+//     };
+
+//     #[test_case("C5", ChordQuality::Power)]
+//     #[test_case("C6Maj7", ChordQuality::Major6)]
+//     // #[test_case("Cmaj7no3", ChordQuality::Major7)]
+//     #[test_case("Cno3", ChordQuality::Power)]
+//     // #[test_case("Cma9omit3", ChordQuality::Major7)]
+//     #[test_case("C", ChordQuality::Major)]
+//     #[test_case("CM7", ChordQuality::Major7)]
+//     #[test_case("CM13", ChordQuality::Major7)]
+//     // #[test_case("CMaj7sus", ChordQuality::Major7)]
+//     // #[test_case("Csus", ChordQuality::Major)]
+//     #[test_case("CMaj7#5", ChordQuality::Major7)]
+//     #[test_case("C(#5)", ChordQuality::Augmented)]
+//     #[test_case("Cadd9(#5)", ChordQuality::Major)]
+//     // #[test_case("C7sus2", ChordQuality::Dominant7)] // fails
+//     // #[test_case("C7sus", ChordQuality::Dominant7)]
+//     #[test_case("C13", ChordQuality::Dominant7)]
+//     #[test_case("CAlt", ChordQuality::Dominant7)]
+//     #[test_case("C7#5", ChordQuality::Dominant7)]
+//     #[test_case("C7(#5,b5)", ChordQuality::Dominant7)]
+//     #[test_case("CMin13", ChordQuality::Minor7)]
+//     #[test_case("CMinb13", ChordQuality::Minor)]
+//     #[test_case("C-Maj7", ChordQuality::MinorMaj7)]
+//     #[test_case("CMaj7-", ChordQuality::MinorMaj7)]
+//     #[test_case("C-7add6", ChordQuality::Minor7)]
+//     #[test_case("C-69", ChordQuality::Minor6)]
+//     #[test_case("C-11add6", ChordQuality::Minor7)]
+//     #[test_case("C-b5", ChordQuality::Diminished)]
+//     // #[test_case("C-7b5", ChordQuality::Minor7)]
+//     // #[test_case("Cdim13", ChordQuality::Minor7)]
+//     #[test_case("Cdim7", ChordQuality::Diminished7)]
+//     #[test_case("Cdim7Maj7", ChordQuality::Diminished7)]
+//     #[test_case("CdimMaj7", ChordQuality::Diminished)]
+//     #[test_case("CdimMaj9", ChordQuality::Diminished)]
+//     fn test_quality(input: &str, expected: ChordQuality) {
+//         let mut parser = Parser::new();
+//         let res = parser.parse(input);
+//         match res {
+//             Ok(chord) => {
+//                 let intervals = chord.norm_intervals;
+//                 let pitch_class_set: PitchClassSet = intervals.as_slice().into();
+//                 let quality: ChordQuality = (&pitch_class_set).into();
+//                 dbg!(intervals);
+//                 dbg!(pitch_class_set);
+//                 assert_eq!(quality, expected);
+//             }
+//             Err(e) => {
+//                 let a = e.errors.iter().fold("".to_owned(), |acc, e| {
+//                     if acc.is_empty() {
+//                         e.to_string()
+//                     } else {
+//                         format!("{acc} {e}")
+//                     }
+//                 });
+//                 panic!("{}", a);
+//             }
+//         }
+//     }
+// }

@@ -11,10 +11,7 @@ use std::{iter::Peekable, slice::Iter};
 
 use ast::Ast;
 use expression::Exp;
-use expressions::{
-    AddExp, AltExp, AugExp, ExtensionExp, HalfDimExp, MajExp, MinorExp, OmitExp, PowerExp,
-    SlashBassExp, SusExp,
-};
+use expressions::{AddExp, AltExp, AugExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
 use lexer::Lexer;
 use parser_error::{ParserError, ParserErrors};
 use token::{Token, TokenType};
@@ -161,15 +158,15 @@ impl Parser {
             TokenType::Aug => self.aug(tokens, ast),
             TokenType::Dim => self.dim(tokens, ast),
             TokenType::Dim7 => ast.expressions.push(Exp::Dim7),
-            TokenType::HalfDim => ast.expressions.push(Exp::HalfDim(HalfDimExp)),
+            TokenType::HalfDim => ast.expressions.push(Exp::HalfDim),
             TokenType::Extension(ext) => self.extension(ext, token, ast),
             TokenType::Add => self.add(token, tokens, ast),
             TokenType::Omit => self.omit(token, tokens, ast),
             TokenType::Alt => ast.expressions.push(Exp::Alt(AltExp)),
             TokenType::Sus => self.sus(tokens, ast),
-            TokenType::Minor => ast.expressions.push(Exp::Minor(MinorExp)),
+            TokenType::Minor => ast.expressions.push(Exp::Minor),
             TokenType::Hyphen => self.hyphen(tokens, token.pos, ast),
-            TokenType::Maj => ast.expressions.push(Exp::Maj(MajExp)),
+            TokenType::Maj => ast.expressions.push(Exp::Maj),
             TokenType::Maj7 => ast.expressions.push(Exp::Maj7(Maj7Exp)),
             TokenType::Slash => self.slash(tokens, token, ast),
             TokenType::LParent => self.lparen(tokens, token.pos, ast),
@@ -223,7 +220,7 @@ impl Parser {
                 pos,
             }));
         } else {
-            ast.expressions.push(Exp::Minor(MinorExp));
+            ast.expressions.push(Exp::Minor);
         }
     }
 
@@ -397,7 +394,7 @@ impl Parser {
 
     fn extension(&mut self, ext: &u8, token: &Token, ast: &mut Ast) {
         if *ext == 5 && self.context == Context::None {
-            ast.expressions.push(Exp::Power(PowerExp));
+            ast.expressions.push(Exp::Power);
         } else if let Some(int) = Interval::from_chord_notation(&ext.to_string()) {
             self.add_interval(int, token.pos, ast);
         } else {
