@@ -37,6 +37,8 @@ pub struct Ast {
     pub(crate) adds: Vec<Interval>,
     pub(crate) alts: Vec<Interval>,
     pub(crate) sus: Option<Interval>,
+    /// The third, either is omited or not. Normalization pass: an omited third could be included to derive the quality
+    pub(crate) third: Option<Interval>,
     pub(crate) sixth: Option<Interval>,
     pub(crate) seventh: Option<Interval>,
     pub(crate) extension_cap: Option<Interval>,
@@ -66,6 +68,8 @@ impl Ast {
         if !self.is_valid() {
             return Err(ParserErrors::new(self.errors));
         }
+
+        self.normalize();
 
         Ok(Chord::builder(name, self.root)
             .descriptor(&self.descriptor(name))
@@ -106,7 +110,7 @@ impl Ast {
 
     fn build(&mut self) {
         let expressions = mem::take(&mut self.expressions);
-        if expressions.iter().any(|exp| matches!(exp, Exp::Bass(..))) {
+        if expressions.iter().any(|exp| matches!(exp, Exp::Bass)) {
             self.interval_set.remove(Interval::PerfectFifth);
             self.interval_set.remove(Interval::MajorThird);
             return;
@@ -182,7 +186,7 @@ impl Ast {
             let seventh = if self
                 .expressions
                 .iter()
-                .any(|exp| matches!(exp, Exp::Maj7(..) | Exp::Maj(..)))
+                .any(|exp| matches!(exp, Exp::Maj7 | Exp::Maj))
             {
                 Interval::MajorSeventh
             } else {
@@ -393,13 +397,14 @@ impl Default for Ast {
             errors: Vec::new(),
 
             base_form: BaseForm::Major,
+            third: Some(Interval::MajorThird),
+            sixth: None,
+            seventh: None,
             omits: Default::default(),
             adds: Default::default(),
-            seventh: None,
             extension_cap: None,
             alts: Default::default(),
             sus: Default::default(),
-            sixth: Default::default(),
             interval_set: vec![
                 Interval::Unison,
                 Interval::MajorThird,

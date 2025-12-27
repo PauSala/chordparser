@@ -3,6 +3,7 @@ pub(crate) mod ast;
 pub(crate) mod expression;
 pub(crate) mod expressions;
 pub(crate) mod lexer;
+pub(crate) mod normalize;
 pub mod parser_error;
 pub(crate) mod token;
 
@@ -10,21 +11,15 @@ use std::{iter::Peekable, slice::Iter};
 
 use ast::Ast;
 use expression::Exp;
-use expressions::{
-    AddExp, AltExp, AugExp, BassExp, Dim7Exp, DimExp, ExtensionExp, HalfDimExp, MajExp, MinorExp,
-    OmitExp, PowerExp, SlashBassExp, SusExp,
-};
+use expressions::{AddExp, AltExp, AugExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
 use lexer::Lexer;
 use parser_error::{ParserError, ParserErrors};
 use token::{Token, TokenType};
 
-use crate::{
-    chord::{
-        Chord,
-        intervals::Interval,
-        note::{Modifier, Note, NoteLiteral},
-    },
-    parsing::expressions::Maj7Exp,
+use crate::chord::{
+    Chord,
+    intervals::Interval,
+    note::{Modifier, Note, NoteLiteral},
 };
 
 /// This is used to handle X(omit/add a,b) cases.
@@ -116,6 +111,7 @@ impl Parser {
     /// - There are more than one sus modifier.
     /// - Slash notation is used for anything other than 9 (6/9) or bass notation.
     pub fn parse(&mut self, input: &str) -> Result<Chord, ParserErrors> {
+        self.init();
         let mut ast = Ast::default();
         let binding = self.lexer.scan_tokens(input);
         let tokens = self.pre_process(&binding);
@@ -127,11 +123,10 @@ impl Parser {
             return Err(ParserErrors::new(self.errors.clone()));
         }
         let res = ast.build_chord(input);
-        self.cleanup();
         res
     }
 
-    fn cleanup(&mut self) {
+    fn init(&mut self) {
         self.errors.clear();
         self.open_parent_count = 0;
         self.context = Context::None;
@@ -159,22 +154,22 @@ impl Parser {
             TokenType::Flat => self.modifier(tokens, Modifier::Flat, token, ast),
             TokenType::Aug => self.aug(tokens, ast),
             TokenType::Dim => self.dim(tokens, ast),
-            TokenType::Dim7 => ast.expressions.push(Exp::Dim7(Dim7Exp)),
-            TokenType::HalfDim => ast.expressions.push(Exp::HalfDim(HalfDimExp)),
+            TokenType::Dim7 => ast.expressions.push(Exp::Dim7),
+            TokenType::HalfDim => ast.expressions.push(Exp::HalfDim),
             TokenType::Extension(ext) => self.extension(ext, token, ast),
             TokenType::Add => self.add(token, tokens, ast),
             TokenType::Omit => self.omit(token, tokens, ast),
             TokenType::Alt => ast.expressions.push(Exp::Alt(AltExp)),
             TokenType::Sus => self.sus(tokens, ast),
-            TokenType::Minor => ast.expressions.push(Exp::Minor(MinorExp)),
+            TokenType::Minor => ast.expressions.push(Exp::Minor),
             TokenType::Hyphen => self.hyphen(tokens, token.pos, ast),
-            TokenType::Maj => ast.expressions.push(Exp::Maj(MajExp)),
-            TokenType::Maj7 => ast.expressions.push(Exp::Maj7(Maj7Exp)),
+            TokenType::Maj => ast.expressions.push(Exp::Maj),
+            TokenType::Maj7 => ast.expressions.push(Exp::Maj7),
             TokenType::Slash => self.slash(tokens, token, ast),
             TokenType::LParent => self.lparen(tokens, token.pos, ast),
             TokenType::RParent => self.rparen(token.pos),
             TokenType::Comma => self.comma(),
-            TokenType::Bass => ast.expressions.push(Exp::Bass(BassExp)),
+            TokenType::Bass => ast.expressions.push(Exp::Bass),
             TokenType::Illegal => self.errors.push(ParserError::IllegalToken(token.pos)),
             TokenType::Eof => (),
         }
@@ -222,7 +217,7 @@ impl Parser {
                 pos,
             }));
         } else {
-            ast.expressions.push(Exp::Minor(MinorExp));
+            ast.expressions.push(Exp::Minor);
         }
     }
 
@@ -236,9 +231,9 @@ impl Parser {
             .next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == 7))
             .is_some()
         {
-            ast.expressions.push(Exp::Dim7(Dim7Exp));
+            ast.expressions.push(Exp::Dim7);
         } else {
-            ast.expressions.push(Exp::Dim(DimExp));
+            ast.expressions.push(Exp::Dim);
         }
     }
 
@@ -396,7 +391,7 @@ impl Parser {
 
     fn extension(&mut self, ext: &u8, token: &Token, ast: &mut Ast) {
         if *ext == 5 && self.context == Context::None {
-            ast.expressions.push(Exp::Power(PowerExp));
+            ast.expressions.push(Exp::Power);
         } else if let Some(int) = Interval::from_chord_notation(&ext.to_string()) {
             self.add_interval(int, token.pos, ast);
         } else {
@@ -496,7 +491,7 @@ impl Parser {
         }
     }
 
-    /// Normalizes the token stream by collapsing 7ths if possible
+    /// Normalizes the token stream by collapsing 7ths if possible (matching them with non-derived maj and dim tokens)
     fn pre_process(&self, tokens: &[Token]) -> Vec<Token> {
         self.fold_7(
             &self.fold_7(&self.concat_maj7(tokens), TokenType::Dim, TokenType::Dim7),
@@ -519,6 +514,7 @@ impl Parser {
                         token_type: TokenType::Maj7,
                         pos: tokens[i].pos,
                         len: tokens[i].len + next.len,
+                        derived: true,
                     });
                     i += 2;
                 }
@@ -547,7 +543,7 @@ impl Parser {
             let current_idx = out.len();
 
             match &token.token_type {
-                t if *t == match_token => {
+                t if *t == match_token && !token.derived => {
                     if let Some(prev_idx) = pending_seven.pop() {
                         out[prev_idx] =
                             self.merge_tokens(&out[prev_idx], token, &insert_token_type);
@@ -576,6 +572,7 @@ impl Parser {
             token_type: new_type.clone(),
             pos: t1.pos.min(t2.pos),
             len: t1.len,
+            derived: true,
         }
     }
 }
