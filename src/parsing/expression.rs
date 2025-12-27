@@ -33,6 +33,7 @@ pub enum Exp {
 
 impl Exp {
     pub(crate) fn pass(&self, ast: &mut Ast) {
+        self.set_third(ast);
         match self {
             Exp::Power => ast.base_form = BaseForm::Power,
             Exp::Alt(exp) => exp.pass(ast),
@@ -52,6 +53,16 @@ impl Exp {
             Exp::Aug(exp) => exp.pass(ast),
             Exp::Omit(exp) => exp.pass(ast),
             Exp::SlashBass(exp) => exp.pass(ast),
+        }
+    }
+
+    pub(crate) fn set_third(&self, ast: &mut Ast) {
+        match self {
+            Exp::Minor | Exp::Dim | Exp::Dim7 | Exp::HalfDim => {
+                ast.third = Some(Interval::MinorThird)
+            }
+            Exp::Power | Exp::Bass => ast.third = None,
+            _ => {}
         }
     }
 

@@ -37,7 +37,7 @@ pub struct Ast {
     pub(crate) adds: Vec<Interval>,
     pub(crate) alts: Vec<Interval>,
     pub(crate) sus: Option<Interval>,
-    /// The third, either is omited or not
+    /// The third, either is omited or not. Normalization pass: an omited third could be included to derive the quality
     pub(crate) third: Option<Interval>,
     pub(crate) sixth: Option<Interval>,
     pub(crate) seventh: Option<Interval>,
