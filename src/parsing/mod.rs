@@ -15,13 +15,10 @@ use lexer::Lexer;
 use parser_error::{ParserError, ParserErrors};
 use token::{Token, TokenType};
 
-use crate::{
-    chord::{
-        Chord,
-        intervals::Interval,
-        note::{Modifier, Note, NoteLiteral},
-    },
-    parsing::expressions::Maj7Exp,
+use crate::chord::{
+    Chord,
+    intervals::Interval,
+    note::{Modifier, Note, NoteLiteral},
 };
 
 /// This is used to handle X(omit/add a,b) cases.
@@ -166,7 +163,7 @@ impl Parser {
             TokenType::Minor => ast.expressions.push(Exp::Minor),
             TokenType::Hyphen => self.hyphen(tokens, token.pos, ast),
             TokenType::Maj => ast.expressions.push(Exp::Maj),
-            TokenType::Maj7 => ast.expressions.push(Exp::Maj7(Maj7Exp)),
+            TokenType::Maj7 => ast.expressions.push(Exp::Maj7),
             TokenType::Slash => self.slash(tokens, token, ast),
             TokenType::LParent => self.lparen(tokens, token.pos, ast),
             TokenType::RParent => self.rparen(token.pos),

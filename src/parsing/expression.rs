@@ -2,10 +2,7 @@ use std::fmt::{Display, Formatter};
 
 use crate::{
     chord::intervals::Interval,
-    parsing::{
-        ast::{Ast, BaseForm},
-        expressions::Maj7Exp,
-    },
+    parsing::ast::{Ast, BaseForm},
 };
 
 use super::expressions::{AddExp, AltExp, AugExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
@@ -26,7 +23,7 @@ pub enum Exp {
     HalfDim,
     Sus(SusExp),
     Maj,
-    Maj7(Maj7Exp),
+    Maj7,
     Extension(ExtensionExp),
     Add(AddExp),
     Aug(AugExp),
@@ -49,7 +46,7 @@ impl Exp {
             }
             Exp::Sus(exp) => exp.pass(ast),
             Exp::Maj => {}
-            Exp::Maj7(exp) => exp.pass(ast),
+            Exp::Maj7 => ast.seventh = Some(Interval::MajorSeventh),
             Exp::Extension(exp) => exp.pass(ast),
             Exp::Add(exp) => exp.pass(ast),
             Exp::Aug(exp) => exp.pass(ast),
@@ -81,7 +78,7 @@ impl Exp {
             Exp::Dim => "Dim".to_string(),
             Exp::Dim7 => "Dim7".to_string(),
             Exp::Maj => "Maj".to_string(),
-            Exp::Maj7(_) => "Maj".to_string(),
+            Exp::Maj7 => "Maj".to_string(),
             Exp::Power => "Power".to_string(),
         }
     }
@@ -97,7 +94,7 @@ impl Exp {
             Exp::HalfDim => 6,
             Exp::Sus(_) => 7,
             Exp::Maj => 8,
-            Exp::Maj7(_) => 9,
+            Exp::Maj7 => 9,
             Exp::Extension(_) => 10,
             Exp::Add(_) => 11,
             Exp::Aug(_) => 12,
