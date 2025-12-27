@@ -493,7 +493,7 @@ impl Parser {
         }
     }
 
-    /// Normalizes the token stream by collapsing 7ths if possible
+    /// Normalizes the token stream by collapsing 7ths if possible (matching them with non-derived maj and dim tokens)
     fn pre_process(&self, tokens: &[Token]) -> Vec<Token> {
         self.fold_7(
             &self.fold_7(&self.concat_maj7(tokens), TokenType::Dim, TokenType::Dim7),
