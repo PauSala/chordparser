@@ -43,7 +43,6 @@ const DIM7_SET: PitchClassSet =
 const QUALITY_SETS: &[(ChordQuality, PitchClassSet)] = &[
     (ChordQuality::Dominant7, DOM7_SET),
     (ChordQuality::Diminished7, DIM7_SET),
-    (ChordQuality::Diminished, DIM_SET),
     (ChordQuality::MinorMaj7, MIMA7SET),
     (ChordQuality::Minor7, MIN7_SET),
     (ChordQuality::Minor6, MIN6_SET),
@@ -54,18 +53,55 @@ const QUALITY_SETS: &[(ChordQuality, PitchClassSet)] = &[
     (ChordQuality::Power, POW_SET),
 ];
 
+impl From<&[Interval]> for ChordQuality {
+    fn from(value: &[Interval]) -> Self {
+        let pc: PitchClassSet = value.into();
+        (&pc).into()
+    }
+}
+
 impl From<&PitchClassSet> for ChordQuality {
     fn from(value: &PitchClassSet) -> Self {
-        if value.difference(&AUG_SET).is_empty() {
-            return ChordQuality::Augmented;
+        use ChordQuality::*;
+
+        const RULES: &[QualityRule] = &[
+            QualityRule {
+                quality: Augmented,
+                matches: is_augmented,
+            },
+            QualityRule {
+                quality: Diminished,
+                matches: is_diminished,
+            },
+        ];
+
+        for rule in RULES {
+            if (rule.matches)(value) {
+                return rule.quality;
+            }
         }
+
         for (quality, set) in QUALITY_SETS {
             if value.is_superset_of(set) {
                 return *quality;
             }
         }
-        ChordQuality::Bass
+
+        Bass
     }
+}
+
+fn is_augmented(value: &PitchClassSet) -> bool {
+    value.difference(&AUG_SET).is_empty() // Must match exactly, otherwise +5 will be handled as alteration.
+}
+
+fn is_diminished(value: &PitchClassSet) -> bool {
+    value.is_superset_of(&DIM_SET) && !value.contains(PitchClass::Pc10) // no m7, otherwise b6 will be handled as alteration. 
+}
+
+struct QualityRule {
+    quality: ChordQuality,
+    matches: fn(&PitchClassSet) -> bool,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, EnumBitset)]

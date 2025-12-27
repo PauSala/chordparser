@@ -69,6 +69,8 @@ impl Ast {
             return Err(ParserErrors::new(self.errors));
         }
 
+        self.normalize();
+
         Ok(Chord::builder(name, self.root)
             .descriptor(&self.descriptor(name))
             .bass(self.bass)

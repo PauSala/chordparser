@@ -3,6 +3,7 @@ pub(crate) mod ast;
 pub(crate) mod expression;
 pub(crate) mod expressions;
 pub(crate) mod lexer;
+pub(crate) mod normalize;
 pub mod parser_error;
 pub(crate) mod token;
 
