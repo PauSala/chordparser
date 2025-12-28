@@ -375,25 +375,17 @@ impl<'a> Evaluator<'a> {
     }
 
     fn evaluate_extension(desc: &mut Descriptor, exp: &ExtensionExp) {
+        use Interval::*;
         match exp.interval {
-            Interval::PerfectFourth
-            | Interval::AugmentedFourth
-            | Interval::DiminishedFifth
-            | Interval::AugmentedFifth
-            | Interval::FlatNinth
-            | Interval::SharpNinth
-            | Interval::SharpEleventh
-            | Interval::FlatThirteenth => desc.alts.push(exp.interval),
-            Interval::MajorSixth | Interval::MinorSixth => desc.insert_sixth(exp.interval),
-            Interval::MinorSeventh => {
+            PerfectFourth | AugmentedFourth | DiminishedFifth | AugmentedFifth | FlatNinth
+            | SharpNinth | SharpEleventh | FlatThirteenth => desc.alts.push(exp.interval),
+            MajorSixth | MinorSixth => desc.insert_sixth(exp.interval),
+            MinorSeventh => {
                 desc.insert_seventh(exp.interval);
                 desc.alts.push(exp.interval);
             }
-            Interval::Ninth | Interval::Eleventh | Interval::Thirteenth => {
-                desc.max_extension = Some(
-                    exp.interval
-                        .max(desc.max_extension.unwrap_or(Interval::Unison)),
-                )
+            Ninth | Eleventh | Thirteenth => {
+                desc.max_extension = Some(exp.interval.max(desc.max_extension.unwrap_or(Unison)))
             }
             _ => {}
         }
