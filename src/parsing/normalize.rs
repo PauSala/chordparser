@@ -30,18 +30,15 @@ impl Ast {
             return descriptor;
         }
 
-        let intervals_slice = self.norm_intervals.as_slice();
-        let is_sus = quality.is_sus(&intervals_slice.into());
-
+        let is_sus = quality.is_sus(&(self.norm_intervals.as_slice()).into());
         let alterations = quality.alterations(&self.interval_set);
         let extensions = quality
             .extensions(&self.interval_set)
             .upgrade(Interval::MajorSixth, Interval::Thirteenth);
-
-        let (modifier, adds) = Ast::process_extensions(&extensions, &alterations, &quality);
+        let (modifier, adds) = Ast::split_extensions(&extensions, &alterations, &quality);
         let omits = self.omits(is_sus, &quality);
 
-        descriptor.push_str(&Ast::merge_quality_modifier(&quality, modifier));
+        descriptor.push_str(&Ast::format_quality_modifier(&quality, modifier));
         if is_sus {
             descriptor.push_str("sus");
         }
@@ -78,26 +75,38 @@ impl Ast {
         descriptor
     }
 
-    fn merge_quality_modifier(quality: &ChordQuality, modifier: Option<Interval>) -> String {
+    fn format_quality_modifier(quality: &ChordQuality, modifier: Option<Interval>) -> String {
         let mod_str = modifier.map(|m| m.to_chord_notation());
 
+        const MI: &str = "mi";
+        const MA: &str = "Ma";
+        const MA7: &str = "Ma7";
+        const MI7: &str = "mi7";
+        const MIMA7: &str = "miMa7";
+        const AUG: &str = "+";
+        const DIM: &str = "dim";
+        const DIM7: &str = "dim7";
+        const FIVE: &str = "5";
+        const SIX: &str = "6";
+        const SEVEN: &str = "7";
+
         match quality {
-            Maj | Bass => "".into(),
-            Maj6 => "6".into(),
-            Maj7 => mod_str.map_or("Ma7".into(), |m| format!("Ma{m}")),
-            Dom => mod_str.unwrap_or_else(|| "7".into()),
-            Mi => "mi".into(),
-            Mi6 => "mi6".into(),
-            Mi7 => mod_str.map_or("mi7".into(), |m| format!("mi{m}")),
-            MiMaj7 => mod_str.map_or("miMa7".into(), |m| format!("miMa{m}")),
-            Augmented => mod_str.map_or("+".into(), |m| format!("+{m}")),
-            Diminished => "dim".into(),
-            Diminished7 => "dim7".into(),
-            Pow => "5".into(),
+            Maj | Bass => String::new(),
+            Maj6 => SIX.into(),
+            Maj7 => mod_str.map_or_else(|| MA7.into(), |m| format!("{MA}{m}")),
+            Dom => mod_str.unwrap_or_else(|| SEVEN.into()),
+            Mi => MI.into(),
+            Mi6 => format!("{MI}{SIX}"),
+            Mi7 => mod_str.map_or_else(|| MI7.into(), |m| format!("{MI}{m}")),
+            MiMaj7 => mod_str.map_or_else(|| MIMA7.into(), |m| format!("{MIMA7}{m}")),
+            Augmented => mod_str.map_or_else(|| AUG.into(), |m| format!("{AUG}{m}")),
+            Diminished => DIM.into(),
+            Diminished7 => DIM7.into(),
+            Pow => FIVE.into(),
         }
     }
 
-    fn process_extensions(
+    fn split_extensions(
         extensions: &IntervalSet,
         alterations: &IntervalSet,
         quality: &ChordQuality,
