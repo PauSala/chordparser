@@ -7,6 +7,18 @@ use crate::{
 };
 use ChordQuality::*;
 
+const MI: &str = "mi";
+const MA: &str = "Ma";
+const MA7: &str = "Ma7";
+const MI7: &str = "mi7";
+const MIMA7: &str = "miMa7";
+const AUG: &str = "+";
+const DIM: &str = "dim";
+const DIM7: &str = "dim7";
+const FIVE: &str = "5";
+const SIX: &str = "6";
+const SEVEN: &str = "7";
+
 impl<'a> Evaluator<'a> {
     pub fn quality(&self) -> ChordQuality {
         let intervals_slice = self.dc.intervals.as_slice();
@@ -77,19 +89,6 @@ impl<'a> Evaluator<'a> {
 
     fn format_quality_modifier(quality: &ChordQuality, modifier: Option<Interval>) -> String {
         let mod_str = modifier.map(|m| m.to_chord_notation());
-
-        const MI: &str = "mi";
-        const MA: &str = "Ma";
-        const MA7: &str = "Ma7";
-        const MI7: &str = "mi7";
-        const MIMA7: &str = "miMa7";
-        const AUG: &str = "+";
-        const DIM: &str = "dim";
-        const DIM7: &str = "dim7";
-        const FIVE: &str = "5";
-        const SIX: &str = "6";
-        const SEVEN: &str = "7";
-
         match quality {
             Maj | Bass => String::new(),
             Maj6 => SIX.into(),
@@ -173,7 +172,7 @@ impl<'a> Evaluator<'a> {
         if !is_sus && ints.intersection(&THIRDS_SET).is_empty() {
             omits.push("3".to_string());
         }
-        // is omit 5 if there isn't a five and there isn't a b13
+        // is omit 5 if there isn't a five and there isn't a b13 (bc in this case the 5 is omited by default)
         if ints.intersection(&FIFTHS_SET).is_empty() && !ints.contains_const(&Pc::Pc20) {
             omits.push("5".to_string());
         }
