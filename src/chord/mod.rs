@@ -2,11 +2,12 @@
 use std::vec;
 
 use intervals::Interval;
-use quality::{InnerQuality, Quality};
 use serde::{Deserialize, Serialize};
 use serde_json;
 
 use note::Note;
+
+use crate::chord::c_quality::ChordQuality;
 
 pub mod c_quality;
 pub mod intervals;
@@ -33,16 +34,13 @@ pub struct Chord {
     pub semitones: Vec<u8>,
     /// The real intervals of the notes.
     pub intervals: Vec<Interval>,
+    pub quality: ChordQuality,
     /// The normalized intervals of the notes, used to normalize the name
     #[serde(skip_serializing)]
     pub(crate) norm_intervals: Vec<Interval>,
     /// The semantic intervals of the notes, meaning non altered intervals.
     #[serde(skip_serializing)]
     semantic_intervals: Vec<u8>,
-    /// Full quality of the chord, for internal purposes.
-    #[serde(skip_serializing)]
-    complete_quality: InnerQuality,
-    pub quality: Quality,
     #[serde(skip_serializing)]
     is_sus: bool,
     #[serde(skip_serializing)]
@@ -152,6 +150,7 @@ pub struct ChordBuilder {
     semantic_intervals: Vec<u8>,
     intervals: Vec<Interval>,
     normalized_intervals: Vec<Interval>,
+    quality: ChordQuality,
     is_sus: bool,
     rbs: [bool; 24],
 }
@@ -172,7 +171,13 @@ impl ChordBuilder {
             intervals: Vec::new(),
             is_sus: false,
             rbs: [false; 24],
+            quality: Default::default(),
         }
+    }
+
+    pub fn quality(mut self, quality: ChordQuality) -> ChordBuilder {
+        self.quality = quality;
+        self
     }
 
     pub fn rbs(mut self, rbs: [bool; 24]) -> ChordBuilder {
@@ -231,13 +236,11 @@ impl ChordBuilder {
     }
 
     pub fn build(self) -> Chord {
-        let mut chord = Chord {
+        let chord = Chord {
             origin: self.origin,
             descriptor: self.descriptor,
             root: self.root,
             bass: self.bass,
-            complete_quality: Default::default(),
-            quality: Default::default(),
             notes: self.notes,
             note_literals: self.note_literals,
             semantic_intervals: self.semantic_intervals,
@@ -247,9 +250,8 @@ impl ChordBuilder {
             semitones: self.semitones,
             rbs: self.rbs,
             normalized: self.normalized,
+            quality: self.quality,
         };
-        chord.complete_quality = InnerQuality::from_chord(&chord);
-        chord.quality = Quality::new(&chord.rbs);
         chord
     }
 }

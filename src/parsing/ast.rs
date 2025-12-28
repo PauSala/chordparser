@@ -79,6 +79,7 @@ impl Ast {
             .rbs(rbs)
             .semitones(semitones)
             .semantic_intervals(semantic_intervals)
+            .quality(self.quality())
             .normalized_intervals(self.norm_intervals)
             .intervals(self.intervals)
             .normalized(normalized)

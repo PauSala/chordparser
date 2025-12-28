@@ -8,7 +8,7 @@ use crate::{
 use ChordQuality::*;
 
 impl Ast {
-    pub fn normalize(&self) -> String {
+    pub fn quality(&self) -> ChordQuality {
         let intervals_slice = self.norm_intervals.as_slice();
         let mut virtual_set: PcSet = intervals_slice.into();
 
@@ -18,13 +18,19 @@ impl Ast {
         {
             virtual_set.insert(Into::<Pc>::into(&third));
         }
-        let mut descriptor = self.root.to_string();
+        (&virtual_set).into()
+    }
 
-        let quality: ChordQuality = (&virtual_set).into();
+    pub fn normalize(&self) -> String {
+        let mut descriptor = self.root.to_string();
+        let quality: ChordQuality = self.quality();
+
         if quality == Bass {
             descriptor.push_str("Bass");
             return descriptor;
         }
+
+        let intervals_slice = self.norm_intervals.as_slice();
         let is_sus = quality.is_sus(&intervals_slice.into());
 
         let interval_set = &IntervalSet::from_slice(intervals_slice);

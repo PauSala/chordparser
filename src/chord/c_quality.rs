@@ -1,4 +1,5 @@
 use enum_bitset::EnumBitset;
+use serde::{Deserialize, Serialize};
 
 use crate::chord::intervals::{IntDegree, IntDegreeSet, Interval, IntervalSet};
 use ChordQuality::*;
@@ -109,9 +110,10 @@ impl From<&[Interval]> for PcSet {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize, Default)]
 #[repr(u8)]
 pub enum ChordQuality {
+    #[default]
     Maj,
     Maj6,
     Maj7,
