@@ -1,6 +1,5 @@
 //! Useful abstractions to work with notes
 //!
-use core::panic;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
@@ -108,7 +107,7 @@ impl NoteLiteral {
                 (NoteLiteral::A, Some(Modifier::DSharp)),
                 (NoteLiteral::C, Some(Modifier::Flat)),
             ],
-            _ => panic!("Dont call this with a number greater than 6"),
+            _ => vec![],
         }
     }
 }

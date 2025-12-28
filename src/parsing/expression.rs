@@ -137,7 +137,7 @@ impl Exp {
             12 => "Aug".to_string(),
             13 => "Omit".to_string(),
             14 => "SlashBass".to_string(),
-            _ => panic!("Invalid priority"),
+            _ => "".to_string(),
         }
     }
 }
