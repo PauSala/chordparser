@@ -126,7 +126,6 @@ impl Parser {
             return Err(ParserErrors::new(self.errors.clone()));
         }
         Evaluator::evaluate(&ast, input.into())
-        // ast.build_chord(input)
     }
 
     fn init(&mut self) {
