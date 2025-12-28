@@ -71,7 +71,7 @@ impl<'a> Evaluator<'a> {
             errors: vec![],
             name,
         }
-        .seed()
+        .seed_defaults()
         .evaluate_expressions()
         .update_triad()
         .apply_sus()
@@ -85,7 +85,7 @@ impl<'a> Evaluator<'a> {
         .build_chord()
     }
 
-    fn seed(mut self) -> Self {
+    fn seed_defaults(mut self) -> Self {
         self.desc.intervals = vec![Interval::Unison];
         self.desc.base_form = BaseForm::Major;
         self.desc.third = Some(Interval::MajorThird);

@@ -1,13 +1,5 @@
 use super::expressions::{AddExp, AltExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
-use crate::{
-    chord::intervals::Interval,
-    parsing::ast::{Ast, BaseForm},
-};
 use std::fmt::{Display, Formatter};
-
-pub(crate) trait Expression {
-    fn evaluate(&self, ast: &mut Ast);
-}
 
 #[derive(Debug, PartialEq, Clone)]
 #[repr(u8)]
@@ -30,49 +22,6 @@ pub enum Exp {
 }
 
 impl Exp {
-    pub(crate) fn old_evaluate(&self, ast: &mut Ast) {
-        self.set_third(ast);
-        match self {
-            Exp::Power => ast.base_form = BaseForm::Power,
-            Exp::Alt(exp) => exp.evaluate(ast),
-            Exp::Bass => {
-                ast.interval_set.remove(Interval::PerfectFifth);
-                ast.interval_set.remove(Interval::MajorThird);
-                ast.third = None;
-            }
-            Exp::Minor => ast.base_form = BaseForm::Minor,
-            Exp::Dim7 => {
-                ast.base_form = BaseForm::Dim7;
-                ast.insert_seventh(Interval::DiminishedSeventh);
-            }
-            Exp::Dim => ast.base_form = BaseForm::Dim,
-            Exp::HalfDim => {
-                ast.base_form = BaseForm::HalfDim;
-                ast.insert_seventh(Interval::MinorSeventh);
-            }
-            Exp::Sus(exp) => exp.evaluate(ast),
-            Exp::Maj => {}
-            Exp::Maj7 => ast.insert_seventh(Interval::MajorSeventh),
-            Exp::Extension(exp) => exp.evaluate(ast),
-            Exp::Add(exp) => exp.evaluate(ast),
-            Exp::Aug => ast.alts.push(Interval::AugmentedFifth),
-            Exp::Omit(exp) => exp.evaluate(ast),
-            Exp::SlashBass(exp) => exp.evaluate(ast),
-        }
-    }
-
-    /// The third is stored to not lose information about the quality for the normalization step,   
-    /// which could happen for sus or omits.
-    pub(crate) fn set_third(&self, ast: &mut Ast) {
-        match self {
-            Exp::Minor | Exp::Dim | Exp::Dim7 | Exp::HalfDim => {
-                ast.third = Some(Interval::MinorThird)
-            }
-            Exp::Power | Exp::Bass => ast.third = None,
-            _ => {}
-        }
-    }
-
     pub fn validate(&self) -> (bool, usize) {
         match self {
             Exp::Omit(exp) => exp.isvalid(),

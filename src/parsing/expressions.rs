@@ -1,7 +1,4 @@
-use crate::{
-    chord::{intervals::Interval, note::Note},
-    parsing::expression::Expression,
-};
+use crate::chord::{intervals::Interval, note::Note};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ExtensionExp {
@@ -14,43 +11,10 @@ impl ExtensionExp {
     }
 }
 
-impl Expression for ExtensionExp {
-    fn evaluate(&self, ast: &mut super::ast::Ast) {
-        match self.interval {
-            Interval::PerfectFourth
-            | Interval::AugmentedFourth
-            | Interval::DiminishedFifth
-            | Interval::AugmentedFifth
-            | Interval::FlatNinth
-            | Interval::SharpNinth
-            | Interval::SharpEleventh
-            | Interval::FlatThirteenth => ast.alts.push(self.interval),
-            Interval::MajorSixth | Interval::MinorSixth => ast.insert_sixth(self.interval),
-            Interval::MinorSeventh => {
-                ast.insert_seventh(self.interval);
-                ast.alts.push(self.interval);
-            }
-            Interval::Ninth | Interval::Eleventh | Interval::Thirteenth => {
-                ast.max_extension = Some(
-                    self.interval
-                        .max(ast.max_extension.unwrap_or(Interval::Unison)),
-                )
-            }
-            _ => {}
-        }
-    }
-}
-
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AddExp {
     pub interval: Interval,
     pub target_pos: usize,
-}
-
-impl Expression for AddExp {
-    fn evaluate(&self, ast: &mut super::ast::Ast) {
-        ast.adds.push(self.interval);
-    }
 }
 
 impl AddExp {
@@ -88,19 +52,6 @@ pub struct SusExp {
     pub interval: Interval,
 }
 
-impl Expression for SusExp {
-    fn evaluate(&self, ast: &mut super::ast::Ast) {
-        ast.omits.push(Interval::MajorThird);
-        match self.interval {
-            Interval::PerfectFourth => ast.sus = Some(self.interval),
-            Interval::AugmentedFourth => ast.alts.push(Interval::SharpEleventh),
-            Interval::MinorSecond => ast.alts.push(Interval::FlatNinth),
-            Interval::MajorSecond => ast.alts.push(Interval::Ninth),
-            _ => {}
-        }
-    }
-}
-
 impl SusExp {
     pub fn new(interval: Interval) -> Self {
         Self { interval }
@@ -111,12 +62,6 @@ impl SusExp {
 pub struct OmitExp {
     pub interval: Interval,
     pub target_pos: usize,
-}
-
-impl Expression for OmitExp {
-    fn evaluate(&self, ast: &mut super::ast::Ast) {
-        ast.omits.push(self.interval);
-    }
 }
 
 impl OmitExp {
@@ -139,12 +84,6 @@ pub struct SlashBassExp {
     pub note: Note,
 }
 
-impl Expression for SlashBassExp {
-    fn evaluate(&self, ast: &mut super::ast::Ast) {
-        ast.bass = Some(self.note)
-    }
-}
-
 impl SlashBassExp {
     pub fn new(note: Note) -> Self {
         Self { note }
@@ -153,13 +92,3 @@ impl SlashBassExp {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AltExp;
-impl Expression for AltExp {
-    fn evaluate(&self, ast: &mut super::ast::Ast) {
-        ast.omits.push(Interval::PerfectFifth);
-        ast.insert_seventh(Interval::MinorSeventh);
-        ast.alts.push(Interval::FlatNinth);
-        ast.alts.push(Interval::SharpNinth);
-        ast.alts.push(Interval::SharpEleventh);
-        ast.alts.push(Interval::FlatThirteenth);
-    }
-}
