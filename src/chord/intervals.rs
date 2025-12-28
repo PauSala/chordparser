@@ -237,7 +237,7 @@ impl From<&IntervalSet> for IntDegreeSet {
     fn from(value: &IntervalSet) -> Self {
         value
             .iter()
-            .map(|i| <Interval as Into<IntDegree>>::into(i))
+            .map(<Interval as Into<IntDegree>>::into)
             .collect()
     }
 }

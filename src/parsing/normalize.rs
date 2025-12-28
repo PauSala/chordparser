@@ -52,7 +52,7 @@ impl Ast {
             let prefix = if i == 0 { "add" } else { "" };
             // Handle 69
             if *add == Interval::Ninth && (quality == Maj6 || quality == Mi6) {
-                descriptor.push_str("9");
+                descriptor.push('9');
                 continue;
             }
             items.push(format!("{}{}", prefix, add.to_chord_notation()));
@@ -70,7 +70,7 @@ impl Ast {
         }
 
         if let Some(bass) = self.bass {
-            descriptor.push_str(&format!("/{}", bass.literal.to_string()));
+            descriptor.push_str(&format!("/{}", bass.literal));
         }
         descriptor
     }
@@ -121,7 +121,7 @@ impl Ast {
 
         let mut adds: Vec<Interval> = vec![];
         let mut main: Option<Interval> = None;
-        let degrees = Ast::extensions_to_degrees(&alterations, &extensions, &quality);
+        let degrees = Ast::extensions_to_degrees(alterations, extensions, quality);
 
         for curr in extensions.iter() {
             // Maj7 is always an add if it isn't part of the quality (e.g. dim7Maj7)

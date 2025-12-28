@@ -122,8 +122,7 @@ impl Parser {
         if !self.errors.is_empty() {
             return Err(ParserErrors::new(self.errors.clone()));
         }
-        let res = ast.build_chord(input);
-        res
+        ast.build_chord(input)
     }
 
     fn init(&mut self) {

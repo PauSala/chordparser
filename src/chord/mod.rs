@@ -218,7 +218,7 @@ impl ChordBuilder {
     }
 
     pub fn build(self) -> Chord {
-        let chord = Chord {
+        Chord {
             origin: self.origin,
             descriptor: self.descriptor,
             root: self.root,
@@ -232,7 +232,6 @@ impl ChordBuilder {
             semitones: self.semitones,
             normalized: self.normalized,
             quality: self.quality,
-        };
-        chord
+        }
     }
 }

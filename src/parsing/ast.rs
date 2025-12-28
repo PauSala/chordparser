@@ -84,7 +84,7 @@ impl Ast {
     }
 
     fn prune_step(&mut self) {
-        if self.interval_set.contains(&Interval::MajorSixth) {
+        if self.interval_set.contains(Interval::MajorSixth) {
             self.interval_set.remove(Interval::Thirteenth);
         }
     }
