@@ -11,7 +11,7 @@ use std::{iter::Peekable, slice::Iter};
 
 use ast::Ast;
 use expression::Exp;
-use expressions::{AddExp, AltExp, AugExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
+use expressions::{AddExp, AltExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
 use lexer::Lexer;
 use parser_error::{ParserError, ParserErrors};
 use token::{Token, TokenType};
@@ -223,7 +223,7 @@ impl Parser {
 
     fn aug(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
         let _ = tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == 5));
-        ast.expressions.push(Exp::Aug(AugExp));
+        ast.expressions.push(Exp::Aug);
     }
 
     fn dim(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {

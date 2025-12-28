@@ -153,13 +153,6 @@ impl SlashBassExp {
         Self { note }
     }
 }
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct AugExp;
-impl Expression for AugExp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
-        ast.alts.push(Interval::AugmentedFifth);
-    }
-}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AltExp;

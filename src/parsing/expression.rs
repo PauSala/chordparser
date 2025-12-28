@@ -1,4 +1,4 @@
-use super::expressions::{AddExp, AltExp, AugExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
+use super::expressions::{AddExp, AltExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
 use crate::{
     chord::intervals::Interval,
     parsing::ast::{Ast, BaseForm},
@@ -24,7 +24,7 @@ pub enum Exp {
     Maj7,
     Extension(ExtensionExp),
     Add(AddExp),
-    Aug(AugExp),
+    Aug,
     Omit(OmitExp),
     SlashBass(SlashBassExp),
 }
@@ -52,7 +52,7 @@ impl Exp {
             Exp::Maj7 => ast.seventh = Some(Interval::MajorSeventh),
             Exp::Extension(exp) => exp.pass(ast),
             Exp::Add(exp) => exp.pass(ast),
-            Exp::Aug(exp) => exp.pass(ast),
+            Exp::Aug => ast.alts.push(Interval::AugmentedFifth),
             Exp::Omit(exp) => exp.pass(ast),
             Exp::SlashBass(exp) => exp.pass(ast),
         }
@@ -88,7 +88,7 @@ impl Exp {
             Exp::Bass => "Bass".to_string(),
             Exp::Alt(_) => "Alt".to_string(),
             Exp::Minor => "Minor".to_string(),
-            Exp::Aug(_) => "Aug".to_string(),
+            Exp::Aug => "Aug".to_string(),
             Exp::HalfDim => "HalfDim".to_string(),
             Exp::Dim => "Dim".to_string(),
             Exp::Dim7 => "Dim7".to_string(),
@@ -112,7 +112,7 @@ impl Exp {
             Exp::Maj7 => 9,
             Exp::Extension(_) => 10,
             Exp::Add(_) => 11,
-            Exp::Aug(_) => 12,
+            Exp::Aug => 12,
             Exp::Omit(_) => 13,
             Exp::SlashBass(_) => 14,
         }
