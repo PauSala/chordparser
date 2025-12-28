@@ -1,9 +1,8 @@
-use std::collections::HashMap;
-
 use crate::{
     chord::intervals::Interval,
     parsing::{expression::Exp, parser_error::ParserError},
 };
+use std::collections::HashMap;
 
 pub(crate) struct Validator;
 impl Validator {
