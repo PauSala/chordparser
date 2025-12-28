@@ -89,35 +89,13 @@ impl Ast {
         }
     }
 
-    fn set_intervals(&mut self) {
-        self.norm_intervals = self.interval_set.iter().collect();
-        self.norm_intervals.sort_by_key(|i| i.st());
-        self.intervals = self.norm_intervals.clone();
-        if let Some(Exp::Sus(sus_exp)) = self.expressions.iter().find(|e| matches!(e, Exp::Sus(_)))
-        {
-            self.intervals = self
-                .intervals
-                .iter()
-                .map(|i| match (sus_exp.interval, i) {
-                    (Interval::MinorSecond, Interval::FlatNinth) => Interval::MinorSecond,
-                    (Interval::MajorSecond, Interval::Ninth) => Interval::MajorSecond,
-                    (Interval::AugmentedFourth, Interval::SharpEleventh) => {
-                        Interval::AugmentedFourth
-                    }
-                    _ => *i,
-                })
-                .collect();
-            self.intervals.sort_by_key(|i| i.st());
-        }
-    }
-
     fn interval_set(&mut self) {
         let expressions = mem::take(&mut self.expressions);
         expressions.iter().for_each(|exp| exp.pass(self));
         self.expressions = expressions;
 
         // Set quality intervals
-        self.base_form.build(&mut self.interval_set);
+        self.base_form.interval_set(&mut self.interval_set);
 
         // Set seventh
         if let Some(seventh) = self.seventh {
@@ -168,6 +146,28 @@ impl Ast {
 
         self.prune_step();
         self.set_intervals();
+    }
+
+    fn set_intervals(&mut self) {
+        self.norm_intervals = self.interval_set.iter().collect();
+        self.norm_intervals.sort_by_key(|i| i.st());
+        self.intervals = self.norm_intervals.clone();
+        if let Some(Exp::Sus(sus_exp)) = self.expressions.iter().find(|e| matches!(e, Exp::Sus(_)))
+        {
+            self.intervals = self
+                .intervals
+                .iter()
+                .map(|i| match (sus_exp.interval, i) {
+                    (Interval::MinorSecond, Interval::FlatNinth) => Interval::MinorSecond,
+                    (Interval::MajorSecond, Interval::Ninth) => Interval::MajorSecond,
+                    (Interval::AugmentedFourth, Interval::SharpEleventh) => {
+                        Interval::AugmentedFourth
+                    }
+                    _ => *i,
+                })
+                .collect();
+            self.intervals.sort_by_key(|i| i.st());
+        }
     }
 
     fn remove_thirds(interval_set: &mut IntervalSet) {
@@ -428,7 +428,7 @@ pub(crate) enum BaseForm {
 }
 
 impl BaseForm {
-    fn build(&self, intervals: &mut IntervalSet) {
+    fn interval_set(&self, intervals: &mut IntervalSet) {
         match self {
             BaseForm::Major => {}
             BaseForm::Power => {

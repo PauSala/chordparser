@@ -41,7 +41,10 @@ impl Exp {
                 ast.third = None;
             }
             Exp::Minor => ast.base_form = BaseForm::Minor,
-            Exp::Dim7 => ast.base_form = BaseForm::Dim7,
+            Exp::Dim7 => {
+                ast.base_form = BaseForm::Dim7;
+                ast.seventh = Some(Interval::DiminishedSeventh)
+            }
             Exp::Dim => ast.base_form = BaseForm::Dim,
             Exp::HalfDim => {
                 ast.base_form = BaseForm::HalfDim;
