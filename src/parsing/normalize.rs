@@ -9,11 +9,11 @@ use ChordQuality::*;
 
 impl<'a> Evaluator<'a> {
     pub fn quality(&self) -> ChordQuality {
-        let intervals_slice = self.desc.intervals.as_slice();
+        let intervals_slice = self.dc.intervals.as_slice();
         let mut virtual_set: PcSet = intervals_slice.into();
 
         // This is that in case of an omited third the quality can still be derived as Major or Minor.
-        if let Some(third) = self.desc.third
+        if let Some(third) = self.dc.third
             && !virtual_set.difference(&EXACT_POW_SET).is_empty()
         {
             virtual_set.insert(Into::<Pc>::into(&third));
@@ -30,10 +30,10 @@ impl<'a> Evaluator<'a> {
             return descriptor;
         }
 
-        let is_sus = quality.is_sus(&(self.desc.intervals.as_slice()).into());
-        let alterations = quality.alterations(&self.desc.interval_set);
+        let is_sus = quality.is_sus(&(self.dc.intervals.as_slice()).into());
+        let alterations = quality.alterations(&self.dc.interval_set);
         let extensions = quality
-            .extensions(&self.desc.interval_set)
+            .extensions(&self.dc.interval_set)
             .upgrade(Interval::MajorSixth, Interval::Thirteenth);
         let (modifier, adds) = Evaluator::split_extensions(&extensions, &alterations, &quality);
         let omits = self.omits(is_sus, &quality);
@@ -69,7 +69,7 @@ impl<'a> Evaluator<'a> {
             descriptor.push(')');
         }
 
-        if let Some(bass) = self.desc.bass {
+        if let Some(bass) = self.dc.bass {
             descriptor.push_str(&format!("/{}", bass.literal));
         }
         descriptor
@@ -167,7 +167,7 @@ impl<'a> Evaluator<'a> {
         if matches!(quality, ChordQuality::Bass | ChordQuality::Pow) {
             return omits;
         }
-        let intervals_slice = self.desc.intervals.as_slice();
+        let intervals_slice = self.dc.intervals.as_slice();
         let ints: PcSet = intervals_slice.into();
         // is omit 3 if is not sus and there isn't a third
         if !is_sus && ints.intersection(&THIRDS_SET).is_empty() {
