@@ -8,7 +8,6 @@ use crate::{
 
 impl Ast {
     pub fn normalize(&self) -> String {
-        let mut descriptor = String::new();
         let intervals_slice = self.norm_intervals.as_slice();
         let mut virtual_set: PcSet = intervals_slice.into();
 
@@ -23,6 +22,8 @@ impl Ast {
         let extensions = quality.extensions(interval_set);
         let (modifier, adds) = Ast::process_extensions(&extensions, &alterations, &quality);
         let omits = self.omits(is_sus);
+
+        let mut descriptor = String::new();
         descriptor.push_str(&Ast::merge_quality_modifier(&quality, modifier));
 
         if is_sus {
@@ -54,22 +55,8 @@ impl Ast {
             descriptor.push_str(&items.join(","));
             descriptor.push(')');
         }
+        dbg!(&descriptor);
         descriptor
-    }
-
-    fn omits(&self, is_sus: bool) -> Vec<String> {
-        let mut omits = vec![];
-        let intervals_slice = self.norm_intervals.as_slice();
-        let ints: PcSet = intervals_slice.into();
-        // is omit 3 if is not sus and there isn't a third
-        if !is_sus && ints.intersection(&THIRDS_SET).is_empty() {
-            omits.push("omit3".to_string());
-        }
-        // is omit 5 if there isn't a five and there isn't a b13
-        if ints.intersection(&FIFTHS_SET).is_empty() && !ints.contains_const(&Pc::Pc20) {
-            omits.push("omit5".to_string());
-        }
-        omits
     }
 
     fn merge_quality_modifier(quality: &ChordQuality, modifier: Option<Interval>) -> String {
@@ -145,5 +132,20 @@ impl Ast {
             res.insert(seventh);
         }
         res
+    }
+
+    fn omits(&self, is_sus: bool) -> Vec<String> {
+        let mut omits = vec![];
+        let intervals_slice = self.norm_intervals.as_slice();
+        let ints: PcSet = intervals_slice.into();
+        // is omit 3 if is not sus and there isn't a third
+        if !is_sus && ints.intersection(&THIRDS_SET).is_empty() {
+            omits.push("omit3".to_string());
+        }
+        // is omit 5 if there isn't a five and there isn't a b13
+        if ints.intersection(&FIFTHS_SET).is_empty() && !ints.contains_const(&Pc::Pc20) {
+            omits.push("omit5".to_string());
+        }
+        omits
     }
 }

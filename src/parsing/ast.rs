@@ -85,6 +85,12 @@ impl Ast {
             .build())
     }
 
+    fn prune_equivalent(&mut self) {
+        if self.interval_set.contains(&Interval::MajorSixth) {
+            self.interval_set.remove(Interval::Thirteenth);
+        }
+    }
+
     fn set_intervals(&mut self) {
         self.build();
         self.norm_intervals = self.interval_set.iter().collect();
@@ -167,6 +173,8 @@ impl Ast {
             }
             self.interval_set.insert(*add);
         }
+
+        self.prune_equivalent();
     }
 
     fn remove_thirds(interval_set: &mut IntervalSet) {
