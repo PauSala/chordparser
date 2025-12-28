@@ -1,11 +1,9 @@
-use std::fmt::{Display, Formatter};
-
+use super::expressions::{AddExp, AltExp, AugExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
 use crate::{
     chord::intervals::Interval,
     parsing::ast::{Ast, BaseForm},
 };
-
-use super::expressions::{AddExp, AltExp, AugExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
+use std::fmt::{Display, Formatter};
 
 pub(crate) trait Expression {
     fn pass(&self, ast: &mut Ast);

@@ -1,14 +1,10 @@
 //! # Chords, notes and intervals
-use std::vec;
-
+use crate::chord::quality::ChordQuality;
 use intervals::Interval;
+use note::Note;
 use serde::{Deserialize, Serialize};
 use serde_json;
-
-use note::Note;
-
-use crate::chord::quality::ChordQuality;
-
+use std::vec;
 pub mod intervals;
 pub mod note;
 pub mod quality;

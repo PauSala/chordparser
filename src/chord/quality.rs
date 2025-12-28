@@ -1,10 +1,9 @@
-use enum_bitset::EnumBitset;
-use serde::{Deserialize, Serialize};
-
 use crate::chord::intervals::{IntDegree, IntDegreeSet, Interval, IntervalSet};
 use ChordQuality::*;
 use Interval::*;
 use Pc::*;
+use enum_bitset::EnumBitset;
+use serde::{Deserialize, Serialize};
 
 // Quality sets
 const POW_SET: PcSet = PcSet::from_array([Pc7]);
