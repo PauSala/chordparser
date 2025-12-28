@@ -15,7 +15,7 @@ impl ExtensionExp {
 }
 
 impl Expression for ExtensionExp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
+    fn evaluate(&self, ast: &mut super::ast::Ast) {
         match self.interval {
             Interval::PerfectFourth
             | Interval::AugmentedFourth
@@ -48,7 +48,7 @@ pub struct AddExp {
 }
 
 impl Expression for AddExp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
+    fn evaluate(&self, ast: &mut super::ast::Ast) {
         ast.adds.push(self.interval);
     }
 }
@@ -89,7 +89,7 @@ pub struct SusExp {
 }
 
 impl Expression for SusExp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
+    fn evaluate(&self, ast: &mut super::ast::Ast) {
         ast.omits.push(Interval::MajorThird);
         match self.interval {
             Interval::PerfectFourth => {
@@ -117,7 +117,7 @@ pub struct OmitExp {
 }
 
 impl Expression for OmitExp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
+    fn evaluate(&self, ast: &mut super::ast::Ast) {
         ast.omits.push(self.interval);
     }
 }
@@ -143,7 +143,7 @@ pub struct SlashBassExp {
 }
 
 impl Expression for SlashBassExp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
+    fn evaluate(&self, ast: &mut super::ast::Ast) {
         ast.bass = Some(self.note)
     }
 }
@@ -157,7 +157,7 @@ impl SlashBassExp {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AltExp;
 impl Expression for AltExp {
-    fn pass(&self, ast: &mut super::ast::Ast) {
+    fn evaluate(&self, ast: &mut super::ast::Ast) {
         ast.omits.push(Interval::PerfectFifth);
         ast.insert_seventh(Interval::MinorSeventh);
         ast.alts.push(Interval::FlatNinth);

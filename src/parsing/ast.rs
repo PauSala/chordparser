@@ -81,9 +81,10 @@ impl Ast {
             .build())
     }
 
+    /// Populate the chord's interval set
     fn interval_set(&mut self) {
         let expressions = mem::take(&mut self.expressions);
-        expressions.iter().for_each(|exp| exp.pass(self));
+        expressions.iter().for_each(|exp| exp.evaluate(self));
         self.expressions = expressions;
 
         // Set quality intervals
@@ -130,6 +131,7 @@ impl Ast {
         self.set_intervals();
     }
 
+    /// Remove duplicates or equivalences
     fn prune_step(&mut self) {
         if self.interval_set.contains(Interval::MajorSixth) {
             self.interval_set.remove(Interval::Thirteenth);

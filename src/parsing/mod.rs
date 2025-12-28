@@ -7,20 +7,18 @@ pub(crate) mod normalize;
 pub mod parser_error;
 pub(crate) mod token;
 
-use std::{iter::Peekable, slice::Iter};
-
-use ast::Ast;
-use expression::Exp;
-use expressions::{AddExp, AltExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
-use lexer::Lexer;
-use parser_error::{ParserError, ParserErrors};
-use token::{Token, TokenType};
-
 use crate::chord::{
     Chord,
     intervals::Interval,
     note::{Modifier, Note, NoteLiteral},
 };
+use ast::Ast;
+use expression::Exp;
+use expressions::{AddExp, AltExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
+use lexer::Lexer;
+use parser_error::{ParserError, ParserErrors};
+use std::{iter::Peekable, slice::Iter};
+use token::{Token, TokenType};
 
 /// This is used to handle X(omit/add a,b) cases.
 /// An omit/add modifier inside a parenthesis changes context to Omit(false)/Add(false).  

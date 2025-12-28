@@ -6,7 +6,7 @@ use crate::{
 use std::fmt::{Display, Formatter};
 
 pub(crate) trait Expression {
-    fn pass(&self, ast: &mut Ast);
+    fn evaluate(&self, ast: &mut Ast);
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -30,11 +30,11 @@ pub enum Exp {
 }
 
 impl Exp {
-    pub(crate) fn pass(&self, ast: &mut Ast) {
+    pub(crate) fn evaluate(&self, ast: &mut Ast) {
         self.set_third(ast);
         match self {
             Exp::Power => ast.base_form = BaseForm::Power,
-            Exp::Alt(exp) => exp.pass(ast),
+            Exp::Alt(exp) => exp.evaluate(ast),
             Exp::Bass => {
                 ast.interval_set.remove(Interval::PerfectFifth);
                 ast.interval_set.remove(Interval::MajorThird);
@@ -50,14 +50,14 @@ impl Exp {
                 ast.base_form = BaseForm::HalfDim;
                 ast.insert_seventh(Interval::MinorSeventh);
             }
-            Exp::Sus(exp) => exp.pass(ast),
+            Exp::Sus(exp) => exp.evaluate(ast),
             Exp::Maj => {}
             Exp::Maj7 => ast.insert_seventh(Interval::MajorSeventh),
-            Exp::Extension(exp) => exp.pass(ast),
-            Exp::Add(exp) => exp.pass(ast),
+            Exp::Extension(exp) => exp.evaluate(ast),
+            Exp::Add(exp) => exp.evaluate(ast),
             Exp::Aug => ast.alts.push(Interval::AugmentedFifth),
-            Exp::Omit(exp) => exp.pass(ast),
-            Exp::SlashBass(exp) => exp.pass(ast),
+            Exp::Omit(exp) => exp.evaluate(ast),
+            Exp::SlashBass(exp) => exp.evaluate(ast),
         }
     }
 
