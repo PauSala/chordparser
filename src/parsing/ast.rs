@@ -50,14 +50,14 @@ impl Ast {
         self.set_intervals();
         let notes = self.notes();
         let mut semitones = Vec::new();
-        let mut semantic_intervals = Vec::new();
+        let mut interval_degrees = Vec::new();
         let note_literals = notes.iter().map(|a| a.to_string()).collect();
 
         let mut rbs = [false; 24];
         for e in &self.norm_intervals {
             let v = e.st();
             rbs[v as usize] = true;
-            semantic_intervals.push(e.to_semantic_interval().numeric());
+            interval_degrees.push(e.to_semantic_interval().numeric());
         }
 
         for e in &self.intervals {
@@ -78,7 +78,7 @@ impl Ast {
             .note_literals(note_literals)
             .rbs(rbs)
             .semitones(semitones)
-            .semantic_intervals(semantic_intervals)
+            .interval_degrees(interval_degrees)
             .quality(self.quality())
             .normalized_intervals(self.norm_intervals)
             .intervals(self.intervals)

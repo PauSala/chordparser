@@ -1,7 +1,7 @@
 use crate::{
     chord::{
-        c_quality::{ChordQuality, EXACT_POW_SET, FIFTHS_SET, Pc, PcSet, THIRDS_SET},
         intervals::{IntDegree, IntDegreeSet, Interval, IntervalSet},
+        quality::{ChordQuality, EXACT_POW_SET, FIFTHS_SET, Pc, PcSet, THIRDS_SET},
     },
     parsing::ast::Ast,
 };
