@@ -18,13 +18,14 @@ const DIM7: &str = "dim7";
 const FIVE: &str = "5";
 const SIX: &str = "6";
 const SEVEN: &str = "7";
+const NINE: &str = "9";
 
 impl<'a> Evaluator<'a> {
     pub fn quality(&self) -> ChordQuality {
         let intervals_slice = self.dc.intervals.as_slice();
         let mut virtual_set: PcSet = intervals_slice.into();
 
-        // This is that in case of an omited third the quality can still be derived as Major or Minor.
+        // This is just in case of an omited third the quality can still be derived as Major or Minor.
         if let Some(third) = self.dc.third
             && !virtual_set.difference(&EXACT_POW_SET).is_empty()
         {
@@ -42,6 +43,7 @@ impl<'a> Evaluator<'a> {
             return descriptor;
         }
 
+        // Collect data
         let is_sus = quality.is_sus(&(self.dc.intervals.as_slice()).into());
         let alterations = quality.alterations(&self.dc.interval_set);
         let extensions = quality
@@ -50,6 +52,7 @@ impl<'a> Evaluator<'a> {
         let (modifier, adds) = Evaluator::split_extensions(&extensions, &alterations, &quality);
         let omits = self.omits(is_sus, &quality);
 
+        // Render descriptor
         descriptor.push_str(&Evaluator::format_quality_modifier(&quality, modifier));
         if is_sus {
             descriptor.push_str("sus");
@@ -64,7 +67,7 @@ impl<'a> Evaluator<'a> {
             let prefix = if i == 0 { "add" } else { "" };
             // Handle 69
             if *add == Interval::Ninth && (quality == Maj6 || quality == Mi6) {
-                descriptor.push('9');
+                descriptor.push_str(NINE);
                 continue;
             }
             items.push(format!("{}{}", prefix, add.to_chord_notation()));
