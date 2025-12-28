@@ -468,27 +468,22 @@ impl Parser {
 
     /// Returns Some(modifier) and advances tokens or returns None if any
     fn match_modifier(&self, tokens: &mut Peekable<Iter<Token>>) -> Option<Modifier> {
-        match tokens.peek().map(|t| &t.token_type) {
-            Some(TokenType::Flat) => {
-                tokens.next();
-                Some(Modifier::Flat)
-            }
-            Some(TokenType::Sharp) => {
-                tokens.next();
-                Some(Modifier::Sharp)
-            }
-            _ => None,
-        }
+        let modifier = match tokens.peek()?.token_type {
+            TokenType::Flat => Modifier::Flat,
+            TokenType::Sharp => Modifier::Sharp,
+            _ => return None,
+        };
+
+        tokens.next();
+        Some(modifier)
     }
 
     fn expect_note(&mut self, tokens: &mut Peekable<Iter<Token>>) -> Option<Note> {
-        match &tokens.next()?.token_type {
-            TokenType::Note(n) => {
-                let modifier = self.match_modifier(tokens);
-                Some(Note::new(NoteLiteral::from_string(n), modifier))
-            }
-            _ => None,
-        }
+        let TokenType::Note(n) = &tokens.next()?.token_type else {
+            return None;
+        };
+        let modifier = self.match_modifier(tokens);
+        Some(Note::new(NoteLiteral::from_string(n), modifier))
     }
 
     /// Normalizes the token stream by collapsing 7ths if possible (matching them with non-derived maj and dim tokens)
