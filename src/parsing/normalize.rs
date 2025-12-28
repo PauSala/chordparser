@@ -79,7 +79,7 @@ impl Ast {
         match quality {
             Maj | Bass => "".into(),
             Maj6 => "6".into(),
-            Maj7 => mod_str.map_or("Ma".into(), |m| format!("Ma{m}")),
+            Maj7 => mod_str.map_or("Ma7".into(), |m| format!("Ma{m}")),
             Dom => mod_str.unwrap_or_else(|| "7".into()),
             Mi => "mi".into(),
             Mi6 => "mi6".into(),

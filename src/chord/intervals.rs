@@ -130,7 +130,7 @@ impl Interval {
             Interval::MajorSixth => "6".to_string(),
             Interval::DiminishedSeventh => "bb7".to_string(),
             Interval::MinorSeventh => "7".to_string(),
-            Interval::MajorSeventh => "Maj7".to_string(),
+            Interval::MajorSeventh => "Ma7".to_string(),
             Interval::Octave => "8".to_string(),
             Interval::FlatNinth => "b9".to_string(),
             Interval::Ninth => "9".to_string(),

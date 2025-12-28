@@ -1,8 +1,7 @@
 //! # Chords, notes and intervals
 use std::vec;
 
-use intervals::{IntDegree, Interval};
-use normalize::normalize;
+use intervals::Interval;
 use quality::{InnerQuality, Quality};
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -11,7 +10,6 @@ use note::Note;
 
 pub mod c_quality;
 pub mod intervals;
-pub(crate) mod normalize;
 pub mod note;
 pub mod quality;
 
@@ -141,10 +139,6 @@ impl Chord {
     pub(crate) fn has(&self, int: Interval) -> bool {
         self.rbs[int.st() as usize]
     }
-
-    pub(crate) fn has_sem(&self, int: IntDegree) -> bool {
-        self.semantic_intervals.iter().any(|n| *n == int.numeric())
-    }
 }
 
 /// Builder for the Chord struct.
@@ -266,7 +260,6 @@ impl ChordBuilder {
         };
         chord.complete_quality = InnerQuality::from_chord(&chord);
         chord.quality = Quality::new(&chord.rbs);
-        chord.normalized = normalize(&chord);
         chord
     }
 }
