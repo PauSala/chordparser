@@ -473,7 +473,6 @@ impl Parser {
             TokenType::Sharp => Modifier::Sharp,
             _ => return None,
         };
-
         tokens.next();
         Some(modifier)
     }
