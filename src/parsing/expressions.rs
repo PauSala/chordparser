@@ -25,9 +25,9 @@ impl Expression for ExtensionExp {
             | Interval::SharpNinth
             | Interval::SharpEleventh
             | Interval::FlatThirteenth => ast.alts.push(self.interval),
-            Interval::MajorSixth | Interval::MinorSixth => ast.sixth = Some(self.interval),
+            Interval::MajorSixth | Interval::MinorSixth => ast.insert_sixth(self.interval),
             Interval::MinorSeventh => {
-                ast.seventh = Some(Interval::MinorSeventh);
+                ast.insert_seventh(self.interval);
                 ast.alts.push(self.interval);
             }
             Interval::Ninth | Interval::Eleventh | Interval::Thirteenth => {
@@ -159,7 +159,7 @@ pub struct AltExp;
 impl Expression for AltExp {
     fn pass(&self, ast: &mut super::ast::Ast) {
         ast.omits.push(Interval::PerfectFifth);
-        ast.seventh = Some(Interval::MinorSeventh);
+        ast.insert_seventh(Interval::MinorSeventh);
         ast.alts.push(Interval::FlatNinth);
         ast.alts.push(Interval::SharpNinth);
         ast.alts.push(Interval::SharpEleventh);

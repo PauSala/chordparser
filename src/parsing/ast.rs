@@ -28,7 +28,7 @@ pub struct Ast {
     pub(crate) bass: Option<Note>,
     pub(crate) expressions: Vec<Exp>,
     pub(crate) norm_intervals: Vec<Interval>,
-    pub(crate) intervals: Vec<Interval>,
+    pub(crate) display_intervals: Vec<Interval>,
     pub(crate) is_sus: bool,
     pub(crate) errors: Vec<ParserError>,
 
@@ -37,10 +37,8 @@ pub struct Ast {
     pub(crate) adds: Vec<Interval>,
     pub(crate) alts: Vec<Interval>,
     pub(crate) sus: Option<Interval>,
-    /// The third, either is omited or not. Normalization pass: an omited third could be included to derive the quality
+    /// The third, either is omited or not. Normalization pass: an omited third must be included to derive the quality
     pub(crate) third: Option<Interval>,
-    pub(crate) sixth: Option<Interval>,
-    pub(crate) seventh: Option<Interval>,
     pub(crate) extension_cap: Option<Interval>,
     pub(crate) interval_set: IntervalSet,
 }
@@ -57,7 +55,7 @@ impl Ast {
             interval_degrees.push(e.to_degree().numeric());
         }
 
-        for e in &self.intervals {
+        for e in &self.display_intervals {
             let v = e.st();
             semitones.push(v);
         }
@@ -77,16 +75,10 @@ impl Ast {
             .interval_degrees(interval_degrees)
             .quality(self.quality())
             .normalized_intervals(self.norm_intervals)
-            .intervals(self.intervals)
+            .intervals(self.display_intervals)
             .normalized(normalized)
             .is_sus(self.is_sus)
             .build())
-    }
-
-    fn prune_step(&mut self) {
-        if self.interval_set.contains(Interval::MajorSixth) {
-            self.interval_set.remove(Interval::Thirteenth);
-        }
     }
 
     fn interval_set(&mut self) {
@@ -96,16 +88,6 @@ impl Ast {
 
         // Set quality intervals
         self.base_form.interval_set(&mut self.interval_set);
-
-        // Set seventh
-        if let Some(seventh) = self.seventh {
-            self.interval_set.insert(seventh);
-        }
-
-        // Set sixth
-        if let Some(sixth) = self.sixth {
-            self.interval_set.insert(sixth);
-        }
 
         if let Some(sus) = self.sus {
             Self::remove_thirds(&mut self.interval_set);
@@ -148,14 +130,20 @@ impl Ast {
         self.set_intervals();
     }
 
+    fn prune_step(&mut self) {
+        if self.interval_set.contains(Interval::MajorSixth) {
+            self.interval_set.remove(Interval::Thirteenth);
+        }
+    }
+
     fn set_intervals(&mut self) {
         self.norm_intervals = self.interval_set.iter().collect();
         self.norm_intervals.sort_by_key(|i| i.st());
-        self.intervals = self.norm_intervals.clone();
+        self.display_intervals = self.norm_intervals.clone();
         if let Some(Exp::Sus(sus_exp)) = self.expressions.iter().find(|e| matches!(e, Exp::Sus(_)))
         {
-            self.intervals = self
-                .intervals
+            self.display_intervals = self
+                .display_intervals
                 .iter()
                 .map(|i| match (sus_exp.interval, i) {
                     (Interval::MinorSecond, Interval::FlatNinth) => Interval::MinorSecond,
@@ -166,13 +154,21 @@ impl Ast {
                     _ => *i,
                 })
                 .collect();
-            self.intervals.sort_by_key(|i| i.st());
+            self.display_intervals.sort_by_key(|i| i.st());
         }
     }
 
     fn remove_thirds(interval_set: &mut IntervalSet) {
         interval_set.remove(Interval::MinorThird);
         interval_set.remove(Interval::MajorThird);
+    }
+
+    pub(crate) fn insert_sixth(&mut self, sixth: Interval) {
+        self.interval_set.insert(sixth);
+    }
+
+    pub(crate) fn insert_seventh(&mut self, seventh: Interval) {
+        self.interval_set.insert(seventh);
     }
 
     fn extension_caps(&mut self) {
@@ -203,7 +199,12 @@ impl Ast {
             let caps_to_add: Vec<Interval> = match cap {
                 Interval::Thirteenth => thirteenth,
                 Interval::Eleventh => vec![Interval::Ninth, seventh],
-                Interval::Ninth => self.sixth.map_or(vec![seventh], |_| vec![]),
+                Interval::Ninth => {
+                    let has_sixth = self.interval_set.contains(Interval::MajorSixth)
+                        || self.interval_set.contains(Interval::MinorSixth);
+
+                    if has_sixth { vec![] } else { vec![seventh] }
+                }
                 _ => vec![],
             };
 
@@ -368,7 +369,7 @@ impl Ast {
     /// Get the notes of the chord
     fn notes(&mut self) -> Vec<Note> {
         let mut notes = Vec::new();
-        for n in &self.intervals {
+        for n in &self.display_intervals {
             let note = self.root.get_note(n.st(), n.to_degree().numeric());
             notes.push(note);
         }
@@ -391,14 +392,12 @@ impl Default for Ast {
             bass: None,
             expressions: Vec::new(),
             norm_intervals: vec![Interval::Unison],
-            intervals: vec![],
+            display_intervals: vec![],
             is_sus: false,
             errors: Vec::new(),
 
             base_form: BaseForm::Major,
             third: Some(Interval::MajorThird),
-            sixth: None,
-            seventh: None,
             omits: Default::default(),
             adds: Default::default(),
             extension_cap: None,

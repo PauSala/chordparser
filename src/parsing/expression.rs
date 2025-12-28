@@ -43,16 +43,16 @@ impl Exp {
             Exp::Minor => ast.base_form = BaseForm::Minor,
             Exp::Dim7 => {
                 ast.base_form = BaseForm::Dim7;
-                ast.seventh = Some(Interval::DiminishedSeventh)
+                ast.insert_seventh(Interval::DiminishedSeventh);
             }
             Exp::Dim => ast.base_form = BaseForm::Dim,
             Exp::HalfDim => {
                 ast.base_form = BaseForm::HalfDim;
-                ast.seventh = Some(Interval::MinorSeventh);
+                ast.insert_seventh(Interval::MinorSeventh);
             }
             Exp::Sus(exp) => exp.pass(ast),
             Exp::Maj => {}
-            Exp::Maj7 => ast.seventh = Some(Interval::MajorSeventh),
+            Exp::Maj7 => ast.insert_seventh(Interval::MajorSeventh),
             Exp::Extension(exp) => exp.pass(ast),
             Exp::Add(exp) => exp.pass(ast),
             Exp::Aug => ast.alts.push(Interval::AugmentedFifth),
