@@ -227,7 +227,7 @@ fn test_notes(i: &str, expected: Vec<&str>) {
             dbg!(i);
             assert_eq!(literals, &expected);
             for n in notes {
-                let t = chord.transpose_to(&n);
+                let t = chord.transpose(&n);
                 assert_eq!(
                     chord.intervals, t.intervals,
                     "Error parsing chord {}",

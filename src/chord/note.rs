@@ -27,7 +27,7 @@ impl NoteLiteral {
             "G" => NoteLiteral::G,
             "A" => NoteLiteral::A,
             "B" => NoteLiteral::B,
-            _ => panic!("Unknown note literal"),
+            _ => NoteLiteral::C,
         }
     }
 
@@ -177,7 +177,7 @@ impl Note {
     /// * `to` - The note took as refference to calculate the transposing interval
     /// # Returns
     /// The transposed note
-    pub fn transpose_to(&self, note: &Note, to: &Note) -> Note {
+    pub fn transpose(&self, note: &Note, to: &Note) -> Note {
         let diff = self.get_difference(to);
         let m = self.literal.get_matcher(note.to_semitone(), diff);
         Note::new(m[0].0, m[0].1)
@@ -192,7 +192,7 @@ impl Note {
                 Some(m) => match m {
                     Modifier::Sharp => 1,
                     Modifier::Flat => 11,
-                    _ => panic!("Double flat/sharp roots are not allowed"),
+                    _ => 0,
                 },
                 None => 0,
             },
@@ -200,7 +200,7 @@ impl Note {
                 Some(m) => match m {
                     Modifier::Sharp => 3,
                     Modifier::Flat => 1,
-                    _ => panic!("Double flat/sharp roots are not allowed"),
+                    _ => 0,
                 },
                 None => 2,
             },
@@ -208,7 +208,7 @@ impl Note {
                 Some(m) => match m {
                     Modifier::Sharp => 5,
                     Modifier::Flat => 3,
-                    _ => panic!("Double flat/sharp roots are not allowed"),
+                    _ => 0,
                 },
                 None => 4,
             },
@@ -216,7 +216,7 @@ impl Note {
                 Some(m) => match m {
                     Modifier::Sharp => 6,
                     Modifier::Flat => 4,
-                    _ => panic!("Double flat/sharp roots are not allowed"),
+                    _ => 0,
                 },
                 None => 5,
             },
@@ -224,7 +224,7 @@ impl Note {
                 Some(m) => match m {
                     Modifier::Sharp => 8,
                     Modifier::Flat => 6,
-                    _ => panic!("Double flat/sharp roots are not allowed"),
+                    _ => 0,
                 },
                 None => 7,
             },
@@ -232,7 +232,7 @@ impl Note {
                 Some(m) => match m {
                     Modifier::Sharp => 10,
                     Modifier::Flat => 8,
-                    _ => panic!("Double flat/sharp roots are not allowed"),
+                    _ => 0,
                 },
                 None => 9,
             },
@@ -240,7 +240,7 @@ impl Note {
                 Some(m) => match m {
                     Modifier::Sharp => 0,
                     Modifier::Flat => 10,
-                    _ => panic!("Double flat/sharp roots are not allowed"),
+                    _ => 0,
                 },
                 None => 11,
             },

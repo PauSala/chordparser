@@ -51,17 +51,17 @@ impl Chord {
     /// * `transpose_to` - The note to transpose the chord to.
     /// # Returns
     /// * A new chord transposed to the new root note.
-    pub fn transpose_to(&self, transpose_to: &Note) -> Chord {
+    pub fn transpose(&self, transpose_to: &Note) -> Chord {
         let bass = self
             .bass
             .as_ref()
-            .map(|bass| self.root.transpose_to(bass, transpose_to));
+            .map(|bass| self.root.transpose(bass, transpose_to));
 
         let mut notes = Vec::new();
         let semitones = self.semitones.clone();
-        let semantic_intervals = self.interval_degrees.clone();
+        let interval_degrees = self.interval_degrees.clone();
 
-        for (st, sem_int) in semitones.iter().zip(&semantic_intervals) {
+        for (st, sem_int) in semitones.iter().zip(&interval_degrees) {
             let note = transpose_to.get_note(*st, *sem_int);
             notes.push(note);
         }
@@ -85,7 +85,7 @@ impl Chord {
             .notes(notes)
             .note_literals(note_literals)
             .semitones(semitones)
-            .interval_degrees(semantic_intervals)
+            .interval_degrees(interval_degrees)
             .normalized_intervals(self.norm_intervals.clone())
             .intervals(self.intervals.clone())
             .is_sus(self.is_sus)

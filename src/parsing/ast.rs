@@ -47,14 +47,14 @@ impl Ast {
     pub(crate) fn build_chord(mut self, name: &str) -> Result<Chord, ParserErrors> {
         self.interval_set();
         let notes = self.notes();
-        let mut semitones = Vec::new();
-        let mut interval_degrees = Vec::new();
         let note_literals = notes.iter().map(|a| a.to_string()).collect();
 
+        let mut interval_degrees = Vec::new();
         for e in &self.norm_intervals {
             interval_degrees.push(e.to_degree().numeric());
         }
 
+        let mut semitones = Vec::new();
         for e in &self.display_intervals {
             let v = e.st();
             semitones.push(v);
