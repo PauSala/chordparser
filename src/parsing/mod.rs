@@ -23,7 +23,7 @@ use parser_error::{ParserError, ParserErrors};
 use std::{iter::Peekable, slice::Iter};
 use token::{Token, TokenType};
 
-/// This is used to handle `X(omit/add a,b)` cases.
+/// Used to handle `X(omit/add a,b)` cases.
 /// An omit/add modifier inside a parenthesis changes context to `Group` with active = false.  
 /// When a comma is encountered, if a Group context exits it is changed to active = true.    
 /// This allows for handling subsequent tokens assuming this context.  
@@ -465,7 +465,7 @@ impl Parser {
         )
     }
 
-    /// Returns Some(modifier) and advances tokens or returnes None if any
+    /// Returns Some(modifier) and advances tokens or returns None if any
     fn match_modifier(&self, tokens: &mut Peekable<Iter<Token>>) -> Option<Modifier> {
         match tokens.peek().map(|t| &t.token_type) {
             Some(TokenType::Flat) => {
