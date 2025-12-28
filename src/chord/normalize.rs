@@ -1,6 +1,6 @@
 use super::{
     Chord,
-    intervals::{Interval, SemInterval},
+    intervals::{Interval, IntDegree},
     quality::InnerQuality,
 };
 
@@ -137,12 +137,12 @@ fn omits(ch: &Chord) -> Vec<String> {
     if !(ch
         .semantic_intervals
         .iter()
-        .any(|i| *i == SemInterval::Third.numeric() || *i == SemInterval::Fourth.numeric())
+        .any(|i| *i == IntDegree::Third.numeric() || *i == IntDegree::Fourth.numeric())
         || ch.is_sus && ch.has(Interval::Eleventh))
     {
         res.push("3".to_string());
     }
-    if !ch.has_sem(SemInterval::Fifth) && !ch.has(Interval::FlatThirteenth) {
+    if !ch.has_sem(IntDegree::Fifth) && !ch.has(Interval::FlatThirteenth) {
         res.push("5".to_string());
     }
     res
@@ -160,11 +160,11 @@ fn get_mod(ch: &Chord) -> Option<Interval> {
             None
         }
         InnerQuality::Major7 | InnerQuality::Dominant => {
-            if ch.has(Interval::Thirteenth) && ch.has_sem(SemInterval::Ninth) {
+            if ch.has(Interval::Thirteenth) && ch.has_sem(IntDegree::Ninth) {
                 return Some(Interval::Thirteenth);
             }
-            if ch.has(Interval::Eleventh) && ch.has_sem(SemInterval::Ninth) {
-                if (ch.is_sus && !ch.has_sem(SemInterval::Ninth)) || ch.has(Interval::Ninth) {
+            if ch.has(Interval::Eleventh) && ch.has_sem(IntDegree::Ninth) {
+                if (ch.is_sus && !ch.has_sem(IntDegree::Ninth)) || ch.has(Interval::Ninth) {
                     return Some(Interval::Ninth);
                 }
                 return Some(Interval::MinorSeventh);
@@ -179,12 +179,12 @@ fn get_mod(ch: &Chord) -> Option<Interval> {
         }
         InnerQuality::Minor7 | InnerQuality::MinorMaj7 => {
             if ch.has(Interval::Thirteenth)
-                && ch.has_sem(SemInterval::Ninth)
-                && ch.has_sem(SemInterval::Eleventh)
+                && ch.has_sem(IntDegree::Ninth)
+                && ch.has_sem(IntDegree::Eleventh)
             {
                 return Some(Interval::Thirteenth);
             }
-            if ch.has(Interval::Eleventh) && ch.has_sem(SemInterval::Ninth) {
+            if ch.has(Interval::Eleventh) && ch.has_sem(IntDegree::Ninth) {
                 return Some(Interval::Eleventh);
             }
             if ch.has(Interval::Ninth) {
@@ -200,12 +200,12 @@ fn get_mod(ch: &Chord) -> Option<Interval> {
         }
         InnerQuality::Diminished => {
             if ch.has(Interval::Thirteenth)
-                && ch.has_sem(SemInterval::Ninth)
-                && ch.has_sem(SemInterval::Eleventh)
+                && ch.has_sem(IntDegree::Ninth)
+                && ch.has_sem(IntDegree::Eleventh)
             {
                 return Some(Interval::Thirteenth);
             }
-            if ch.has(Interval::Eleventh) && ch.has_sem(SemInterval::Ninth) {
+            if ch.has(Interval::Eleventh) && ch.has_sem(IntDegree::Ninth) {
                 return Some(Interval::Eleventh);
             }
             if ch.has(Interval::Ninth) {
@@ -221,7 +221,7 @@ fn adds(ch: &Chord) -> Vec<Interval> {
     match ch.complete_quality {
         InnerQuality::Power => adds,
         InnerQuality::Major7 | InnerQuality::Dominant => {
-            if ch.has(Interval::Thirteenth) && !ch.has_sem(SemInterval::Ninth) {
+            if ch.has(Interval::Thirteenth) && !ch.has_sem(IntDegree::Ninth) {
                 adds.push(Interval::Thirteenth);
             }
             if ch.has(Interval::Eleventh) && !ch.has(Interval::Ninth) {

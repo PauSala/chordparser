@@ -305,7 +305,7 @@ impl Display for Note {
 
 #[cfg(test)]
 mod test {
-    use crate::chord::intervals::SemInterval;
+    use crate::chord::intervals::IntDegree;
 
     use super::*;
 
@@ -315,7 +315,7 @@ mod test {
             (
                 Note::new(NoteLiteral::C, None),
                 3,
-                SemInterval::Third,
+                IntDegree::Third,
                 Note {
                     literal: NoteLiteral::E,
                     modifier: Some(Modifier::Flat),
@@ -324,7 +324,7 @@ mod test {
             (
                 Note::new(NoteLiteral::C, Some(Modifier::Flat)),
                 3,
-                SemInterval::Third,
+                IntDegree::Third,
                 Note {
                     literal: NoteLiteral::E,
                     modifier: Some(Modifier::DFlat),
@@ -333,7 +333,7 @@ mod test {
             (
                 Note::new(NoteLiteral::D, Some(Modifier::Flat)),
                 1,
-                SemInterval::Ninth,
+                IntDegree::Ninth,
                 Note {
                     literal: NoteLiteral::E,
                     modifier: Some(Modifier::DFlat),
@@ -342,7 +342,7 @@ mod test {
             (
                 Note::new(NoteLiteral::D, Some(Modifier::Sharp)),
                 15,
-                SemInterval::Ninth,
+                IntDegree::Ninth,
                 Note {
                     literal: NoteLiteral::E,
                     modifier: Some(Modifier::DSharp),
@@ -351,7 +351,7 @@ mod test {
             (
                 Note::new(NoteLiteral::B, None),
                 9,
-                SemInterval::Seventh,
+                IntDegree::Seventh,
                 Note {
                     literal: NoteLiteral::A,
                     modifier: Some(Modifier::Flat),

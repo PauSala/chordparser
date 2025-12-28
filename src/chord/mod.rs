@@ -1,7 +1,7 @@
 //! # Chords, notes and intervals
 use std::vec;
 
-use intervals::{Interval, SemInterval};
+use intervals::{Interval, IntDegree};
 use normalize::normalize;
 use quality::{InnerQuality, Quality};
 use serde::{Deserialize, Serialize};
@@ -141,7 +141,7 @@ impl Chord {
         self.rbs[int.st() as usize]
     }
 
-    pub(crate) fn has_sem(&self, int: SemInterval) -> bool {
+    pub(crate) fn has_sem(&self, int: IntDegree) -> bool {
         self.semantic_intervals.iter().any(|n| *n == int.numeric())
     }
 }

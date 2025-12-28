@@ -6,9 +6,12 @@ use serde::ser::{Serialize, Serializer};
 use std::fmt::Display;
 
 /// Enum representing all possible intervals of a chord
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Hash, EnumBitset)]
+#[derive(
+    Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Hash, EnumBitset, Default,
+)]
 #[repr(u8)]
 pub enum Interval {
+    #[default]
     Unison,
     MinorSecond,
     MajorSecond,
@@ -38,6 +41,12 @@ impl IntervalSet {
     pub fn replace(&mut self, remove: Interval, add: Interval) {
         self.remove(remove);
         self.insert(add);
+    }
+
+    pub fn upgrade(&self, target: Interval, dest: Interval) -> IntervalSet {
+        self.iter()
+            .map(|a| if a == target { dest } else { a })
+            .collect()
     }
 }
 
@@ -80,23 +89,23 @@ impl Interval {
     /// * `self` - The interval
     /// # Returns
     /// * `SemInterval` - The semantic interval
-    pub fn to_semantic_interval(&self) -> SemInterval {
+    pub fn to_semantic_interval(&self) -> IntDegree {
         match self {
-            Interval::Unison => SemInterval::Root,
-            Interval::MinorSecond | Interval::MajorSecond => SemInterval::Second,
-            Interval::MinorThird | Interval::MajorThird => SemInterval::Third,
-            Interval::PerfectFourth | Interval::AugmentedFourth => SemInterval::Fourth,
+            Interval::Unison => IntDegree::Root,
+            Interval::MinorSecond | Interval::MajorSecond => IntDegree::Second,
+            Interval::MinorThird | Interval::MajorThird => IntDegree::Third,
+            Interval::PerfectFourth | Interval::AugmentedFourth => IntDegree::Fourth,
             Interval::DiminishedFifth | Interval::PerfectFifth | Interval::AugmentedFifth => {
-                SemInterval::Fifth
+                IntDegree::Fifth
             }
-            Interval::MinorSixth | Interval::MajorSixth => SemInterval::Sixth,
+            Interval::MinorSixth | Interval::MajorSixth => IntDegree::Sixth,
             Interval::DiminishedSeventh | Interval::MinorSeventh | Interval::MajorSeventh => {
-                SemInterval::Seventh
+                IntDegree::Seventh
             }
-            Interval::Octave => SemInterval::Root,
-            Interval::FlatNinth | Interval::Ninth | Interval::SharpNinth => SemInterval::Ninth,
-            Interval::Eleventh | Interval::SharpEleventh => SemInterval::Eleventh,
-            Interval::FlatThirteenth | Interval::Thirteenth => SemInterval::Thirteenth,
+            Interval::Octave => IntDegree::Root,
+            Interval::FlatNinth | Interval::Ninth | Interval::SharpNinth => IntDegree::Ninth,
+            Interval::Eleventh | Interval::SharpEleventh => IntDegree::Eleventh,
+            Interval::FlatThirteenth | Interval::Thirteenth => IntDegree::Thirteenth,
         }
     }
 
@@ -178,10 +187,13 @@ impl Serialize for Interval {
     }
 }
 
-/// Enum representing semantic intervals, meaning that every interval can be any of its possible values.  
+/// Enum representing interval degrees.
 /// It is used to calculate the correct enharmonic notes from given root.
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum SemInterval {
+#[derive(
+    Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Hash, EnumBitset, Default,
+)]
+pub enum IntDegree {
+    #[default]
     Root = 1,
     Second = 2,
     Third = 3,
@@ -194,7 +206,46 @@ pub enum SemInterval {
     Thirteenth = 13,
 }
 
-impl SemInterval {
+impl From<Interval> for IntDegree {
+    fn from(value: Interval) -> Self {
+        match value {
+            Interval::Unison => IntDegree::Root,
+            Interval::MinorSecond => IntDegree::Second,
+            Interval::MajorSecond => IntDegree::Second,
+            Interval::MinorThird => IntDegree::Third,
+            Interval::MajorThird => IntDegree::Third,
+            Interval::PerfectFourth => IntDegree::Fourth,
+            Interval::AugmentedFourth => IntDegree::Fourth,
+            Interval::DiminishedFifth => IntDegree::Fourth,
+            Interval::PerfectFifth => IntDegree::Fifth,
+            Interval::AugmentedFifth => IntDegree::Fifth,
+            Interval::MinorSixth => IntDegree::Sixth,
+            Interval::MajorSixth => IntDegree::Sixth,
+            Interval::DiminishedSeventh => IntDegree::Seventh,
+            Interval::MinorSeventh => IntDegree::Seventh,
+            Interval::MajorSeventh => IntDegree::Seventh,
+            Interval::Octave => IntDegree::Root,
+            Interval::FlatNinth => IntDegree::Ninth,
+            Interval::Ninth => IntDegree::Ninth,
+            Interval::SharpNinth => IntDegree::Ninth,
+            Interval::Eleventh => IntDegree::Eleventh,
+            Interval::SharpEleventh => IntDegree::Eleventh,
+            Interval::FlatThirteenth => IntDegree::Thirteenth,
+            Interval::Thirteenth => IntDegree::Thirteenth,
+        }
+    }
+}
+
+impl From<&IntervalSet> for IntDegreeSet {
+    fn from(value: &IntervalSet) -> Self {
+        value
+            .iter()
+            .map(|i| <Interval as Into<IntDegree>>::into(i))
+            .collect()
+    }
+}
+
+impl IntDegree {
     /// Numeric representation of the semantic interval
     /// # Arguments
     /// * `self` - The semantic interval

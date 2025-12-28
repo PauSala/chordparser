@@ -1,7 +1,8 @@
 use enum_bitset::EnumBitset;
 
-use crate::chord::intervals::{Interval, IntervalSet};
+use crate::chord::intervals::{IntDegree, IntDegreeSet, Interval, IntervalSet};
 
+// Quality sets
 const POW_SET: PcSet = PcSet::from_array([Pc::Pc7]);
 const MAJ_SET: PcSet = PcSet::from_array([Pc::Pc4]);
 const MAJ6_SET: PcSet = PcSet::from_array([Pc::Pc4, Pc::Pc9]);
@@ -16,9 +17,12 @@ const MIMA7SET: PcSet = PcSet::from_array([Pc::Pc3, Pc::Pc11]);
 const AUG_SET: PcSet = PcSet::from_array([Pc::Pc4, Pc::Pc8]);
 const DIM_SET: PcSet = PcSet::from_array([Pc::Pc3, Pc::Pc6]);
 const DIM7_SET: PcSet = PcSet::from_array([Pc::Pc3, Pc::Pc6, Pc::Pc9]);
+
+// Other convenient sets
 const SEVENTH_SET: PcSet = PcSet::from_array([Pc::Pc10, Pc::Pc11]);
 const SUS_SET: PcSet = PcSet::from_array([Pc::Pc5, Pc::Pc17]);
-const THIRDS_SET: PcSet = PcSet::from_array([Pc::Pc3, Pc::Pc4]);
+pub(crate) const THIRDS_SET: PcSet = PcSet::from_array([Pc::Pc3, Pc::Pc4]);
+pub(crate) const FIFTHS_SET: PcSet = PcSet::from_array([Pc::Pc6, Pc::Pc7, Pc::Pc8]);
 
 const QUALITY_SETS: &[(ChordQuality, PcSet)] = &[
     (ChordQuality::Dom, DOM7_SET),
@@ -32,6 +36,7 @@ const QUALITY_SETS: &[(ChordQuality, PcSet)] = &[
     (ChordQuality::Pow, POW_SET),
 ];
 
+// Interval sets
 const EMPTY_INTERVAL_SET: IntervalSet = IntervalSet::from_array([]);
 
 /// PitchClass: semitones in two octaves
@@ -139,21 +144,39 @@ impl ChordQuality {
         self.extension_mask().intersection(ints)
     }
 
+    pub(crate) fn extension_stack(&self) -> &'static IntDegreeSet {
+        const EMPTY_INTERVAL_SET: IntDegreeSet = IntDegreeSet::from_array([]);
+        const DEFAULT: IntDegreeSet =
+            IntDegreeSet::from_array([IntDegree::Seventh, IntDegree::Ninth, IntDegree::Thirteenth]);
+        const M11: IntDegreeSet = IntDegreeSet::from_array([IntDegree::Eleventh]).union(&DEFAULT);
+        match self {
+            ChordQuality::Pow | ChordQuality::Bass => &EMPTY_INTERVAL_SET,
+            ChordQuality::Dom
+            | ChordQuality::Maj7
+            | ChordQuality::Maj
+            | ChordQuality::Augmented => &DEFAULT,
+            _ => &M11,
+        }
+    }
+
     fn extension_mask(&self) -> &'static IntervalSet {
         const DEFAULT: IntervalSet =
             IntervalSet::from_array([Interval::Ninth, Interval::Thirteenth]);
         const M7: IntervalSet = IntervalSet::from_array([Interval::MajorSeventh]).union(&DEFAULT);
         const M11: IntervalSet = IntervalSet::from_array([Interval::Eleventh]).union(&DEFAULT);
+        const M11_M6: IntervalSet = IntervalSet::from_array([Interval::MajorSixth]).union(&M11);
         const M7_11: IntervalSet = M11.union(&M7);
+        const M6: IntervalSet = IntervalSet::from_array([Interval::MajorSixth]).union(&DEFAULT);
+
         match self {
             ChordQuality::Pow | ChordQuality::Bass => &EMPTY_INTERVAL_SET,
             ChordQuality::Diminished7 | ChordQuality::Diminished | ChordQuality::Mi6 => &M7_11,
-            ChordQuality::Mi | ChordQuality::Mi7 | ChordQuality::MiMaj7 => &M11,
+            ChordQuality::Mi | ChordQuality::Mi7 | ChordQuality::MiMaj7 => &M11_M6,
             ChordQuality::Maj6 => &M7,
             ChordQuality::Dom
             | ChordQuality::Maj7
             | ChordQuality::Maj
-            | ChordQuality::Augmented => &DEFAULT,
+            | ChordQuality::Augmented => &M6,
         }
     }
 
