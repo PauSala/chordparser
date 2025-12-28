@@ -3,17 +3,30 @@ use crate::{
         intervals::{IntDegree, IntDegreeSet, Interval, IntervalSet},
         quality::{ChordQuality, EXACT_POW_SET, FIFTHS_SET, Pc, PcSet, THIRDS_SET},
     },
-    parsing::ast::Ast,
+    parsing::evaluator::Evaluator,
 };
 use ChordQuality::*;
 
-impl Ast {
+const MI: &str = "mi";
+const MA: &str = "Ma";
+const MA7: &str = "Ma7";
+const MI7: &str = "mi7";
+const MIMA7: &str = "miMa7";
+const AUG: &str = "+";
+const DIM: &str = "dim";
+const DIM7: &str = "dim7";
+const FIVE: &str = "5";
+const SIX: &str = "6";
+const SEVEN: &str = "7";
+const NINE: &str = "9";
+
+impl<'a> Evaluator<'a> {
     pub fn quality(&self) -> ChordQuality {
-        let intervals_slice = self.norm_intervals.as_slice();
+        let intervals_slice = self.dc.intervals.as_slice();
         let mut virtual_set: PcSet = intervals_slice.into();
 
-        // This is that in case of an omited third the quality can still be derived as Major or Minor.
-        if let Some(third) = self.third
+        // This is just in case of an omited third the quality can still be derived as Major or Minor.
+        if let Some(third) = self.dc.third
             && !virtual_set.difference(&EXACT_POW_SET).is_empty()
         {
             virtual_set.insert(Into::<Pc>::into(&third));
@@ -22,7 +35,7 @@ impl Ast {
     }
 
     pub fn normalize(&self) -> String {
-        let mut descriptor = self.root.to_string();
+        let mut descriptor = self.ast.root.to_string();
         let quality: ChordQuality = self.quality();
 
         if quality == Bass {
@@ -30,15 +43,17 @@ impl Ast {
             return descriptor;
         }
 
-        let is_sus = quality.is_sus(&(self.norm_intervals.as_slice()).into());
-        let alterations = quality.alterations(&self.interval_set);
+        // Collect data
+        let is_sus = quality.is_sus(&(self.dc.intervals.as_slice()).into());
+        let alterations = quality.alterations(&self.dc.interval_set);
         let extensions = quality
-            .extensions(&self.interval_set)
+            .extensions(&self.dc.interval_set)
             .upgrade(Interval::MajorSixth, Interval::Thirteenth);
-        let (modifier, adds) = Ast::split_extensions(&extensions, &alterations, &quality);
+        let (modifier, adds) = Evaluator::split_extensions(&extensions, &alterations, &quality);
         let omits = self.omits(is_sus, &quality);
 
-        descriptor.push_str(&Ast::format_quality_modifier(&quality, modifier));
+        // Render descriptor
+        descriptor.push_str(&Evaluator::format_quality_modifier(&quality, modifier));
         if is_sus {
             descriptor.push_str("sus");
         }
@@ -52,7 +67,7 @@ impl Ast {
             let prefix = if i == 0 { "add" } else { "" };
             // Handle 69
             if *add == Interval::Ninth && (quality == Maj6 || quality == Mi6) {
-                descriptor.push('9');
+                descriptor.push_str(NINE);
                 continue;
             }
             items.push(format!("{}{}", prefix, add.to_chord_notation()));
@@ -69,7 +84,7 @@ impl Ast {
             descriptor.push(')');
         }
 
-        if let Some(bass) = self.bass {
+        if let Some(bass) = self.dc.bass {
             descriptor.push_str(&format!("/{}", bass.literal));
         }
         descriptor
@@ -77,19 +92,6 @@ impl Ast {
 
     fn format_quality_modifier(quality: &ChordQuality, modifier: Option<Interval>) -> String {
         let mod_str = modifier.map(|m| m.to_chord_notation());
-
-        const MI: &str = "mi";
-        const MA: &str = "Ma";
-        const MA7: &str = "Ma7";
-        const MI7: &str = "mi7";
-        const MIMA7: &str = "miMa7";
-        const AUG: &str = "+";
-        const DIM: &str = "dim";
-        const DIM7: &str = "dim7";
-        const FIVE: &str = "5";
-        const SIX: &str = "6";
-        const SEVEN: &str = "7";
-
         match quality {
             Maj | Bass => String::new(),
             Maj6 => SIX.into(),
@@ -121,7 +123,7 @@ impl Ast {
 
         let mut adds: Vec<Interval> = vec![];
         let mut main: Option<Interval> = None;
-        let degrees = Ast::extensions_to_degrees(alterations, extensions, quality);
+        let degrees = Evaluator::extensions_to_degrees(alterations, extensions, quality);
 
         for curr in extensions.iter() {
             // Maj7 is always an add if it isn't part of the quality (e.g. dim7Maj7)
@@ -167,13 +169,13 @@ impl Ast {
         if matches!(quality, ChordQuality::Bass | ChordQuality::Pow) {
             return omits;
         }
-        let intervals_slice = self.norm_intervals.as_slice();
+        let intervals_slice = self.dc.intervals.as_slice();
         let ints: PcSet = intervals_slice.into();
         // is omit 3 if is not sus and there isn't a third
         if !is_sus && ints.intersection(&THIRDS_SET).is_empty() {
             omits.push("3".to_string());
         }
-        // is omit 5 if there isn't a five and there isn't a b13
+        // is omit 5 if there isn't a five and there isn't a b13 (bc in this case the 5 is omited by default)
         if ints.intersection(&FIFTHS_SET).is_empty() && !ints.contains_const(&Pc::Pc20) {
             omits.push("5".to_string());
         }

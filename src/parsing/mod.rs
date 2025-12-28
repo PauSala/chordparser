@@ -1,30 +1,32 @@
 //! # Chord parsing module
 pub(crate) mod ast;
+pub(crate) mod evaluator;
 pub(crate) mod expression;
-pub(crate) mod expressions;
 pub(crate) mod lexer;
 pub(crate) mod normalize;
 pub mod parser_error;
 pub(crate) mod token;
+pub(crate) mod validator;
 
-use crate::chord::{
-    Chord,
-    intervals::Interval,
-    note::{Modifier, Note, NoteLiteral},
+use crate::{
+    chord::{
+        Chord,
+        intervals::Interval,
+        note::{Modifier, Note, NoteLiteral},
+    },
+    parsing::{evaluator::Evaluator, expression::*},
 };
 use ast::Ast;
 use expression::Exp;
-use expressions::{AddExp, AltExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
 use lexer::Lexer;
 use parser_error::{ParserError, ParserErrors};
 use std::{iter::Peekable, slice::Iter};
 use token::{Token, TokenType};
 
-/// This is used to handle X(omit/add a,b) cases.
-/// An omit/add modifier inside a parenthesis changes context to Omit(false)/Add(false).  
-/// When a comma is encountered, if a context exits it is changed to true.    
+/// Used to handle `X(omit/add a,b)` cases.
+/// An omit/add modifier inside a parenthesis changes context to `Group` with active = false.  
+/// When a comma is encountered, if a Group context exits it is changed to active = true.    
 /// This allows for handling subsequent tokens assuming this context.  
-/// So in C7(omit3,5), the 5 is assumed as an omit, but in C7(omit3 5) it is not.
 /// When parents are closed the context is reset to None.  
 /// Commas with no context are ignored.  
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -115,12 +117,11 @@ impl Parser {
         let tokens = self.pre_process(&binding);
         let mut tokens = tokens.iter().peekable();
 
-        self.read_root(&mut tokens, &mut ast);
         self.read_tokens(&mut tokens, &mut ast);
         if !self.errors.is_empty() {
             return Err(ParserErrors::new(self.errors.clone()));
         }
-        ast.build_chord(input)
+        Evaluator::evaluate(&ast, input.into())
     }
 
     fn init(&mut self) {
@@ -129,18 +130,19 @@ impl Parser {
         self.context = Context::None;
     }
 
-    fn read_root(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
-        match self.expect_note(tokens) {
-            Some(note) => ast.root = note,
-            None => self.errors.push(ParserError::MissingRootNote),
-        }
-    }
-
     fn read_tokens(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
+        self.read_root(tokens, ast);
         let mut next = tokens.next();
         while next.is_some() {
             self.process_token(next.unwrap(), tokens, ast);
             next = tokens.next();
+        }
+    }
+
+    fn read_root(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
+        match self.expect_note(tokens) {
+            Some(note) => ast.root = note,
+            None => self.errors.push(ParserError::MissingRootNote),
         }
     }
 
@@ -156,7 +158,7 @@ impl Parser {
             TokenType::Extension(ext) => self.extension(ext, token, ast),
             TokenType::Add => self.add(token, tokens, ast),
             TokenType::Omit => self.omit(token, tokens, ast),
-            TokenType::Alt => ast.expressions.push(Exp::Alt(AltExp)),
+            TokenType::Alt => ast.expressions.push(Exp::Alt),
             TokenType::Sus => self.sus(tokens, ast),
             TokenType::Minor => ast.expressions.push(Exp::Minor),
             TokenType::Hyphen => self.hyphen(tokens, token.pos, ast),
@@ -428,6 +430,7 @@ impl Parser {
         }
     }
 
+    /// Execute the given function consuming the next token if target matches next token
     fn consume_extension_if<F>(
         &mut self,
         tokens: &mut Peekable<Iter<Token>>,
@@ -463,29 +466,23 @@ impl Parser {
         )
     }
 
-    /// Returns Some(modifier) and advances tokens or returnes None if any
+    /// Returns Some(modifier) and advances tokens or returns None if any
     fn match_modifier(&self, tokens: &mut Peekable<Iter<Token>>) -> Option<Modifier> {
-        match tokens.peek().map(|t| &t.token_type) {
-            Some(TokenType::Flat) => {
-                tokens.next();
-                Some(Modifier::Flat)
-            }
-            Some(TokenType::Sharp) => {
-                tokens.next();
-                Some(Modifier::Sharp)
-            }
-            _ => None,
-        }
+        let modifier = match tokens.peek()?.token_type {
+            TokenType::Flat => Modifier::Flat,
+            TokenType::Sharp => Modifier::Sharp,
+            _ => return None,
+        };
+        tokens.next();
+        Some(modifier)
     }
 
     fn expect_note(&mut self, tokens: &mut Peekable<Iter<Token>>) -> Option<Note> {
-        match &tokens.next()?.token_type {
-            TokenType::Note(n) => {
-                let modifier = self.match_modifier(tokens);
-                Some(Note::new(NoteLiteral::from_string(n), modifier))
-            }
-            _ => None,
-        }
+        let TokenType::Note(n) = &tokens.next()?.token_type else {
+            return None;
+        };
+        let modifier = self.match_modifier(tokens);
+        Some(Note::new(NoteLiteral::from_string(n), modifier))
     }
 
     /// Normalizes the token stream by collapsing 7ths if possible (matching them with non-derived maj and dim tokens)

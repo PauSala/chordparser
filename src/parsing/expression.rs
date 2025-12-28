@@ -1,78 +1,27 @@
-use super::expressions::{AddExp, AltExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
-use crate::{
-    chord::intervals::Interval,
-    parsing::ast::{Ast, BaseForm},
-};
+use crate::chord::{intervals::Interval, note::Note};
 use std::fmt::{Display, Formatter};
-
-pub(crate) trait Expression {
-    fn evaluate(&self, ast: &mut Ast);
-}
 
 #[derive(Debug, PartialEq, Clone)]
 #[repr(u8)]
 pub enum Exp {
     Power,
-    Alt(AltExp),
     Bass,
-    Minor,
-    Dim7,
-    Dim,
-    HalfDim,
-    Sus(SusExp),
     Maj,
     Maj7,
+    Minor,
+    HalfDim,
+    Dim,
+    Dim7,
+    Alt,
+    Aug,
+    Sus(SusExp),
     Extension(ExtensionExp),
     Add(AddExp),
-    Aug,
     Omit(OmitExp),
     SlashBass(SlashBassExp),
 }
 
 impl Exp {
-    pub(crate) fn evaluate(&self, ast: &mut Ast) {
-        self.set_third(ast);
-        match self {
-            Exp::Power => ast.base_form = BaseForm::Power,
-            Exp::Alt(exp) => exp.evaluate(ast),
-            Exp::Bass => {
-                ast.interval_set.remove(Interval::PerfectFifth);
-                ast.interval_set.remove(Interval::MajorThird);
-                ast.third = None;
-            }
-            Exp::Minor => ast.base_form = BaseForm::Minor,
-            Exp::Dim7 => {
-                ast.base_form = BaseForm::Dim7;
-                ast.insert_seventh(Interval::DiminishedSeventh);
-            }
-            Exp::Dim => ast.base_form = BaseForm::Dim,
-            Exp::HalfDim => {
-                ast.base_form = BaseForm::HalfDim;
-                ast.insert_seventh(Interval::MinorSeventh);
-            }
-            Exp::Sus(exp) => exp.evaluate(ast),
-            Exp::Maj => {}
-            Exp::Maj7 => ast.insert_seventh(Interval::MajorSeventh),
-            Exp::Extension(exp) => exp.evaluate(ast),
-            Exp::Add(exp) => exp.evaluate(ast),
-            Exp::Aug => ast.alts.push(Interval::AugmentedFifth),
-            Exp::Omit(exp) => exp.evaluate(ast),
-            Exp::SlashBass(exp) => exp.evaluate(ast),
-        }
-    }
-
-    /// The third is stored to not lose information about the quality for the normalization step,   
-    /// which could happen for sus or omits.
-    pub(crate) fn set_third(&self, ast: &mut Ast) {
-        match self {
-            Exp::Minor | Exp::Dim | Exp::Dim7 | Exp::HalfDim => {
-                ast.third = Some(Interval::MinorThird)
-            }
-            Exp::Power | Exp::Bass => ast.third = None,
-            _ => {}
-        }
-    }
-
     pub fn validate(&self) -> (bool, usize) {
         match self {
             Exp::Omit(exp) => exp.isvalid(),
@@ -89,7 +38,7 @@ impl Exp {
             Exp::Omit(_) => "Omit".to_string(),
             Exp::SlashBass(_) => "SlashBass".to_string(),
             Exp::Bass => "Bass".to_string(),
-            Exp::Alt(_) => "Alt".to_string(),
+            Exp::Alt => "Alt".to_string(),
             Exp::Minor => "Minor".to_string(),
             Exp::Aug => "Aug".to_string(),
             Exp::HalfDim => "HalfDim".to_string(),
@@ -104,7 +53,7 @@ impl Exp {
     pub fn priority(&self) -> u32 {
         match self {
             Exp::Power => 0,
-            Exp::Alt(_) => 1,
+            Exp::Alt => 1,
             Exp::Bass => 2,
             Exp::Minor => 3,
             Exp::Dim7 => 4,
@@ -166,5 +115,95 @@ impl Ord for Exp {
             },
             other => other,
         }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct ExtensionExp {
+    pub interval: Interval,
+    pub pos: usize,
+}
+impl ExtensionExp {
+    pub fn new(interval: Interval, pos: usize) -> Self {
+        Self { interval, pos }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct AddExp {
+    pub interval: Interval,
+    pub target_pos: usize,
+}
+
+impl AddExp {
+    pub fn new(interval: Interval, target_pos: usize) -> Self {
+        Self {
+            interval,
+            target_pos,
+        }
+    }
+    pub fn isvalid(&self) -> (bool, usize) {
+        (
+            matches!(
+                self.interval,
+                Interval::MajorSecond
+                    | Interval::MajorThird
+                    | Interval::PerfectFourth
+                    | Interval::MinorSixth
+                    | Interval::MajorSixth
+                    | Interval::MajorSeventh
+                    | Interval::FlatNinth
+                    | Interval::Ninth
+                    | Interval::SharpNinth
+                    | Interval::Eleventh
+                    | Interval::SharpEleventh
+                    | Interval::FlatThirteenth
+                    | Interval::Thirteenth
+            ),
+            self.target_pos,
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct SusExp {
+    pub interval: Interval,
+}
+
+impl SusExp {
+    pub fn new(interval: Interval) -> Self {
+        Self { interval }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct OmitExp {
+    pub interval: Interval,
+    pub target_pos: usize,
+}
+
+impl OmitExp {
+    pub fn new(interval: Interval, target_pos: usize) -> Self {
+        Self {
+            interval,
+            target_pos,
+        }
+    }
+    pub fn isvalid(&self) -> (bool, usize) {
+        (
+            matches!(self.interval, Interval::MajorThird | Interval::PerfectFifth),
+            self.target_pos,
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct SlashBassExp {
+    pub note: Note,
+}
+
+impl SlashBassExp {
+    pub fn new(note: Note) -> Self {
+        Self { note }
     }
 }
