@@ -99,7 +99,8 @@ fn test_normalize(input: &str, expected: &str) {
 
     match res {
         Ok(chord) => {
-            assert_eq!(chord.normalized, expected)
+            assert_eq!(chord.normalized, expected);
+            println!("{} {} ", chord.normalized, chord.new_normalized);
         }
         Err(e) => {
             let a = e.errors.iter().fold("".to_owned(), |acc, e| {

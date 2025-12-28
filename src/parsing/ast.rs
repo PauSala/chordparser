@@ -69,7 +69,7 @@ impl Ast {
             return Err(ParserErrors::new(self.errors));
         }
 
-        self.normalize();
+        let normalized = self.normalize();
 
         Ok(Chord::builder(name, self.root)
             .descriptor(&self.descriptor(name))
@@ -81,11 +81,12 @@ impl Ast {
             .semantic_intervals(semantic_intervals)
             .normalized_intervals(self.norm_intervals)
             .intervals(self.intervals)
+            .new_normalized(normalized)
             .is_sus(self.is_sus)
             .build())
     }
 
-    fn prune_equivalent(&mut self) {
+    fn prune_step(&mut self) {
         if self.interval_set.contains(&Interval::MajorSixth) {
             self.interval_set.remove(Interval::Thirteenth);
         }
@@ -116,11 +117,6 @@ impl Ast {
 
     fn build(&mut self) {
         let expressions = mem::take(&mut self.expressions);
-        if expressions.iter().any(|exp| matches!(exp, Exp::Bass)) {
-            self.interval_set.remove(Interval::PerfectFifth);
-            self.interval_set.remove(Interval::MajorThird);
-            return;
-        }
         expressions.iter().for_each(|exp| exp.pass(self));
         self.expressions = expressions;
 
@@ -174,7 +170,7 @@ impl Ast {
             self.interval_set.insert(*add);
         }
 
-        self.prune_equivalent();
+        self.prune_step();
     }
 
     fn remove_thirds(interval_set: &mut IntervalSet) {

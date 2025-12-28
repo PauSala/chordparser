@@ -37,7 +37,11 @@ impl Exp {
         match self {
             Exp::Power => ast.base_form = BaseForm::Power,
             Exp::Alt(exp) => exp.pass(ast),
-            Exp::Bass => {}
+            Exp::Bass => {
+                ast.interval_set.remove(Interval::PerfectFifth);
+                ast.interval_set.remove(Interval::MajorThird);
+                ast.third = None;
+            }
             Exp::Minor => ast.base_form = BaseForm::Minor,
             Exp::Dim7 => ast.base_form = BaseForm::Dim7,
             Exp::Dim => ast.base_form = BaseForm::Dim,
