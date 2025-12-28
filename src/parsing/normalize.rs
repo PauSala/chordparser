@@ -33,10 +33,9 @@ impl Ast {
         let intervals_slice = self.norm_intervals.as_slice();
         let is_sus = quality.is_sus(&intervals_slice.into());
 
-        let interval_set = &IntervalSet::from_slice(intervals_slice);
-        let alterations = quality.alterations(interval_set);
+        let alterations = quality.alterations(&self.interval_set);
         let extensions = quality
-            .extensions(interval_set)
+            .extensions(&self.interval_set)
             .upgrade(Interval::MajorSixth, Interval::Thirteenth);
 
         let (modifier, adds) = Ast::process_extensions(&extensions, &alterations, &quality);
