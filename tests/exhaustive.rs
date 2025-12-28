@@ -62,7 +62,7 @@ mod tests {
                         base.push_str(desc);
                         match parser.parse(&base) {
                             Ok(_) => (),
-                            Err(e) => panic!("{e}"),
+                            Err(e) => panic!("{e} {base}"),
                         }
                     }
                 }

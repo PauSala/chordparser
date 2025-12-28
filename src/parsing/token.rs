@@ -90,6 +90,7 @@ pub struct Token {
     pub token_type: TokenType,
     pub pos: usize,
     pub len: usize,
+    pub derived: bool,
 }
 
 impl Token {
@@ -98,6 +99,7 @@ impl Token {
             token_type,
             pos,
             len,
+            derived: false,
         }
     }
 }

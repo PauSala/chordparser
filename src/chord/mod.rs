@@ -1,16 +1,11 @@
 //! # Chords, notes and intervals
-use std::vec;
-
-use intervals::{Interval, SemInterval};
-use normalize::normalize;
-use quality::{InnerQuality, Quality};
+use crate::chord::quality::ChordQuality;
+use intervals::Interval;
+use note::Note;
 use serde::{Deserialize, Serialize};
 use serde_json;
-
-use note::Note;
-
+use std::vec;
 pub mod intervals;
-pub(crate) mod normalize;
 pub mod note;
 pub mod quality;
 
@@ -21,7 +16,6 @@ pub struct Chord {
     pub origin: String,
     /// The descriptor of the chord (all beyond its root).
     pub descriptor: String,
-    /// Normalized input
     pub normalized: String,
     /// The root note of the chord.
     pub root: Note,
@@ -35,21 +29,15 @@ pub struct Chord {
     pub semitones: Vec<u8>,
     /// The real intervals of the notes.
     pub intervals: Vec<Interval>,
+    pub quality: ChordQuality,
     /// The normalized intervals of the notes, used to normalize the name
     #[serde(skip_serializing)]
     pub(crate) norm_intervals: Vec<Interval>,
-    /// The semantic intervals of the notes, meaning non altered intervals.
+    /// Interval degrees of the notes
     #[serde(skip_serializing)]
-    semantic_intervals: Vec<u8>,
-    /// Full quality of the chord, for internal purposes.
-    #[serde(skip_serializing)]
-    complete_quality: InnerQuality,
-    pub quality: Quality,
-    /// Intervals added through the add modifier.
+    interval_degrees: Vec<u8>,
     #[serde(skip_serializing)]
     is_sus: bool,
-    #[serde(skip_serializing)]
-    rbs: [bool; 24],
 }
 
 impl Chord {
@@ -71,7 +59,7 @@ impl Chord {
 
         let mut notes = Vec::new();
         let semitones = self.semitones.clone();
-        let semantic_intervals = self.semantic_intervals.clone();
+        let semantic_intervals = self.interval_degrees.clone();
 
         for (st, sem_int) in semitones.iter().zip(&semantic_intervals) {
             let note = transpose_to.get_note(*st, *sem_int);
@@ -97,7 +85,7 @@ impl Chord {
             .notes(notes)
             .note_literals(note_literals)
             .semitones(semitones)
-            .semantic_intervals(semantic_intervals)
+            .interval_degrees(semantic_intervals)
             .normalized_intervals(self.norm_intervals.clone())
             .intervals(self.intervals.clone())
             .is_sus(self.is_sus)
@@ -136,14 +124,6 @@ impl Chord {
             Err(_) => "{{}}".to_string(),
         }
     }
-
-    pub(crate) fn has(&self, int: Interval) -> bool {
-        self.rbs[int.st() as usize]
-    }
-
-    pub(crate) fn has_sem(&self, int: SemInterval) -> bool {
-        self.semantic_intervals.iter().any(|n| *n == int.numeric())
-    }
 }
 
 /// Builder for the Chord struct.
@@ -156,11 +136,11 @@ pub struct ChordBuilder {
     notes: Vec<Note>,
     note_literals: Vec<String>,
     semitones: Vec<u8>,
-    semantic_intervals: Vec<u8>,
+    interval_degrees: Vec<u8>,
     intervals: Vec<Interval>,
     normalized_intervals: Vec<Interval>,
+    quality: ChordQuality,
     is_sus: bool,
-    rbs: [bool; 24],
 }
 
 impl ChordBuilder {
@@ -174,16 +154,16 @@ impl ChordBuilder {
             notes: Vec::new(),
             note_literals: Vec::new(),
             semitones: Vec::new(),
-            semantic_intervals: Vec::new(),
+            interval_degrees: Vec::new(),
             normalized_intervals: Vec::new(),
             intervals: Vec::new(),
             is_sus: false,
-            rbs: [false; 24],
+            quality: Default::default(),
         }
     }
 
-    pub fn rbs(mut self, rbs: [bool; 24]) -> ChordBuilder {
-        self.rbs = rbs;
+    pub fn quality(mut self, quality: ChordQuality) -> ChordBuilder {
+        self.quality = quality;
         self
     }
 
@@ -197,8 +177,8 @@ impl ChordBuilder {
         self
     }
 
-    pub fn semantic_intervals(mut self, semantic_intervals: Vec<u8>) -> ChordBuilder {
-        self.semantic_intervals = semantic_intervals;
+    pub fn interval_degrees(mut self, semantic_intervals: Vec<u8>) -> ChordBuilder {
+        self.interval_degrees = semantic_intervals;
         self
     }
 
@@ -238,26 +218,21 @@ impl ChordBuilder {
     }
 
     pub fn build(self) -> Chord {
-        let mut chord = Chord {
+        let chord = Chord {
             origin: self.origin,
-            normalized: self.normalized,
             descriptor: self.descriptor,
             root: self.root,
             bass: self.bass,
-            complete_quality: Default::default(),
-            quality: Default::default(),
             notes: self.notes,
             note_literals: self.note_literals,
-            semantic_intervals: self.semantic_intervals,
+            interval_degrees: self.interval_degrees,
             intervals: self.intervals,
             norm_intervals: self.normalized_intervals,
             is_sus: self.is_sus,
             semitones: self.semitones,
-            rbs: self.rbs,
+            normalized: self.normalized,
+            quality: self.quality,
         };
-        chord.complete_quality = InnerQuality::from_chord(&chord);
-        chord.quality = Quality::new(&chord.rbs);
-        chord.normalized = normalize(&chord);
         chord
     }
 }

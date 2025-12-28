@@ -1,14 +1,18 @@
 //! Useful abstractions to work with intervals
 
+use Interval::*;
 use enum_bitset::EnumBitset;
 use serde::Deserialize;
 use serde::ser::{Serialize, Serializer};
 use std::fmt::Display;
 
 /// Enum representing all possible intervals of a chord
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Hash, EnumBitset)]
+#[derive(
+    Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Hash, EnumBitset, Default,
+)]
 #[repr(u8)]
 pub enum Interval {
+    #[default]
     Unison,
     MinorSecond,
     MajorSecond,
@@ -39,6 +43,12 @@ impl IntervalSet {
         self.remove(remove);
         self.insert(add);
     }
+
+    pub fn upgrade(&self, target: Interval, dest: Interval) -> IntervalSet {
+        self.iter()
+            .map(|a| if a == target { dest } else { a })
+            .collect()
+    }
 }
 
 impl Interval {
@@ -49,54 +59,50 @@ impl Interval {
     /// * `u8` - The semitone representation of the interval
     pub fn st(&self) -> u8 {
         match self {
-            Interval::Unison => 0,
-            Interval::MinorSecond => 1,
-            Interval::MajorSecond => 2,
-            Interval::MinorThird => 3,
-            Interval::MajorThird => 4,
-            Interval::PerfectFourth => 5,
-            Interval::AugmentedFourth => 6,
-            Interval::DiminishedFifth => 6,
-            Interval::PerfectFifth => 7,
-            Interval::AugmentedFifth => 8,
-            Interval::MinorSixth => 8,
-            Interval::MajorSixth => 9,
-            Interval::DiminishedSeventh => 9,
-            Interval::MinorSeventh => 10,
-            Interval::MajorSeventh => 11,
-            Interval::Octave => 12,
-            Interval::FlatNinth => 13,
-            Interval::Ninth => 14,
-            Interval::SharpNinth => 15,
-            Interval::Eleventh => 17,
-            Interval::SharpEleventh => 18,
-            Interval::FlatThirteenth => 20,
-            Interval::Thirteenth => 21,
+            Unison => 0,
+            MinorSecond => 1,
+            MajorSecond => 2,
+            MinorThird => 3,
+            MajorThird => 4,
+            PerfectFourth => 5,
+            AugmentedFourth => 6,
+            DiminishedFifth => 6,
+            PerfectFifth => 7,
+            AugmentedFifth => 8,
+            MinorSixth => 8,
+            MajorSixth => 9,
+            DiminishedSeventh => 9,
+            MinorSeventh => 10,
+            MajorSeventh => 11,
+            Octave => 12,
+            FlatNinth => 13,
+            Ninth => 14,
+            SharpNinth => 15,
+            Eleventh => 17,
+            SharpEleventh => 18,
+            FlatThirteenth => 20,
+            Thirteenth => 21,
         }
     }
 
-    /// Transforms the interval into its semantic form, i.e,. for any interval returns its natural form.
+    /// Transforms the interval into its degree, i.e,. for any interval returns its natural form.
     /// # Arguments
     /// * `self` - The interval
     /// # Returns
-    /// * `SemInterval` - The semantic interval
-    pub fn to_semantic_interval(&self) -> SemInterval {
+    /// * `SemInterval` - The interval degree
+    pub fn to_degree(&self) -> IntDegree {
         match self {
-            Interval::Unison => SemInterval::Root,
-            Interval::MinorSecond | Interval::MajorSecond => SemInterval::Second,
-            Interval::MinorThird | Interval::MajorThird => SemInterval::Third,
-            Interval::PerfectFourth | Interval::AugmentedFourth => SemInterval::Fourth,
-            Interval::DiminishedFifth | Interval::PerfectFifth | Interval::AugmentedFifth => {
-                SemInterval::Fifth
-            }
-            Interval::MinorSixth | Interval::MajorSixth => SemInterval::Sixth,
-            Interval::DiminishedSeventh | Interval::MinorSeventh | Interval::MajorSeventh => {
-                SemInterval::Seventh
-            }
-            Interval::Octave => SemInterval::Root,
-            Interval::FlatNinth | Interval::Ninth | Interval::SharpNinth => SemInterval::Ninth,
-            Interval::Eleventh | Interval::SharpEleventh => SemInterval::Eleventh,
-            Interval::FlatThirteenth | Interval::Thirteenth => SemInterval::Thirteenth,
+            Unison => IntDegree::Root,
+            MinorSecond | MajorSecond => IntDegree::Second,
+            MinorThird | MajorThird => IntDegree::Third,
+            PerfectFourth | AugmentedFourth => IntDegree::Fourth,
+            DiminishedFifth | PerfectFifth | AugmentedFifth => IntDegree::Fifth,
+            MinorSixth | MajorSixth => IntDegree::Sixth,
+            DiminishedSeventh | MinorSeventh | MajorSeventh => IntDegree::Seventh,
+            Octave => IntDegree::Root,
+            FlatNinth | Ninth | SharpNinth => IntDegree::Ninth,
+            Eleventh | SharpEleventh => IntDegree::Eleventh,
+            FlatThirteenth | Thirteenth => IntDegree::Thirteenth,
         }
     }
 
@@ -107,29 +113,29 @@ impl Interval {
     /// * `String` - The chord notation form for this interval
     pub fn to_chord_notation(&self) -> String {
         match self {
-            Interval::Unison => "1".to_string(),
-            Interval::MinorSecond => "b2".to_string(),
-            Interval::MajorSecond => "2".to_string(),
-            Interval::MinorThird => "b3".to_string(),
-            Interval::MajorThird => "3".to_string(),
-            Interval::PerfectFourth => "4".to_string(),
-            Interval::AugmentedFourth => "#4".to_string(),
-            Interval::DiminishedFifth => "b5".to_string(),
-            Interval::PerfectFifth => "5".to_string(),
-            Interval::AugmentedFifth => "#5".to_string(),
-            Interval::MinorSixth => "b6".to_string(),
-            Interval::MajorSixth => "6".to_string(),
-            Interval::DiminishedSeventh => "bb7".to_string(),
-            Interval::MinorSeventh => "7".to_string(),
-            Interval::MajorSeventh => "Maj7".to_string(),
-            Interval::Octave => "8".to_string(),
-            Interval::FlatNinth => "b9".to_string(),
-            Interval::Ninth => "9".to_string(),
-            Interval::SharpNinth => "#9".to_string(),
-            Interval::Eleventh => "11".to_string(),
-            Interval::SharpEleventh => "#11".to_string(),
-            Interval::FlatThirteenth => "b13".to_string(),
-            Interval::Thirteenth => "13".to_string(),
+            Unison => "1".to_string(),
+            MinorSecond => "b2".to_string(),
+            MajorSecond => "2".to_string(),
+            MinorThird => "b3".to_string(),
+            MajorThird => "3".to_string(),
+            PerfectFourth => "4".to_string(),
+            AugmentedFourth => "#4".to_string(),
+            DiminishedFifth => "b5".to_string(),
+            PerfectFifth => "5".to_string(),
+            AugmentedFifth => "#5".to_string(),
+            MinorSixth => "b6".to_string(),
+            MajorSixth => "6".to_string(),
+            DiminishedSeventh => "bb7".to_string(),
+            MinorSeventh => "7".to_string(),
+            MajorSeventh => "Ma7".to_string(),
+            Octave => "8".to_string(),
+            FlatNinth => "b9".to_string(),
+            Ninth => "9".to_string(),
+            SharpNinth => "#9".to_string(),
+            Eleventh => "11".to_string(),
+            SharpEleventh => "#11".to_string(),
+            FlatThirteenth => "b13".to_string(),
+            Thirteenth => "13".to_string(),
         }
     }
 
@@ -178,10 +184,13 @@ impl Serialize for Interval {
     }
 }
 
-/// Enum representing semantic intervals, meaning that every interval can be any of its possible values.  
+/// Enum representing interval degrees.
 /// It is used to calculate the correct enharmonic notes from given root.
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum SemInterval {
+#[derive(
+    Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Hash, EnumBitset, Default,
+)]
+pub enum IntDegree {
+    #[default]
     Root = 1,
     Second = 2,
     Third = 3,
@@ -194,12 +203,51 @@ pub enum SemInterval {
     Thirteenth = 13,
 }
 
-impl SemInterval {
-    /// Numeric representation of the semantic interval
+impl From<Interval> for IntDegree {
+    fn from(value: Interval) -> Self {
+        match value {
+            Unison => IntDegree::Root,
+            MinorSecond => IntDegree::Second,
+            MajorSecond => IntDegree::Second,
+            MinorThird => IntDegree::Third,
+            MajorThird => IntDegree::Third,
+            PerfectFourth => IntDegree::Fourth,
+            AugmentedFourth => IntDegree::Fourth,
+            DiminishedFifth => IntDegree::Fourth,
+            PerfectFifth => IntDegree::Fifth,
+            AugmentedFifth => IntDegree::Fifth,
+            MinorSixth => IntDegree::Sixth,
+            MajorSixth => IntDegree::Sixth,
+            DiminishedSeventh => IntDegree::Seventh,
+            MinorSeventh => IntDegree::Seventh,
+            MajorSeventh => IntDegree::Seventh,
+            Octave => IntDegree::Root,
+            FlatNinth => IntDegree::Ninth,
+            Ninth => IntDegree::Ninth,
+            SharpNinth => IntDegree::Ninth,
+            Eleventh => IntDegree::Eleventh,
+            SharpEleventh => IntDegree::Eleventh,
+            FlatThirteenth => IntDegree::Thirteenth,
+            Thirteenth => IntDegree::Thirteenth,
+        }
+    }
+}
+
+impl From<&IntervalSet> for IntDegreeSet {
+    fn from(value: &IntervalSet) -> Self {
+        value
+            .iter()
+            .map(|i| <Interval as Into<IntDegree>>::into(i))
+            .collect()
+    }
+}
+
+impl IntDegree {
+    /// Numeric representation of the interval degree
     /// # Arguments
-    /// * `self` - The semantic interval
+    /// * `self` - The interval degree
     /// # Returns
-    /// * `u8` - The int representation of the semantic interval
+    /// * `u8` - The int representation of the interval degree
     pub fn numeric(&self) -> u8 {
         *self as u8
     }

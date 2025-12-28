@@ -1,10 +1,9 @@
 //! # Error handling for the parser module.
+use serde::Serialize;
 use std::{
     error::Error,
     fmt::{self},
 };
-
-use serde::Serialize;
 
 /// Errors that can occur when parsing a chord.
 /// Includes a list of string messages with a reason an the position in the input string when possible.

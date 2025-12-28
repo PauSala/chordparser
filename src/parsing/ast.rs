@@ -37,6 +37,8 @@ pub struct Ast {
     pub(crate) adds: Vec<Interval>,
     pub(crate) alts: Vec<Interval>,
     pub(crate) sus: Option<Interval>,
+    /// The third, either is omited or not. Normalization pass: an omited third could be included to derive the quality
+    pub(crate) third: Option<Interval>,
     pub(crate) sixth: Option<Interval>,
     pub(crate) seventh: Option<Interval>,
     pub(crate) extension_cap: Option<Interval>,
@@ -48,14 +50,11 @@ impl Ast {
         self.set_intervals();
         let notes = self.notes();
         let mut semitones = Vec::new();
-        let mut semantic_intervals = Vec::new();
+        let mut interval_degrees = Vec::new();
         let note_literals = notes.iter().map(|a| a.to_string()).collect();
 
-        let mut rbs = [false; 24];
         for e in &self.norm_intervals {
-            let v = e.st();
-            rbs[v as usize] = true;
-            semantic_intervals.push(e.to_semantic_interval().numeric());
+            interval_degrees.push(e.to_degree().numeric());
         }
 
         for e in &self.intervals {
@@ -67,18 +66,27 @@ impl Ast {
             return Err(ParserErrors::new(self.errors));
         }
 
+        let normalized = self.normalize();
+
         Ok(Chord::builder(name, self.root)
             .descriptor(&self.descriptor(name))
             .bass(self.bass)
             .notes(notes)
             .note_literals(note_literals)
-            .rbs(rbs)
             .semitones(semitones)
-            .semantic_intervals(semantic_intervals)
+            .interval_degrees(interval_degrees)
+            .quality(self.quality())
             .normalized_intervals(self.norm_intervals)
             .intervals(self.intervals)
+            .normalized(normalized)
             .is_sus(self.is_sus)
             .build())
+    }
+
+    fn prune_step(&mut self) {
+        if self.interval_set.contains(&Interval::MajorSixth) {
+            self.interval_set.remove(Interval::Thirteenth);
+        }
     }
 
     fn set_intervals(&mut self) {
@@ -106,11 +114,6 @@ impl Ast {
 
     fn build(&mut self) {
         let expressions = mem::take(&mut self.expressions);
-        if expressions.iter().any(|exp| matches!(exp, Exp::Bass(..))) {
-            self.interval_set.remove(Interval::PerfectFifth);
-            self.interval_set.remove(Interval::MajorThird);
-            return;
-        }
         expressions.iter().for_each(|exp| exp.pass(self));
         self.expressions = expressions;
 
@@ -163,6 +166,8 @@ impl Ast {
             }
             self.interval_set.insert(*add);
         }
+
+        self.prune_step();
     }
 
     fn remove_thirds(interval_set: &mut IntervalSet) {
@@ -182,7 +187,7 @@ impl Ast {
             let seventh = if self
                 .expressions
                 .iter()
-                .any(|exp| matches!(exp, Exp::Maj7(..) | Exp::Maj(..)))
+                .any(|exp| matches!(exp, Exp::Maj7 | Exp::Maj))
             {
                 Interval::MajorSeventh
             } else {
@@ -364,9 +369,7 @@ impl Ast {
     fn notes(&mut self) -> Vec<Note> {
         let mut notes = Vec::new();
         for n in &self.intervals {
-            let note = self
-                .root
-                .get_note(n.st(), n.to_semantic_interval().numeric());
+            let note = self.root.get_note(n.st(), n.to_degree().numeric());
             notes.push(note);
         }
         notes
@@ -393,13 +396,14 @@ impl Default for Ast {
             errors: Vec::new(),
 
             base_form: BaseForm::Major,
+            third: Some(Interval::MajorThird),
+            sixth: None,
+            seventh: None,
             omits: Default::default(),
             adds: Default::default(),
-            seventh: None,
             extension_cap: None,
             alts: Default::default(),
             sus: Default::default(),
-            sixth: Default::default(),
             interval_set: vec![
                 Interval::Unison,
                 Interval::MajorThird,

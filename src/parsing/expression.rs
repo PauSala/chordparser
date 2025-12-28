@@ -1,11 +1,9 @@
-use std::fmt::{Display, Formatter};
-
-use crate::parsing::{ast::Ast, expressions::Maj7Exp};
-
-use super::expressions::{
-    AddExp, AltExp, AugExp, BassExp, Dim7Exp, DimExp, ExtensionExp, HalfDimExp, MajExp, MinorExp,
-    OmitExp, PowerExp, SlashBassExp, SusExp,
+use super::expressions::{AddExp, AltExp, AugExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
+use crate::{
+    chord::intervals::Interval,
+    parsing::ast::{Ast, BaseForm},
 };
+use std::fmt::{Display, Formatter};
 
 pub(crate) trait Expression {
     fn pass(&self, ast: &mut Ast);
@@ -14,16 +12,16 @@ pub(crate) trait Expression {
 #[derive(Debug, PartialEq, Clone)]
 #[repr(u8)]
 pub enum Exp {
-    Power(PowerExp),
+    Power,
     Alt(AltExp),
-    Bass(BassExp),
-    Minor(MinorExp),
-    Dim7(Dim7Exp),
-    Dim(DimExp),
-    HalfDim(HalfDimExp),
+    Bass,
+    Minor,
+    Dim7,
+    Dim,
+    HalfDim,
     Sus(SusExp),
-    Maj(MajExp),
-    Maj7(Maj7Exp),
+    Maj,
+    Maj7,
     Extension(ExtensionExp),
     Add(AddExp),
     Aug(AugExp),
@@ -33,22 +31,42 @@ pub enum Exp {
 
 impl Exp {
     pub(crate) fn pass(&self, ast: &mut Ast) {
+        self.set_third(ast);
         match self {
-            Exp::Power(exp) => exp.pass(ast),
+            Exp::Power => ast.base_form = BaseForm::Power,
             Exp::Alt(exp) => exp.pass(ast),
-            Exp::Bass(exp) => exp.pass(ast),
-            Exp::Minor(exp) => exp.pass(ast),
-            Exp::Dim7(exp) => exp.pass(ast),
-            Exp::Dim(exp) => exp.pass(ast),
-            Exp::HalfDim(exp) => exp.pass(ast),
+            Exp::Bass => {
+                ast.interval_set.remove(Interval::PerfectFifth);
+                ast.interval_set.remove(Interval::MajorThird);
+                ast.third = None;
+            }
+            Exp::Minor => ast.base_form = BaseForm::Minor,
+            Exp::Dim7 => ast.base_form = BaseForm::Dim7,
+            Exp::Dim => ast.base_form = BaseForm::Dim,
+            Exp::HalfDim => {
+                ast.base_form = BaseForm::HalfDim;
+                ast.seventh = Some(Interval::MinorSeventh);
+            }
             Exp::Sus(exp) => exp.pass(ast),
-            Exp::Maj(exp) => exp.pass(ast),
-            Exp::Maj7(exp) => exp.pass(ast),
+            Exp::Maj => {}
+            Exp::Maj7 => ast.seventh = Some(Interval::MajorSeventh),
             Exp::Extension(exp) => exp.pass(ast),
             Exp::Add(exp) => exp.pass(ast),
             Exp::Aug(exp) => exp.pass(ast),
             Exp::Omit(exp) => exp.pass(ast),
             Exp::SlashBass(exp) => exp.pass(ast),
+        }
+    }
+
+    /// The third is stored to not lose information about the quality for the normalization step,   
+    /// which could happen for sus or omits.
+    pub(crate) fn set_third(&self, ast: &mut Ast) {
+        match self {
+            Exp::Minor | Exp::Dim | Exp::Dim7 | Exp::HalfDim => {
+                ast.third = Some(Interval::MinorThird)
+            }
+            Exp::Power | Exp::Bass => ast.third = None,
+            _ => {}
         }
     }
 
@@ -67,31 +85,31 @@ impl Exp {
             Exp::Sus(_) => "Sus".to_string(),
             Exp::Omit(_) => "Omit".to_string(),
             Exp::SlashBass(_) => "SlashBass".to_string(),
-            Exp::Bass(_) => "Bass".to_string(),
+            Exp::Bass => "Bass".to_string(),
             Exp::Alt(_) => "Alt".to_string(),
-            Exp::Minor(_) => "Minor".to_string(),
+            Exp::Minor => "Minor".to_string(),
             Exp::Aug(_) => "Aug".to_string(),
-            Exp::HalfDim(_) => "HalfDim".to_string(),
-            Exp::Dim(_) => "Dim".to_string(),
-            Exp::Dim7(_) => "Dim7".to_string(),
-            Exp::Maj(_) => "Maj".to_string(),
-            Exp::Maj7(_) => "Maj".to_string(),
-            Exp::Power(_) => "Power".to_string(),
+            Exp::HalfDim => "HalfDim".to_string(),
+            Exp::Dim => "Dim".to_string(),
+            Exp::Dim7 => "Dim7".to_string(),
+            Exp::Maj => "Maj".to_string(),
+            Exp::Maj7 => "Maj".to_string(),
+            Exp::Power => "Power".to_string(),
         }
     }
 
     pub fn priority(&self) -> u32 {
         match self {
-            Exp::Power(_) => 0,
+            Exp::Power => 0,
             Exp::Alt(_) => 1,
-            Exp::Bass(_) => 2,
-            Exp::Minor(_) => 3,
-            Exp::Dim7(_) => 4,
-            Exp::Dim(_) => 5,
-            Exp::HalfDim(_) => 6,
+            Exp::Bass => 2,
+            Exp::Minor => 3,
+            Exp::Dim7 => 4,
+            Exp::Dim => 5,
+            Exp::HalfDim => 6,
             Exp::Sus(_) => 7,
-            Exp::Maj(_) => 8,
-            Exp::Maj7(_) => 9,
+            Exp::Maj => 8,
+            Exp::Maj7 => 9,
             Exp::Extension(_) => 10,
             Exp::Add(_) => 11,
             Exp::Aug(_) => 12,
