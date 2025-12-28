@@ -13,7 +13,7 @@ impl Validator {
         &self,
         expressions: &Vec<Exp>,
         errors: &mut Vec<ParserError>,
-        intervals: &Vec<Interval>,
+        intervals: &[Interval],
     ) -> bool {
         let valid_exp = self.validate_expressions(expressions, errors);
         let valid_ext = self.validate_extensions(expressions, errors, intervals);
@@ -51,9 +51,9 @@ impl Validator {
     /// Validates extensions finding for duplicates and incosistencies.
     fn validate_extensions(
         &self,
-        expressions: &Vec<Exp>,
+        expressions: &[Exp],
         errors: &mut Vec<ParserError>,
-        intervals: &Vec<Interval>,
+        intervals: &[Interval],
     ) -> bool {
         let mut ext_count = [0; 24];
         let filtered = expressions
@@ -88,7 +88,7 @@ impl Validator {
     fn has_inconsistent_extensions(
         &self,
         errors: &mut Vec<ParserError>,
-        intervals: &Vec<Interval>,
+        intervals: &[Interval],
     ) -> bool {
         if self.has_inconsistent_extension(
             &Interval::Ninth,
@@ -147,7 +147,7 @@ impl Validator {
         &self,
         int: &Interval,
         matches: Vec<&Interval>,
-        intervals: &Vec<Interval>,
+        intervals: &[Interval],
     ) -> bool {
         for i in matches {
             if intervals.contains(i) && intervals.contains(int) {
@@ -161,7 +161,7 @@ impl Validator {
     fn validate_semitones(
         &self,
         errors: &mut Vec<ParserError>,
-        input_intervals: &Vec<Interval>,
+        input_intervals: &[Interval],
     ) -> bool {
         let mut is_valid = true;
         let mut count = 0u16;
