@@ -89,7 +89,7 @@ impl Interval {
     /// * `self` - The interval
     /// # Returns
     /// * `SemInterval` - The semantic interval
-    pub fn to_semantic_interval(&self) -> IntDegree {
+    pub fn to_degree(&self) -> IntDegree {
         match self {
             Interval::Unison => IntDegree::Root,
             Interval::MinorSecond | Interval::MajorSecond => IntDegree::Second,

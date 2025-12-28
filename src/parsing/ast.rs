@@ -53,11 +53,8 @@ impl Ast {
         let mut interval_degrees = Vec::new();
         let note_literals = notes.iter().map(|a| a.to_string()).collect();
 
-        let mut rbs = [false; 24];
         for e in &self.norm_intervals {
-            let v = e.st();
-            rbs[v as usize] = true;
-            interval_degrees.push(e.to_semantic_interval().numeric());
+            interval_degrees.push(e.to_degree().numeric());
         }
 
         for e in &self.intervals {
@@ -76,7 +73,6 @@ impl Ast {
             .bass(self.bass)
             .notes(notes)
             .note_literals(note_literals)
-            .rbs(rbs)
             .semitones(semitones)
             .interval_degrees(interval_degrees)
             .quality(self.quality())
@@ -373,9 +369,7 @@ impl Ast {
     fn notes(&mut self) -> Vec<Note> {
         let mut notes = Vec::new();
         for n in &self.intervals {
-            let note = self
-                .root
-                .get_note(n.st(), n.to_semantic_interval().numeric());
+            let note = self.root.get_note(n.st(), n.to_degree().numeric());
             notes.push(note);
         }
         notes

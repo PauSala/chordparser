@@ -42,8 +42,6 @@ pub struct Chord {
     interval_degrees: Vec<u8>,
     #[serde(skip_serializing)]
     is_sus: bool,
-    #[serde(skip_serializing)]
-    rbs: [bool; 24],
 }
 
 impl Chord {
@@ -147,7 +145,6 @@ pub struct ChordBuilder {
     normalized_intervals: Vec<Interval>,
     quality: ChordQuality,
     is_sus: bool,
-    rbs: [bool; 24],
 }
 
 impl ChordBuilder {
@@ -165,18 +162,12 @@ impl ChordBuilder {
             normalized_intervals: Vec::new(),
             intervals: Vec::new(),
             is_sus: false,
-            rbs: [false; 24],
             quality: Default::default(),
         }
     }
 
     pub fn quality(mut self, quality: ChordQuality) -> ChordBuilder {
         self.quality = quality;
-        self
-    }
-
-    pub fn rbs(mut self, rbs: [bool; 24]) -> ChordBuilder {
-        self.rbs = rbs;
         self
     }
 
@@ -243,7 +234,6 @@ impl ChordBuilder {
             norm_intervals: self.normalized_intervals,
             is_sus: self.is_sus,
             semitones: self.semitones,
-            rbs: self.rbs,
             normalized: self.normalized,
             quality: self.quality,
         };
