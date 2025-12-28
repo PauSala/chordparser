@@ -31,9 +31,9 @@ impl Expression for ExtensionExp {
                 ast.alts.push(self.interval);
             }
             Interval::Ninth | Interval::Eleventh | Interval::Thirteenth => {
-                ast.extension_cap = Some(
+                ast.max_extension = Some(
                     self.interval
-                        .max(ast.extension_cap.unwrap_or(Interval::Unison)),
+                        .max(ast.max_extension.unwrap_or(Interval::Unison)),
                 )
             }
             _ => {}

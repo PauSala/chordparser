@@ -39,7 +39,7 @@ pub struct Ast {
     pub(crate) sus: Option<Interval>,
     /// The third, either is omited or not. Normalization pass: an omited third must be included to derive the quality
     pub(crate) third: Option<Interval>,
-    pub(crate) extension_cap: Option<Interval>,
+    pub(crate) max_extension: Option<Interval>,
     pub(crate) interval_set: IntervalSet,
 }
 
@@ -103,7 +103,7 @@ impl Ast {
         });
 
         // Caps
-        self.extension_caps();
+        self.implied_extensions();
 
         // Omits
         for omit in &self.omits {
@@ -171,13 +171,13 @@ impl Ast {
         self.interval_set.insert(seventh);
     }
 
-    fn extension_caps(&mut self) {
-        if let Some(cap) = self.extension_cap {
-            if self.base_form == BaseForm::Major && cap == Interval::Eleventh {
+    fn implied_extensions(&mut self) {
+        if let Some(ext) = self.max_extension {
+            if self.base_form == BaseForm::Major && ext == Interval::Eleventh {
                 self.interval_set
                     .replace(Interval::MajorThird, Interval::PerfectFourth);
             } else {
-                self.interval_set.insert(cap);
+                self.interval_set.insert(ext);
             }
 
             let seventh = if self
@@ -196,7 +196,7 @@ impl Ast {
                 vec![Interval::Eleventh, Interval::Ninth, seventh]
             };
 
-            let caps_to_add: Vec<Interval> = match cap {
+            let to_add: Vec<Interval> = match ext {
                 Interval::Thirteenth => thirteenth,
                 Interval::Eleventh => vec![Interval::Ninth, seventh],
                 Interval::Ninth => {
@@ -208,7 +208,7 @@ impl Ast {
                 _ => vec![],
             };
 
-            for interval in caps_to_add {
+            for interval in to_add {
                 let conflicts = CONFLICT_MAP.get(&interval).cloned().unwrap_or_default();
                 let blocked = self.interval_set.contains(interval)
                     || conflicts.iter().any(|c| self.interval_set.contains(c));
@@ -400,7 +400,7 @@ impl Default for Ast {
             third: Some(Interval::MajorThird),
             omits: Default::default(),
             adds: Default::default(),
-            extension_cap: None,
+            max_extension: None,
             alts: Default::default(),
             sus: Default::default(),
             interval_set: vec![
