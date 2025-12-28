@@ -117,7 +117,6 @@ impl Parser {
         let tokens = self.pre_process(&binding);
         let mut tokens = tokens.iter().peekable();
 
-        self.read_root(&mut tokens, &mut ast);
         self.read_tokens(&mut tokens, &mut ast);
         if !self.errors.is_empty() {
             return Err(ParserErrors::new(self.errors.clone()));
@@ -131,18 +130,19 @@ impl Parser {
         self.context = Context::None;
     }
 
-    fn read_root(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
-        match self.expect_note(tokens) {
-            Some(note) => ast.root = note,
-            None => self.errors.push(ParserError::MissingRootNote),
-        }
-    }
-
     fn read_tokens(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
+        self.read_root(tokens, ast);
         let mut next = tokens.next();
         while next.is_some() {
             self.process_token(next.unwrap(), tokens, ast);
             next = tokens.next();
+        }
+    }
+
+    fn read_root(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
+        match self.expect_note(tokens) {
+            Some(note) => ast.root = note,
+            None => self.errors.push(ParserError::MissingRootNote),
         }
     }
 
@@ -430,6 +430,7 @@ impl Parser {
         }
     }
 
+    /// Execute the given function consuming the next token if target matches next token
     fn consume_extension_if<F>(
         &mut self,
         tokens: &mut Peekable<Iter<Token>>,
