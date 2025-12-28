@@ -1,16 +1,22 @@
 //! # Chord parsing module
 pub(crate) mod ast;
+pub(crate) mod eval_normalize;
+pub(crate) mod evaluator;
 pub(crate) mod expression;
 pub(crate) mod expressions;
 pub(crate) mod lexer;
 pub(crate) mod normalize;
 pub mod parser_error;
 pub(crate) mod token;
+pub(crate) mod validator;
 
-use crate::chord::{
-    Chord,
-    intervals::Interval,
-    note::{Modifier, Note, NoteLiteral},
+use crate::{
+    chord::{
+        Chord,
+        intervals::Interval,
+        note::{Modifier, Note, NoteLiteral},
+    },
+    parsing::evaluator::Evaluator,
 };
 use ast::Ast;
 use expression::Exp;
@@ -120,7 +126,8 @@ impl Parser {
         if !self.errors.is_empty() {
             return Err(ParserErrors::new(self.errors.clone()));
         }
-        ast.build_chord(input)
+        Evaluator::evaluate(&ast, input.into())
+        // ast.build_chord(input)
     }
 
     fn init(&mut self) {

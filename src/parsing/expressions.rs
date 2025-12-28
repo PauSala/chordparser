@@ -92,10 +92,7 @@ impl Expression for SusExp {
     fn evaluate(&self, ast: &mut super::ast::Ast) {
         ast.omits.push(Interval::MajorThird);
         match self.interval {
-            Interval::PerfectFourth => {
-                ast.is_sus = true;
-                ast.sus = Some(self.interval);
-            }
+            Interval::PerfectFourth => ast.sus = Some(self.interval),
             Interval::AugmentedFourth => ast.alts.push(Interval::SharpEleventh),
             Interval::MinorSecond => ast.alts.push(Interval::FlatNinth),
             Interval::MajorSecond => ast.alts.push(Interval::Ninth),

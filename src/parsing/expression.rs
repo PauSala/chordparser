@@ -30,7 +30,7 @@ pub enum Exp {
 }
 
 impl Exp {
-    pub(crate) fn evaluate(&self, ast: &mut Ast) {
+    pub(crate) fn old_evaluate(&self, ast: &mut Ast) {
         self.set_third(ast);
         match self {
             Exp::Power => ast.base_form = BaseForm::Power,

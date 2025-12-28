@@ -3,17 +3,17 @@ use crate::{
         intervals::{IntDegree, IntDegreeSet, Interval, IntervalSet},
         quality::{ChordQuality, EXACT_POW_SET, FIFTHS_SET, Pc, PcSet, THIRDS_SET},
     },
-    parsing::ast::Ast,
+    parsing::evaluator::Evaluator,
 };
 use ChordQuality::*;
 
-impl Ast {
+impl<'a> Evaluator<'a> {
     pub fn quality(&self) -> ChordQuality {
-        let intervals_slice = self.intervals.as_slice();
+        let intervals_slice = self.desc.intervals.as_slice();
         let mut virtual_set: PcSet = intervals_slice.into();
 
         // This is that in case of an omited third the quality can still be derived as Major or Minor.
-        if let Some(third) = self.third
+        if let Some(third) = self.desc.third
             && !virtual_set.difference(&EXACT_POW_SET).is_empty()
         {
             virtual_set.insert(Into::<Pc>::into(&third));
@@ -22,7 +22,7 @@ impl Ast {
     }
 
     pub fn normalize(&self) -> String {
-        let mut descriptor = self.root.to_string();
+        let mut descriptor = self.ast.root.to_string();
         let quality: ChordQuality = self.quality();
 
         if quality == Bass {
@@ -30,15 +30,15 @@ impl Ast {
             return descriptor;
         }
 
-        let is_sus = quality.is_sus(&(self.intervals.as_slice()).into());
-        let alterations = quality.alterations(&self.interval_set);
+        let is_sus = quality.is_sus(&(self.desc.intervals.as_slice()).into());
+        let alterations = quality.alterations(&self.desc.interval_set);
         let extensions = quality
-            .extensions(&self.interval_set)
+            .extensions(&self.desc.interval_set)
             .upgrade(Interval::MajorSixth, Interval::Thirteenth);
-        let (modifier, adds) = Ast::split_extensions(&extensions, &alterations, &quality);
+        let (modifier, adds) = Evaluator::split_extensions(&extensions, &alterations, &quality);
         let omits = self.omits(is_sus, &quality);
 
-        descriptor.push_str(&Ast::format_quality_modifier(&quality, modifier));
+        descriptor.push_str(&Evaluator::format_quality_modifier(&quality, modifier));
         if is_sus {
             descriptor.push_str("sus");
         }
@@ -69,7 +69,7 @@ impl Ast {
             descriptor.push(')');
         }
 
-        if let Some(bass) = self.bass {
+        if let Some(bass) = self.desc.bass {
             descriptor.push_str(&format!("/{}", bass.literal));
         }
         descriptor
@@ -121,7 +121,7 @@ impl Ast {
 
         let mut adds: Vec<Interval> = vec![];
         let mut main: Option<Interval> = None;
-        let degrees = Ast::extensions_to_degrees(alterations, extensions, quality);
+        let degrees = Evaluator::extensions_to_degrees(alterations, extensions, quality);
 
         for curr in extensions.iter() {
             // Maj7 is always an add if it isn't part of the quality (e.g. dim7Maj7)
@@ -167,7 +167,7 @@ impl Ast {
         if matches!(quality, ChordQuality::Bass | ChordQuality::Pow) {
             return omits;
         }
-        let intervals_slice = self.intervals.as_slice();
+        let intervals_slice = self.desc.intervals.as_slice();
         let ints: PcSet = intervals_slice.into();
         // is omit 3 if is not sus and there isn't a third
         if !is_sus && ints.intersection(&THIRDS_SET).is_empty() {

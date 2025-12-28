@@ -27,9 +27,8 @@ pub struct Ast {
     pub(crate) root: Note,
     pub(crate) bass: Option<Note>,
     pub(crate) expressions: Vec<Exp>,
-    pub(crate) norm_intervals: Vec<Interval>,
+    pub(crate) intervals: Vec<Interval>,
     pub(crate) display_intervals: Vec<Interval>,
-    pub(crate) is_sus: bool,
     pub(crate) errors: Vec<ParserError>,
 
     pub(crate) base_form: BaseForm,
@@ -46,11 +45,16 @@ pub struct Ast {
 impl Ast {
     pub(crate) fn build_chord(mut self, name: &str) -> Result<Chord, ParserErrors> {
         self.interval_set();
+
+        if !self.is_valid() {
+            return Err(ParserErrors::new(self.errors));
+        }
+
         let notes = self.notes();
         let note_literals = notes.iter().map(|a| a.to_string()).collect();
 
         let mut interval_degrees = Vec::new();
-        for e in &self.norm_intervals {
+        for e in &self.intervals {
             interval_degrees.push(e.to_degree().numeric());
         }
 
@@ -59,11 +63,6 @@ impl Ast {
             let v = e.st();
             semitones.push(v);
         }
-
-        if !self.is_valid() {
-            return Err(ParserErrors::new(self.errors));
-        }
-
         let normalized = self.normalize();
 
         Ok(Chord::builder(name, self.root)
@@ -74,21 +73,20 @@ impl Ast {
             .semitones(semitones)
             .interval_degrees(interval_degrees)
             .quality(self.quality())
-            .normalized_intervals(self.norm_intervals)
+            .normalized_intervals(self.intervals)
             .intervals(self.display_intervals)
             .normalized(normalized)
-            .is_sus(self.is_sus)
             .build())
     }
 
     /// Populate the chord's interval set
     fn interval_set(&mut self) {
         let expressions = mem::take(&mut self.expressions);
-        expressions.iter().for_each(|exp| exp.evaluate(self));
+        expressions.iter().for_each(|exp| exp.old_evaluate(self));
         self.expressions = expressions;
 
         // Set quality intervals
-        self.base_form.interval_set(&mut self.interval_set);
+        self.base_form.update_triad(&mut self.interval_set);
 
         if let Some(sus) = self.sus {
             Self::remove_thirds(&mut self.interval_set);
@@ -139,9 +137,9 @@ impl Ast {
     }
 
     fn set_intervals(&mut self) {
-        self.norm_intervals = self.interval_set.iter().collect();
-        self.norm_intervals.sort_by_key(|i| i.st());
-        self.display_intervals = self.norm_intervals.clone();
+        self.intervals = self.interval_set.iter().collect();
+        self.intervals.sort_by_key(|i| i.st());
+        self.display_intervals = self.intervals.clone();
         if let Some(Exp::Sus(sus_exp)) = self.expressions.iter().find(|e| matches!(e, Exp::Sus(_)))
         {
             self.display_intervals = self
@@ -228,7 +226,7 @@ impl Ast {
         let mut count = 0u16;
         let mut intervals = [None; 12];
 
-        for s in self.norm_intervals.iter() {
+        for s in self.intervals.iter() {
             let pos = s.st() % 12;
             count |= 1 << pos;
             intervals[pos as usize] = Some(s);
@@ -253,7 +251,7 @@ impl Ast {
 
     fn has_inconsistent_extension(&self, int: &Interval, matches: Vec<&Interval>) -> bool {
         for i in matches {
-            if self.norm_intervals.contains(i) && self.norm_intervals.contains(int) {
+            if self.intervals.contains(i) && self.intervals.contains(int) {
                 return true;
             }
         }
@@ -393,9 +391,8 @@ impl Default for Ast {
             root: Note::new(NoteLiteral::C, None),
             bass: None,
             expressions: Vec::new(),
-            norm_intervals: vec![Interval::Unison],
+            intervals: vec![Interval::Unison],
             display_intervals: vec![],
-            is_sus: false,
             errors: Vec::new(),
 
             base_form: BaseForm::Major,
@@ -429,7 +426,8 @@ pub(crate) enum BaseForm {
 }
 
 impl BaseForm {
-    fn interval_set(&self, intervals: &mut IntervalSet) {
+    /// Mutates `intervals` adding or removing thirds and fifths
+    pub(crate) fn update_triad(&self, intervals: &mut IntervalSet) {
         match self {
             BaseForm::Major => {}
             BaseForm::Power => {
@@ -441,12 +439,6 @@ impl BaseForm {
             BaseForm::Dim | BaseForm::HalfDim | BaseForm::Dim7 => {
                 intervals.replace(Interval::MajorThird, Interval::MinorThird);
                 intervals.replace(Interval::PerfectFifth, Interval::DiminishedFifth);
-
-                if *self == BaseForm::HalfDim {
-                    intervals.insert(Interval::MinorSeventh);
-                } else if *self == BaseForm::Dim7 {
-                    intervals.insert(Interval::DiminishedSeventh);
-                }
             }
         }
     }

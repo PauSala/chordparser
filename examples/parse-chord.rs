@@ -3,7 +3,7 @@ use std::path::Path;
 /// Parse a chord and generate a both json-string representation and a MIDI file.
 pub fn main() {
     let mut parser = Parser::new();
-    let origin = "CMaj7add9";
+    let origin = "Cmi7(omit5)";
     let result = parser.parse(origin);
 
     match result {
