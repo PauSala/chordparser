@@ -8,8 +8,7 @@ use crate::{
     },
     parsing::{
         ast::{Ast, BaseForm},
-        expression::Exp,
-        expressions::{ExtensionExp, SusExp},
+        expression::*,
         parser_error::{ParserError, ParserErrors},
         validator::Validator,
     },
@@ -106,7 +105,7 @@ impl<'a> Evaluator<'a> {
                 Exp::Minor => Evaluator::evaluate_minor(&mut self.dc),
                 Exp::Dim7 => Evaluator::evaluate_dim7(&mut self.dc),
                 Exp::Dim => Evaluator::evaluate_dim(&mut self.dc),
-                Exp::Alt(_) => Evaluator::evaluate_alt(&mut self.dc),
+                Exp::Alt => Evaluator::evaluate_alt(&mut self.dc),
                 Exp::HalfDim => Evaluator::evaluate_half_dim(&mut self.dc),
                 Exp::Sus(exp) => Evaluator::evaluate_sus(&mut self.dc, exp),
                 Exp::Extension(exp) => Evaluator::evaluate_extension(&mut self.dc, exp),

@@ -2,7 +2,6 @@
 pub(crate) mod ast;
 pub(crate) mod evaluator;
 pub(crate) mod expression;
-pub(crate) mod expressions;
 pub(crate) mod lexer;
 pub(crate) mod normalize;
 pub mod parser_error;
@@ -15,11 +14,10 @@ use crate::{
         intervals::Interval,
         note::{Modifier, Note, NoteLiteral},
     },
-    parsing::evaluator::Evaluator,
+    parsing::{evaluator::Evaluator, expression::*},
 };
 use ast::Ast;
 use expression::Exp;
-use expressions::{AddExp, AltExp, ExtensionExp, OmitExp, SlashBassExp, SusExp};
 use lexer::Lexer;
 use parser_error::{ParserError, ParserErrors};
 use std::{iter::Peekable, slice::Iter};
@@ -161,7 +159,7 @@ impl Parser {
             TokenType::Extension(ext) => self.extension(ext, token, ast),
             TokenType::Add => self.add(token, tokens, ast),
             TokenType::Omit => self.omit(token, tokens, ast),
-            TokenType::Alt => ast.expressions.push(Exp::Alt(AltExp)),
+            TokenType::Alt => ast.expressions.push(Exp::Alt),
             TokenType::Sus => self.sus(tokens, ast),
             TokenType::Minor => ast.expressions.push(Exp::Minor),
             TokenType::Hyphen => self.hyphen(tokens, token.pos, ast),
