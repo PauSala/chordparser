@@ -9,8 +9,6 @@ pub struct Ast {
     pub(crate) expressions: Vec<Exp>,
 }
 
-impl Ast {}
-
 impl Default for Ast {
     fn default() -> Ast {
         Ast {
