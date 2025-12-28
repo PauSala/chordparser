@@ -47,7 +47,7 @@ pub struct Ast {
 
 impl Ast {
     pub(crate) fn build_chord(mut self, name: &str) -> Result<Chord, ParserErrors> {
-        self.set_intervals();
+        self.interval_set();
         let notes = self.notes();
         let mut semitones = Vec::new();
         let mut interval_degrees = Vec::new();
@@ -90,7 +90,6 @@ impl Ast {
     }
 
     fn set_intervals(&mut self) {
-        self.build();
         self.norm_intervals = self.interval_set.iter().collect();
         self.norm_intervals.sort_by_key(|i| i.st());
         self.intervals = self.norm_intervals.clone();
@@ -112,7 +111,7 @@ impl Ast {
         }
     }
 
-    fn build(&mut self) {
+    fn interval_set(&mut self) {
         let expressions = mem::take(&mut self.expressions);
         expressions.iter().for_each(|exp| exp.pass(self));
         self.expressions = expressions;
@@ -168,6 +167,7 @@ impl Ast {
         }
 
         self.prune_step();
+        self.set_intervals();
     }
 
     fn remove_thirds(interval_set: &mut IntervalSet) {
