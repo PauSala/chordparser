@@ -81,7 +81,7 @@ impl Ast {
             .semantic_intervals(semantic_intervals)
             .normalized_intervals(self.norm_intervals)
             .intervals(self.intervals)
-            .new_normalized(normalized)
+            .normalized(normalized)
             .is_sus(self.is_sus)
             .build())
     }

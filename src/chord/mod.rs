@@ -20,9 +20,7 @@ pub struct Chord {
     pub origin: String,
     /// The descriptor of the chord (all beyond its root).
     pub descriptor: String,
-    /// Normalized input
     pub normalized: String,
-    pub new_normalized: String,
     /// The root note of the chord.
     pub root: Note,
     /// The bass note of the chord if any is added with a slash.
@@ -145,7 +143,6 @@ impl Chord {
 pub struct ChordBuilder {
     origin: String,
     normalized: String,
-    new_normalized: String,
     descriptor: String,
     root: Note,
     bass: Option<Note>,
@@ -164,7 +161,6 @@ impl ChordBuilder {
         ChordBuilder {
             origin: origin.to_string(),
             normalized: "".to_string(),
-            new_normalized: "".to_string(),
             descriptor: String::new(),
             root,
             bass: None,
@@ -234,15 +230,9 @@ impl ChordBuilder {
         self
     }
 
-    pub fn new_normalized(mut self, new_normalized: String) -> ChordBuilder {
-        self.new_normalized = new_normalized;
-        self
-    }
-
     pub fn build(self) -> Chord {
         let mut chord = Chord {
             origin: self.origin,
-            normalized: self.normalized,
             descriptor: self.descriptor,
             root: self.root,
             bass: self.bass,
@@ -256,7 +246,7 @@ impl ChordBuilder {
             is_sus: self.is_sus,
             semitones: self.semitones,
             rbs: self.rbs,
-            new_normalized: self.new_normalized,
+            normalized: self.normalized,
         };
         chord.complete_quality = InnerQuality::from_chord(&chord);
         chord.quality = Quality::new(&chord.rbs);
