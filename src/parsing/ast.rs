@@ -39,17 +39,16 @@ impl BaseForm {
                 intervals.remove(Interval::MajorThird);
             }
             BaseForm::Minor => {
-                intervals.replace(Interval::MajorThird, Interval::MinorThird);
+                intervals.remove_then_add(Interval::MajorThird, Interval::MinorThird);
                 if intervals.contains(Interval::PerfectFifth)
                     && intervals.contains(Interval::DiminishedSeventh)
                 {
-                    intervals.remove(Interval::DiminishedSeventh);
-                    intervals.insert(Interval::MajorSixth);
+                    intervals.remove_then_add(Interval::DiminishedSeventh, Interval::MajorSixth);
                 }
             }
             BaseForm::Dim | BaseForm::HalfDim | BaseForm::Dim7 => {
-                intervals.replace(Interval::MajorThird, Interval::MinorThird);
-                intervals.replace(Interval::PerfectFifth, Interval::DiminishedFifth);
+                intervals.remove_then_add(Interval::MajorThird, Interval::MinorThird);
+                intervals.remove_then_add(Interval::PerfectFifth, Interval::DiminishedFifth);
             }
         }
     }

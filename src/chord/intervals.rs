@@ -39,12 +39,22 @@ pub enum Interval {
 }
 
 impl IntervalSet {
-    pub fn replace(&mut self, remove: Interval, add: Interval) {
+    /// Removes a specific interval from the set and adds another.
+    ///
+    /// This method **unconditionally** removes `remove` and inserts `add`.
+    /// It does **not** check whether `remove` was actually present before inserting `add`.
+    ///
+    pub fn remove_then_add(&mut self, remove: Interval, add: Interval) {
         self.remove(remove);
         self.insert(add);
     }
 
-    pub fn upgrade(&self, target: Interval, dest: Interval) -> IntervalSet {
+    /// Returns a new `IntervalSet` where a specific interval is replaced with another.
+    ///
+    /// This method produces a **new set** with the following behavior:
+    /// - Every occurrence of `target` in the original set is replaced by `dest`.
+    /// - The original set is **not modified**.
+    pub fn replace(&self, target: Interval, dest: Interval) -> IntervalSet {
         self.iter()
             .map(|a| if a == target { dest } else { a })
             .collect()

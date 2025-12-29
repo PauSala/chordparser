@@ -49,7 +49,7 @@ impl<'a> Evaluator<'a> {
         let alterations = quality.alterations(&self.dc.interval_set);
         let extensions = quality
             .extensions(&self.dc.interval_set)
-            .upgrade(Interval::MajorSixth, Interval::Thirteenth);
+            .replace(Interval::MajorSixth, Interval::Thirteenth);
         let (modifier, adds) = Evaluator::split_extensions(&extensions, &alterations, &quality);
         let omits = self.omits(is_sus, &quality);
 
@@ -157,7 +157,7 @@ impl<'a> Evaluator<'a> {
         };
         let alt_degrees: IntDegreeSet = alterations.into();
         let ext_degrees: IntDegreeSet =
-            (&extensions.upgrade(Interval::MajorSixth, Interval::Thirteenth)).into();
+            (&extensions.replace(Interval::MajorSixth, Interval::Thirteenth)).into();
         let mut res = alt_degrees.union(&ext_degrees);
         if let Some(seventh) = seventh {
             res.insert(seventh);

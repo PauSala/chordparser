@@ -136,9 +136,10 @@ impl<'a> Evaluator<'a> {
 
     fn apply_alterations(mut self) -> Self {
         self.dc.alts.iter().for_each(|alt| match alt {
-            Interval::DiminishedFifth | Interval::AugmentedFifth | Interval::FlatThirteenth => {
-                self.dc.interval_set.replace(Interval::PerfectFifth, *alt)
-            }
+            Interval::DiminishedFifth | Interval::AugmentedFifth | Interval::FlatThirteenth => self
+                .dc
+                .interval_set
+                .remove_then_add(Interval::PerfectFifth, *alt),
             _ => self.dc.interval_set.insert(*alt),
         });
         self
@@ -149,7 +150,7 @@ impl<'a> Evaluator<'a> {
             if self.dc.base_form == BaseForm::Major && ext == Interval::Eleventh {
                 self.dc
                     .interval_set
-                    .replace(Interval::MajorThird, Interval::PerfectFourth);
+                    .remove_then_add(Interval::MajorThird, Interval::PerfectFourth);
             } else {
                 self.dc.interval_set.insert(ext);
             }
