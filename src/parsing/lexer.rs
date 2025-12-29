@@ -15,10 +15,7 @@ impl Lexer {
     }
 
     fn is_valid_extension(&self, s: &str) -> bool {
-        match s {
-            "2" | "3" | "4" | "5" | "6" | "7" | "9" | "11" | "13" => true,
-            _ => false,
-        }
+        matches!(s, "2" | "3" | "4" | "5" | "6" | "7" | "9" | "11" | "13")
     }
 
     pub fn scan_tokens<'a>(
@@ -118,12 +115,10 @@ impl Lexer {
                 }
             }
 
-            if !matched {
-                if let Some(c) = input[start..].chars().next() {
-                    let c_len = c.len_utf8();
-                    self.add_token(TokenType::Illegal, pos + start, c_len, tokens);
-                    start += c_len;
-                }
+            if !matched && let Some(c) = input[start..].chars().next() {
+                let c_len = c.len_utf8();
+                self.add_token(TokenType::Illegal, pos + start, c_len, tokens);
+                start += c_len;
             }
         }
     }
