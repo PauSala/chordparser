@@ -99,7 +99,6 @@ impl<'a> Token<'a> {
 }
 
 use std::fmt::Display;
-
 impl<'a> Display for Token<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&format!("{}", self.token_type))?;
