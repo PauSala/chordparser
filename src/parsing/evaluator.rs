@@ -149,55 +149,62 @@ impl<'a> Evaluator<'a> {
     }
 
     fn implied_extensions(mut self) -> Self {
+        let seventh = self.implied_seventh();
         if let Some(ext) = self.dc.max_extension {
-            if self.dc.base_form == BaseForm::Major && ext == Interval::Eleventh {
-                self.dc
-                    .interval_set
-                    .remove_then_add(Interval::MajorThird, Interval::PerfectFourth);
-            } else {
-                self.dc.interval_set.insert(ext);
-            }
-
-            let seventh = if self
-                .ast
-                .expressions
-                .iter()
-                .any(|exp| matches!(exp, Exp::Maj7 | Exp::Maj))
-            {
-                Interval::MajorSeventh
-            } else {
-                Interval::MinorSeventh
-            };
-
-            let thirteenth = if self.dc.base_form == BaseForm::Major {
-                vec![Interval::Ninth, seventh]
-            } else {
-                vec![Interval::Eleventh, Interval::Ninth, seventh]
-            };
-
+            self.maybe_map_11_to_4(ext);
             let to_add: Vec<Interval> = match ext {
-                Interval::Thirteenth => thirteenth,
+                Interval::Thirteenth => self.thirteenth_implied_extensions(seventh),
                 Interval::Eleventh => vec![Interval::Ninth, seventh],
-                Interval::Ninth => {
-                    let has_sixth = self.dc.interval_set.contains(Interval::MajorSixth)
-                        || self.dc.interval_set.contains(Interval::MinorSixth);
-
-                    if has_sixth { vec![] } else { vec![seventh] }
-                }
+                Interval::Ninth => self.ninth_implied_extensions(seventh),
                 _ => vec![],
             };
 
             for interval in to_add {
                 let conflicts = CONFLICT_MAP.get(&interval).cloned().unwrap_or_default();
-                let blocked = self.dc.interval_set.contains(interval)
-                    || conflicts.iter().any(|c| self.dc.interval_set.contains(c));
-
-                if !blocked {
+                if !conflicts.iter().any(|c| self.dc.interval_set.contains(c)) {
                     self.dc.interval_set.insert(interval);
                 }
             }
         }
         self
+    }
+
+    fn maybe_map_11_to_4(&mut self, ext: Interval) {
+        if self.dc.base_form == BaseForm::Major && ext == Interval::Eleventh {
+            self.dc
+                .interval_set
+                .remove_then_add(Interval::MajorThird, Interval::PerfectFourth);
+        } else {
+            self.dc.interval_set.insert(ext);
+        }
+    }
+
+    fn implied_seventh(&self) -> Interval {
+        if self
+            .ast
+            .expressions
+            .iter()
+            .any(|exp| matches!(exp, Exp::Maj7 | Exp::Maj))
+        {
+            Interval::MajorSeventh
+        } else {
+            Interval::MinorSeventh
+        }
+    }
+
+    fn thirteenth_implied_extensions(&self, seventh: Interval) -> Vec<Interval> {
+        if self.dc.base_form == BaseForm::Major {
+            vec![Interval::Ninth, seventh]
+        } else {
+            vec![Interval::Eleventh, Interval::Ninth, seventh]
+        }
+    }
+
+    fn ninth_implied_extensions(&self, seventh: Interval) -> Vec<Interval> {
+        let has_sixth = self.dc.interval_set.contains(Interval::MajorSixth)
+            || self.dc.interval_set.contains(Interval::MinorSixth);
+
+        if has_sixth { vec![] } else { vec![seventh] }
     }
 
     fn apply_omits(mut self) -> Self {
