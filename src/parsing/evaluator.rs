@@ -151,7 +151,7 @@ impl<'a> Evaluator<'a> {
     fn implied_extensions(mut self) -> Self {
         let seventh = self.implied_seventh();
         if let Some(ext) = self.dc.max_extension {
-            self.maybe_map_11_to_4(ext);
+            self.insert_extension(ext);
             let to_add: Vec<Interval> = match ext {
                 Interval::Thirteenth => self.thirteenth_implied_extensions(seventh),
                 Interval::Eleventh => vec![Interval::Ninth, seventh],
@@ -169,7 +169,7 @@ impl<'a> Evaluator<'a> {
         self
     }
 
-    fn maybe_map_11_to_4(&mut self, ext: Interval) {
+    fn insert_extension(&mut self, ext: Interval) {
         if self.dc.base_form == BaseForm::Major && ext == Interval::Eleventh {
             self.dc
                 .interval_set

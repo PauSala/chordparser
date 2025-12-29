@@ -41,9 +41,7 @@ pub enum Interval {
 impl IntervalSet {
     /// Removes a specific interval from the set and adds another.
     ///
-    /// This method **unconditionally** removes `remove` and inserts `add`.
-    /// It does **not** check whether `remove` was actually present before inserting `add`.
-    ///
+    /// **Unconditionally** removes `remove` and inserts `add`.
     pub fn remove_then_add(&mut self, remove: Interval, add: Interval) {
         self.remove(remove);
         self.insert(add);
