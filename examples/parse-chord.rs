@@ -1,3 +1,8 @@
+use chordparser::{parsing::Parser, voicings::generate_voicing};
+use midly::{
+    Format, Header, MetaMessage, Smf, Timing, Track, TrackEvent, TrackEventKind,
+    num::{u4, u7},
+};
 use std::path::Path;
 
 /// Parse a chord and generate a both json-string representation and a MIDI file.
@@ -24,12 +29,6 @@ pub fn main() {
         }
     }
 }
-
-use chordparser::{parsing::Parser, voicings::generate_voicing};
-use midly::{
-    Format, Header, MetaMessage, Smf, Timing, Track, TrackEvent, TrackEventKind,
-    num::{u4, u7},
-};
 
 /// Generate a MIDI file from Chord.
 /// # Arguments
