@@ -2,17 +2,14 @@ use super::token::{Token, TokenType};
 use std::{iter::Peekable, str::Chars};
 
 pub struct Lexer {
-    tokens: Vec<Token>,
     current: usize,
     input_len: usize,
 }
 
 impl Lexer {
     pub fn new() -> Lexer {
-        // For some reason, generating this with lazy_static! does not improve performance at all.
         Lexer {
             input_len: 0,
-            tokens: Vec::new(),
             current: 0,
         }
     }
@@ -24,14 +21,18 @@ impl Lexer {
         }
     }
 
-    pub fn scan_tokens(&mut self, source: &str) -> Vec<Token> {
+    pub fn scan_tokens<'a>(
+        &mut self,
+        source: &'a str,
+        tokens: &mut Vec<Token<'a>>,
+    ) -> Vec<Token<'a>> {
         self.input_len = source.len();
         let mut iter = source.chars().peekable();
         while !self.is_at_end() {
-            self.scan_token(&mut iter);
+            self.scan_token(&mut iter, tokens, source);
         }
-        self.add_token(TokenType::Eof, self.current + 1, 0);
-        let res = std::mem::take(&mut self.tokens);
+        self.add_token(TokenType::Eof, self.current + 1, 0, tokens);
+        let res = std::mem::take(tokens);
         self.current = 0;
         res
     }
@@ -40,54 +41,51 @@ impl Lexer {
         self.current >= self.input_len
     }
 
-    fn scan_token(&mut self, chars: &mut Peekable<Chars>) {
+    fn scan_token<'a>(
+        &mut self,
+        chars: &mut Peekable<Chars>,
+        tokens: &mut Vec<Token<'a>>,
+        source: &'a str,
+    ) {
         let c = self.advance(chars);
         match c {
             None => (),
             Some(c) => match c {
-                '#' | '♯' => self.add_token(TokenType::Sharp, self.current, 1),
-                '♭' => self.add_token(TokenType::Flat, self.current, 1),
-                '△' | '^' | 'Δ' => self.add_token(TokenType::Maj7, self.current, 1),
-                '-' => self.add_token(TokenType::Hyphen, self.current, 1),
-                '°' => self.add_token(TokenType::Dim, self.current, 1),
-                'ø' => self.add_token(TokenType::HalfDim, self.current, 1),
-                '/' => self.add_token(TokenType::Slash, self.current, 1),
-                '+' => self.add_token(TokenType::Aug, self.current, 1),
+                '#' | '♯' => self.add_token(TokenType::Sharp, self.current, 1, tokens),
+                '♭' => self.add_token(TokenType::Flat, self.current, 1, tokens),
+                '△' | '^' | 'Δ' => self.add_token(TokenType::Maj7, self.current, 1, tokens),
+                '-' => self.add_token(TokenType::Hyphen, self.current, 1, tokens),
+                '°' => self.add_token(TokenType::Dim, self.current, 1, tokens),
+                'ø' => self.add_token(TokenType::HalfDim, self.current, 1, tokens),
+                '/' => self.add_token(TokenType::Slash, self.current, 1, tokens),
+                '+' => self.add_token(TokenType::Aug, self.current, 1, tokens),
                 ' ' => (),
-                ',' => self.add_token(TokenType::Comma, self.current, 1),
-                '(' => self.add_token(TokenType::LParent, self.current, 1),
-                ')' => self.add_token(TokenType::RParent, self.current, 1),
+                ',' => self.add_token(TokenType::Comma, self.current, 1, tokens),
+                '(' => self.add_token(TokenType::LParent, self.current, 1, tokens),
+                ')' => self.add_token(TokenType::RParent, self.current, 1, tokens),
                 c => {
+                    let char_len = c.len_utf8();
+                    let start_pos = self.current - char_len;
+
                     if c.is_numeric() {
-                        let pos = self.current;
-                        let mut literal = String::from(c);
-                        let p = chars.peek();
-                        let mut cond = p.is_some_and(|p| p.is_numeric());
-                        while cond {
-                            let c = self.advance(chars).unwrap();
-                            literal.push(c);
-                            let p = chars.peek();
-                            cond = p.is_some_and(|p| p.is_numeric());
+                        while chars.peek().is_some_and(|p| p.is_numeric()) {
+                            self.advance(chars);
                         }
 
-                        self.parse_number(&literal, pos);
+                        let literal = &source[start_pos..self.current];
+                        self.parse_number(literal, start_pos, tokens);
                         return;
                     }
-                    if self.is_alphabetic(&c) {
-                        let pos = self.current;
-                        let mut literal = String::from(c);
-                        let p = chars.peek();
-                        let mut cond = p.is_some_and(|p| self.is_alphabetic(p));
 
-                        while cond {
-                            let c = self.advance(chars).unwrap();
-                            literal.push(c);
-                            let p = chars.peek();
-                            cond = p.is_some_and(|p| self.is_alphabetic(p));
+                    if self.is_alphabetic(&c) {
+                        while chars.peek().is_some_and(|p| self.is_alphabetic(p)) {
+                            self.advance(chars);
                         }
-                        self.parse_string(&literal, pos);
+
+                        let literal = &source[start_pos..self.current];
+                        self.parse_string(literal, start_pos, tokens);
                     } else {
-                        self.add_token(TokenType::Illegal, self.current, 1);
+                        self.add_token(TokenType::Illegal, start_pos, char_len, tokens);
                     }
                 }
             },
@@ -102,63 +100,63 @@ impl Lexer {
     /// The parsing is done by checking first all the string and advancing the start to ensure that the last longest match is found.  
     /// For example, for `Cminomit5`, those are the handled parts:  
     /// `Cminomit` -> `minomit` -> `inomit` -> `omit` (match!) -> `Cmin` -> `min` (match!) -> `C` (match!)  
-    fn parse_string(&mut self, s: &str, pos: usize) {
+    fn parse_string<'a>(&mut self, input: &'a str, pos: usize, tokens: &mut Vec<Token<'a>>) {
         let mut start = 0;
-        let mut end = s.len();
-        let mut tokens = Vec::new();
-        let mut errors = Vec::new();
-        while end > 0 {
-            let substring = &s[start..end];
-            if let Some(m) = TokenType::from_string(substring) {
-                tokens.push((m, pos + start, substring.len()));
-                end = start;
-                start = 0;
-                continue;
+        while start < input.len() {
+            let mut matched = false;
+            for end in (start + 1..=input.len()).rev() {
+                if !input.is_char_boundary(end) {
+                    continue;
+                }
+
+                let substring = &input[start..end];
+                if let Some(m) = TokenType::from_string(substring) {
+                    self.add_token(m, pos + start, substring.len(), tokens);
+                    start = end;
+                    matched = true;
+                    break;
+                }
             }
 
-            start += 1;
-            if end == start {
-                errors.push((TokenType::Illegal, (pos + start - 1)));
-                start = 0;
-                end -= 1;
+            if !matched {
+                if let Some(c) = input[start..].chars().next() {
+                    let c_len = c.len_utf8();
+                    self.add_token(TokenType::Illegal, pos + start, c_len, tokens);
+                    start += c_len;
+                }
             }
-        }
-
-        while let Some((token_type, pos, len)) = tokens.pop() {
-            self.add_token(token_type, pos, len);
-        }
-
-        while let Some((token_type, pos)) = errors.pop() {
-            self.add_token(token_type, pos, 1);
         }
     }
 
-    fn parse_number(&mut self, s: &str, pos: usize) {
+    fn parse_number<'a>(&mut self, input: &'a str, pos: usize, tokens: &mut Vec<Token<'a>>) {
         let mut start = 0;
-        let mut end = s.len();
+        let mut end = input.len();
         let mut errors = Vec::new();
-        while start < s.len() {
-            let substring = &s[start..end];
+        while start < input.len() {
+            let substring = &input[start..end];
             if self.is_valid_extension(substring) {
                 self.add_token(
                     TokenType::Extension(substring.parse().unwrap_or(0)),
                     pos + start,
                     substring.len(),
+                    tokens,
                 );
                 start = end;
-                end = s.len();
+                end = input.len();
                 continue;
             }
-            end -= 1;
+            if let Some(last_char) = input[..end].chars().next_back() {
+                end -= last_char.len_utf8();
+            }
             if end == start {
                 errors.push((TokenType::Illegal, pos + start));
-                end = s.len();
+                end = input.len();
                 start += 1;
             }
         }
 
         while let Some((token_type, pos)) = errors.pop() {
-            self.add_token(token_type, pos, 1);
+            self.add_token(token_type, pos, 1, tokens);
         }
     }
 
@@ -166,13 +164,19 @@ impl Lexer {
         c.is_ascii_alphabetic()
     }
 
-    fn add_token(&mut self, token_type: TokenType, pos: usize, len: usize) {
-        self.tokens.push(Token::new(token_type, pos, len));
+    fn add_token<'a>(
+        &mut self,
+        token_type: TokenType<'a>,
+        pos: usize,
+        len: usize,
+        tokens: &mut Vec<Token<'a>>,
+    ) {
+        tokens.push(Token::new(token_type, pos, len));
     }
-
     fn advance(&mut self, chars: &mut Peekable<Chars>) -> Option<char> {
-        self.current += 1;
-        chars.next()
+        let c = chars.next()?;
+        self.current += c.len_utf8();
+        Some(c)
     }
 }
 

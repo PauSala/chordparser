@@ -1,7 +1,7 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(u8)]
-pub enum TokenType {
-    Note(String),
+pub enum TokenType<'a> {
+    Note(&'a str),
     Sharp,
     Flat,
     Aug,
@@ -25,8 +25,8 @@ pub enum TokenType {
     Illegal,
     Eof,
 }
-impl TokenType {
-    pub fn from_string(i: &str) -> Option<TokenType> {
+impl<'a> TokenType<'a> {
+    pub fn from_string(i: &'_ str) -> Option<TokenType<'_>> {
         match i {
             "BASS" | "Bass" | "bass" => Some(TokenType::Bass),
             "MAJ" | "Maj" | "maj" | "MAJOR" | "Major" | "major" | "MA" | "Ma" | "ma" | "M" => {
@@ -43,19 +43,19 @@ impl TokenType {
             "ADD" | "Add" | "add" => Some(TokenType::Add),
             "O" | "o" | "°" => Some(TokenType::Dim),
             "OMIT" | "Omit" | "omit" | "NO" | "No" | "no" => Some(TokenType::Omit),
-            "A" => Some(TokenType::Note("A".to_string())),
-            "B" => Some(TokenType::Note("B".to_string())),
-            "C" => Some(TokenType::Note("C".to_string())),
-            "D" => Some(TokenType::Note("D".to_string())),
-            "E" => Some(TokenType::Note("E".to_string())),
-            "F" => Some(TokenType::Note("F".to_string())),
-            "G" => Some(TokenType::Note("G".to_string())),
+            "A" => Some(TokenType::Note(i)),
+            "B" => Some(TokenType::Note(i)),
+            "C" => Some(TokenType::Note(i)),
+            "D" => Some(TokenType::Note(i)),
+            "E" => Some(TokenType::Note(i)),
+            "F" => Some(TokenType::Note(i)),
+            "G" => Some(TokenType::Note(i)),
             _ => None,
         }
     }
 }
 
-impl Display for TokenType {
+impl<'a> Display for TokenType<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TokenType::Note(note) => f.write_str(note)?,
@@ -86,14 +86,14 @@ impl Display for TokenType {
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Token {
-    pub token_type: TokenType,
+pub struct Token<'a> {
+    pub token_type: TokenType<'a>,
     pub pos: usize,
     pub len: usize,
     pub derived: bool,
 }
 
-impl Token {
+impl<'a> Token<'a> {
     pub fn new(token_type: TokenType, pos: usize, len: usize) -> Token {
         Token {
             token_type,
@@ -106,7 +106,7 @@ impl Token {
 
 use std::fmt::Display;
 
-impl Display for Token {
+impl<'a> Display for Token<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&format!("{}", self.token_type))?;
         Ok(())

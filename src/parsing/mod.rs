@@ -113,8 +113,9 @@ impl Parser {
     pub fn parse(&mut self, input: &str) -> Result<Chord, ParserErrors> {
         self.init();
         let mut ast = Ast::default();
-        let binding = self.lexer.scan_tokens(input);
-        let tokens = self.pre_process(&binding);
+        let mut tokens = Vec::with_capacity(input.len());
+        let binding = self.lexer.scan_tokens(input, &mut tokens);
+        let tokens = Self::pre_process(&binding);
         let mut tokens = tokens.iter().peekable();
 
         self.read_tokens(&mut tokens, &mut ast);
@@ -486,16 +487,16 @@ impl Parser {
     }
 
     /// Normalizes the token stream by collapsing 7ths if possible (matching them with non-derived maj and dim tokens)
-    fn pre_process(&self, tokens: &[Token]) -> Vec<Token> {
-        self.fold_7(
-            &self.fold_7(&self.concat_maj7(tokens), TokenType::Dim, TokenType::Dim7),
+    fn pre_process<'a>(tokens: &[Token<'a>]) -> Vec<Token<'a>> {
+        Self::fold_7(
+            &Self::fold_7(&Self::concat_maj7(tokens), TokenType::Dim, TokenType::Dim7),
             TokenType::Maj,
             TokenType::Maj7,
         )
     }
 
     /// Fold Maj + consecutive 7 into Maj7 Token, including ([Δ |^] + 7)
-    fn concat_maj7(&self, tokens: &[Token]) -> Vec<Token> {
+    fn concat_maj7<'a>(tokens: &[Token<'a>]) -> Vec<Token<'a>> {
         let mut out = Vec::with_capacity(tokens.len());
         let mut i = 0;
 
@@ -523,12 +524,11 @@ impl Parser {
         out
     }
 
-    fn fold_7(
-        &self,
-        tokens: &[Token],
+    fn fold_7<'a>(
+        tokens: &[Token<'a>],
         match_token: TokenType,
-        insert_token_type: TokenType,
-    ) -> Vec<Token> {
+        insert_token_type: TokenType<'a>,
+    ) -> Vec<Token<'a>> {
         let mut out: Vec<Token> = Vec::with_capacity(tokens.len());
         let mut pending_match = Vec::new();
         let mut pending_seven = Vec::new();
@@ -540,7 +540,7 @@ impl Parser {
                 t if *t == match_token && !token.derived => {
                     if let Some(prev_idx) = pending_seven.pop() {
                         out[prev_idx] =
-                            self.merge_tokens(&out[prev_idx], token, &insert_token_type);
+                            Self::merge_tokens(&out[prev_idx], token, &insert_token_type);
                     } else {
                         pending_match.push(current_idx);
                         out.push(token.clone());
@@ -549,7 +549,7 @@ impl Parser {
                 TokenType::Extension(7) => {
                     if let Some(prev_idx) = pending_match.pop() {
                         out[prev_idx] =
-                            self.merge_tokens(&out[prev_idx], token, &insert_token_type);
+                            Self::merge_tokens(&out[prev_idx], token, &insert_token_type);
                     } else {
                         pending_seven.push(current_idx);
                         out.push(token.clone());
@@ -561,7 +561,7 @@ impl Parser {
         out
     }
 
-    fn merge_tokens(&self, t1: &Token, t2: &Token, new_type: &TokenType) -> Token {
+    fn merge_tokens<'a>(t1: &Token, t2: &Token, new_type: &TokenType<'a>) -> Token<'a> {
         Token {
             token_type: new_type.clone(),
             pos: t1.pos.min(t2.pos),
