@@ -5,6 +5,8 @@ use std::{
     fmt::{self},
 };
 
+use crate::chord::intervals::Interval;
+
 /// Errors that can occur when parsing a chord.
 /// Includes a list of string messages with a reason an the position in the input string when possible.
 /// The position is 1-based.
@@ -14,7 +16,7 @@ pub enum ParserError {
     IllegalToken(usize),
     UnexpectedNote(usize),
     DuplicateModifier(String),
-    InconsistentExtension(String),
+    InconsistentExtension(Interval),
     DuplicateExtension(usize),
     InvalidExtension(usize),
     WrongExpressionTarget(usize),

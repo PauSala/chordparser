@@ -1,8 +1,34 @@
 use crate::{
-    chord::intervals::Interval,
+    chord::intervals::{Interval, IntervalSet},
     parsing::{expression::Exp, parser_error::ParserError},
 };
+use Interval::*;
 use std::collections::HashMap;
+const INCOMPAT_SET: &[(Interval, IntervalSet)] = &[
+    (
+        MajorThird,
+        IntervalSet::from_array([MajorThird, MinorThird]),
+    ),
+    (
+        PerfectFifth,
+        IntervalSet::from_array([PerfectFifth, DiminishedFifth]),
+    ),
+    (
+        PerfectFifth,
+        IntervalSet::from_array([PerfectFifth, AugmentedFifth]),
+    ),
+    (
+        MajorSixth,
+        IntervalSet::from_array([MajorSixth, MinorSixth]),
+    ),
+    (Ninth, IntervalSet::from_array([Ninth, FlatNinth])),
+    (Ninth, IntervalSet::from_array([Ninth, SharpNinth])),
+    (Eleventh, IntervalSet::from_array([Eleventh, SharpEleventh])),
+    (
+        Thirteenth,
+        IntervalSet::from_array([Thirteenth, FlatThirteenth]),
+    ),
+];
 
 pub(crate) struct Validator;
 impl Validator {
@@ -62,12 +88,8 @@ impl Validator {
             if let Exp::Extension(ext) = ext {
                 let index = ext.interval.st() as usize;
                 match ext.interval {
-                    Interval::MinorSecond
-                    | Interval::MajorSecond
-                    | Interval::MinorThird
-                    | Interval::MajorThird
-                    | Interval::DiminishedSeventh
-                    | Interval::MajorSeventh => {
+                    MinorSecond | MajorSecond | MinorThird | MajorThird | DiminishedSeventh
+                    | MajorSeventh => {
                         errors.push(ParserError::InvalidExtension(ext.pos));
                         return false;
                     }
@@ -89,71 +111,19 @@ impl Validator {
         errors: &mut Vec<ParserError>,
         intervals: &[Interval],
     ) -> bool {
-        if self.has_inconsistent_extension(
-            &Interval::Ninth,
-            vec![&Interval::FlatNinth, &Interval::SharpNinth],
-            intervals,
-        ) {
-            errors.push(ParserError::InconsistentExtension(
-                Interval::Ninth.to_string(),
-            ));
-            return true;
-        }
-        if self.has_inconsistent_extension(
-            &Interval::Eleventh,
-            vec![&Interval::SharpEleventh],
-            intervals,
-        ) {
-            errors.push(ParserError::InconsistentExtension(
-                Interval::Eleventh.to_string(),
-            ));
-            return true;
-        }
-        if self.has_inconsistent_extension(
-            &Interval::Thirteenth,
-            vec![&Interval::FlatThirteenth],
-            intervals,
-        ) {
-            errors.push(ParserError::InconsistentExtension(
-                Interval::Thirteenth.to_string(),
-            ));
-            return true;
-        }
-        if self.has_inconsistent_extension(
-            &Interval::MajorSixth,
-            vec![&Interval::MinorSixth],
-            intervals,
-        ) {
-            errors.push(ParserError::InconsistentExtension(
-                Interval::MajorSixth.to_string(),
-            ));
-            return true;
-        }
-        if self.has_inconsistent_extension(
-            &Interval::MajorThird,
-            vec![&Interval::MinorThird],
-            intervals,
-        ) {
-            errors.push(ParserError::InconsistentExtension(
-                Interval::MajorThird.to_string(),
-            ));
-            return true;
-        }
-        false
-    }
+        let chord_set: IntervalSet = intervals
+            .iter()
+            .copied()
+            .fold(IntervalSet::default(), |acc, s| acc | s);
 
-    fn has_inconsistent_extension(
-        &self,
-        int: &Interval,
-        matches: Vec<&Interval>,
-        intervals: &[Interval],
-    ) -> bool {
-        for i in matches {
-            if intervals.contains(i) && intervals.contains(int) {
-                return true;
-            }
-        }
-        false
+        INCOMPAT_SET
+            .iter()
+            .filter(|(_, set)| set.is_subset_of(&chord_set))
+            .map(|(int, _)| {
+                errors.push(ParserError::InconsistentExtension(*int));
+            })
+            .count()
+            > 0
     }
 
     /// Checks if there are any three consecutive semitones, which are illegal.
