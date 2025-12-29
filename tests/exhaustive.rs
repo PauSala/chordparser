@@ -3,7 +3,7 @@ const ALL_NOTES: [&str; 21] = [
     "Ab", "B", "Bb", "A#", "B#",
 ];
 
-/// This test suite exhaustively covers chords that should not produce errors during parsing.  
+/// Exhaustively covers chords that should not produce errors during parsing.  
 /// The main purpose is to validate that all symbols can be parsed and to detect some corner cases derived from its combinations.
 /// Tests in `should_parse.rs` contains checked results and is the place where to put both corner cases and main use cases.
 #[cfg(test)]
