@@ -1,25 +1,26 @@
 use super::token::{Token, TokenType};
-use regex::Regex;
 use std::{iter::Peekable, str::Chars};
-
-static EXTENSIONS: &str = r"\b(?:2|3|4|5|6|7|9|11|13)\b";
 
 pub struct Lexer {
     tokens: Vec<Token>,
     current: usize,
-    reg_alt: Regex,
     input_len: usize,
 }
 
 impl Lexer {
     pub fn new() -> Lexer {
         // For some reason, generating this with lazy_static! does not improve performance at all.
-        let reg_alt = Regex::new(EXTENSIONS).unwrap();
         Lexer {
             input_len: 0,
             tokens: Vec::new(),
             current: 0,
-            reg_alt,
+        }
+    }
+
+    fn is_valid_extension(&self, s: &str) -> bool {
+        match s {
+            "2" | "3" | "4" | "5" | "6" | "7" | "9" | "11" | "13" => true,
+            _ => false,
         }
     }
 
@@ -139,7 +140,7 @@ impl Lexer {
         let mut errors = Vec::new();
         while start < s.len() {
             let substring = &s[start..end];
-            if self.reg_alt.is_match(substring) {
+            if self.is_valid_extension(substring) {
                 self.add_token(
                     TokenType::Extension(substring.parse().unwrap_or(0)),
                     pos + start,
