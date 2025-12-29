@@ -33,17 +33,24 @@ pub(crate) enum BaseForm {
 impl BaseForm {
     /// Mutates `intervals` adding or removing thirds and fifths
     pub(crate) fn apply(&self, intervals: &mut IntervalSet) {
+        fn apply_dim(intervals: &mut IntervalSet) {
+            intervals.remove_then_add(Interval::MajorThird, Interval::MinorThird);
+            intervals.remove_then_add(Interval::PerfectFifth, Interval::DiminishedFifth);
+        }
         match self {
             BaseForm::Major => {}
-            BaseForm::Power => {
-                intervals.remove(Interval::MajorThird);
-            }
+            BaseForm::Power => intervals.remove(Interval::MajorThird),
             BaseForm::Minor => {
-                intervals.remove_then_add(Interval::MajorThird, Interval::MinorThird);
+                intervals.remove_then_add(Interval::MajorThird, Interval::MinorThird)
             }
-            BaseForm::Dim | BaseForm::HalfDim | BaseForm::Dim7 => {
-                intervals.remove_then_add(Interval::MajorThird, Interval::MinorThird);
-                intervals.remove_then_add(Interval::PerfectFifth, Interval::DiminishedFifth);
+            BaseForm::Dim => apply_dim(intervals),
+            BaseForm::HalfDim => {
+                apply_dim(intervals);
+                intervals.insert(Interval::MinorSeventh);
+            }
+            BaseForm::Dim7 => {
+                apply_dim(intervals);
+                intervals.insert(Interval::DiminishedSeventh);
             }
         }
     }

@@ -98,9 +98,6 @@ impl<'a> Evaluator<'a> {
     ///
     /// Each expression may mutate both the descriptor's interval set and it's baseForm.
     fn evaluate_expressions(mut self) -> Self {
-        // This overriding `BaseForm` when distinct expressions are read.
-        // But there is an implicit hierarchy: e.g. if a minor appears after a dim7, dim7 should take prioriry.
-        // TODO: Materialize this heirarchy explicitly in `BaseForm` itself.
         for expr in &self.ast.expressions {
             match expr {
                 Exp::Maj => {}
@@ -370,13 +367,11 @@ impl<'a> Evaluator<'a> {
     fn evaluate_dim7(desc: &mut Descriptor) {
         desc.base_form = desc.base_form.transition(BaseForm::Dim7);
         desc.third = Some(Interval::MinorThird);
-        desc.insert_seventh(Interval::DiminishedSeventh);
     }
 
     fn evaluate_half_dim(desc: &mut Descriptor) {
         desc.base_form = desc.base_form.transition(BaseForm::HalfDim);
         desc.third = Some(Interval::MinorThird);
-        desc.insert_seventh(Interval::MinorSeventh);
     }
 
     fn evaluate_extension(desc: &mut Descriptor, exp: &ExtensionExp) {

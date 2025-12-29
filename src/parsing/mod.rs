@@ -153,7 +153,7 @@ impl Parser {
             TokenType::Sharp => self.modifier(tokens, Modifier::Sharp, token, ast),
             TokenType::Flat => self.modifier(tokens, Modifier::Flat, token, ast),
             TokenType::Aug => self.aug(tokens, ast),
-            TokenType::Dim => self.dim(tokens, ast),
+            TokenType::Dim => ast.expressions.push(Exp::Dim),
             TokenType::Dim7 => ast.expressions.push(Exp::Dim7),
             TokenType::HalfDim => ast.expressions.push(Exp::HalfDim),
             TokenType::Extension(ext) => self.extension(ext, token, ast),
@@ -224,17 +224,6 @@ impl Parser {
     fn aug(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
         let _ = tokens.next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == 5));
         ast.expressions.push(Exp::Aug);
-    }
-
-    fn dim(&mut self, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
-        if tokens
-            .next_if(|t| matches!(t.token_type, TokenType::Extension(e) if e == 7))
-            .is_some()
-        {
-            ast.expressions.push(Exp::Dim7);
-        } else {
-            ast.expressions.push(Exp::Dim);
-        }
     }
 
     fn rparen(&mut self, pos: usize) {
