@@ -475,7 +475,15 @@ impl Parser {
         Some(Note::new(NoteLiteral::from_string(n), modifier))
     }
 
-    /// Normalizes the token stream by collapsing 7ths if possible (matching them with non-derived maj and dim tokens)
+    /// Normalizes the token stream by collapsing 7ths if possible (matching them with non-synthetic maj and dim tokens)
+    ///
+    /// Opinionated:
+    /// 1. Pair any Maj with consecutive Maj7
+    /// 2. Pair any dim with any 7, no matter the order
+    /// 3. Pair any maj with any 7, no matter the order  
+    ///
+    /// This solves some ambiguities on non-conventional notations (e.g.: C7dim, parsed as Cdim7),
+    /// but also will accept some obvious bad chords (e.g.: C7Dim7Maj, which will be parsed as Cdim7(addMa7)).
     fn pre_process<'a>(tokens: &[Token<'a>]) -> Vec<Token<'a>> {
         Self::fold_7(
             &Self::fold_7(&Self::concat_maj7(tokens), TokenType::Dim, TokenType::Dim7),
@@ -498,7 +506,7 @@ impl Parser {
                         token_type: TokenType::Maj7,
                         pos: tokens[i].pos,
                         len: tokens[i].len + next.len,
-                        derived: true,
+                        synthetic: true,
                     });
                     i += 2;
                 }
@@ -526,7 +534,7 @@ impl Parser {
             let current_idx = out.len();
 
             match &token.token_type {
-                t if *t == match_token && !token.derived => {
+                t if *t == match_token && !token.synthetic => {
                     if let Some(prev_idx) = pending_seven.pop() {
                         out[prev_idx] =
                             Self::merge_tokens(&out[prev_idx], token, &insert_token_type);
@@ -555,7 +563,7 @@ impl Parser {
             token_type: new_type.clone(),
             pos: t1.pos.min(t2.pos),
             len: t1.len,
-            derived: true,
+            synthetic: true,
         }
     }
 }

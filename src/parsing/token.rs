@@ -84,7 +84,7 @@ pub struct Token<'a> {
     pub token_type: TokenType<'a>,
     pub pos: usize,
     pub len: usize,
-    pub derived: bool,
+    pub synthetic: bool,
 }
 
 impl<'a> Token<'a> {
@@ -93,7 +93,7 @@ impl<'a> Token<'a> {
             token_type,
             pos,
             len,
-            derived: false,
+            synthetic: false,
         }
     }
 }
