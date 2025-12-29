@@ -1,7 +1,6 @@
 //! # Chords, notes and intervals
-use crate::chord::quality::ChordQuality;
+use crate::chord::{note::Note, quality::ChordQuality};
 use intervals::Interval;
-use note::Note;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::vec;

@@ -472,7 +472,10 @@ impl Parser {
             return None;
         };
         let modifier = self.match_modifier(tokens);
-        Some(Note::new(NoteLiteral::from_string(n), modifier))
+        Some(Note::new(
+            NoteLiteral::from_string(n),
+            modifier.map(|m| m.into()),
+        ))
     }
 
     /// Normalizes the token stream by collapsing 7ths if possible (matching them with non-synthetic maj and dim tokens)
