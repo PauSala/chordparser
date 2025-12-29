@@ -1,21 +1,21 @@
-use chordparser::parsing::Parser;
+use chordparser::{
+    chord::Chord,
+    parsing::{Parser, parser_error::ParserErrors},
+};
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
 
-fn parse(n: &str, parser: &mut Parser) {
-    let res = parser.parse(&n);
-    match res {
-        Ok(_) => (),
-        Err(e) => {
-            dbg!(e);
-        }
-    }
+fn parse(n: &str, parser: &mut Parser) -> Result<Chord, ParserErrors> {
+    parser.parse(&n)
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
     let mut parser = Parser::new();
     c.bench_function("C", |b| {
-        b.iter(|| parse(black_box("CMaj7#9#11b6Omit5"), black_box(&mut parser)))
+        b.iter(|| {
+            let chord = parse(black_box("CMaj7#9#11b6Omit5"), black_box(&mut parser)).unwrap();
+            let _ = black_box(chord);
+        })
     });
 }
 
