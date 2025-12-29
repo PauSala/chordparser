@@ -43,13 +43,7 @@ impl<'a> TokenType<'a> {
             "ADD" | "Add" | "add" => Some(TokenType::Add),
             "O" | "o" | "°" => Some(TokenType::Dim),
             "OMIT" | "Omit" | "omit" | "NO" | "No" | "no" => Some(TokenType::Omit),
-            "A" => Some(TokenType::Note(i)),
-            "B" => Some(TokenType::Note(i)),
-            "C" => Some(TokenType::Note(i)),
-            "D" => Some(TokenType::Note(i)),
-            "E" => Some(TokenType::Note(i)),
-            "F" => Some(TokenType::Note(i)),
-            "G" => Some(TokenType::Note(i)),
+            "A" | "B" | "C" | "D" | "E" | "F" | "G" => Some(TokenType::Note(i)),
             _ => None,
         }
     }
