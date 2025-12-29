@@ -348,7 +348,9 @@ impl<'a> Evaluator<'a> {
     }
 
     fn evaluate_minor(desc: &mut Descriptor) {
-        desc.base_form = BaseForm::Minor;
+        if desc.base_form == BaseForm::Major {
+            desc.base_form = BaseForm::Minor;
+        }
         desc.third = Some(Interval::MinorThird);
     }
 

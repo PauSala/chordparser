@@ -239,7 +239,6 @@ fn test_notes(input: &str, expected: Vec<&str>) {
 
     for n in notes {
         let t = chord.transpose(&n);
-
         assert_eq!(
             chord.intervals, t.intervals,
             "Interval mismatch transposing `{}` by {:?}",
@@ -252,7 +251,6 @@ fn test_notes(input: &str, expected: Vec<&str>) {
                 t.origin, chord.origin, e
             )
         });
-
         assert_eq!(
             t.intervals, parsed.intervals,
             "Round-trip mismatch: `{}` → `{}`",

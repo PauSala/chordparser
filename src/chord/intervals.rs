@@ -51,7 +51,7 @@ impl IntervalSet {
 
     /// Returns a new `IntervalSet` where a specific interval is replaced with another.
     ///
-    /// This method produces a **new set** with the following behavior:
+    /// Produces a **new set** with the following behavior:
     /// - Every occurrence of `target` in the original set is replaced by `dest`.
     /// - The original set is **not modified**.
     pub fn replace(&self, target: Interval, dest: Interval) -> IntervalSet {
@@ -63,9 +63,9 @@ impl IntervalSet {
 
 impl Interval {
     /// Returns the semitone representation of the interval
-    /// # Arguments
+    /// ## Arguments
     /// * `self` - The interval
-    /// # Returns
+    /// ## Returns
     /// * `u8` - The semitone representation of the interval
     pub fn st(&self) -> u8 {
         match self {

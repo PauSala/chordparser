@@ -32,12 +32,10 @@ pub struct Chord {
     pub quality: ChordQuality,
     /// The normalized intervals of the notes, used to normalize the name
     #[serde(skip_serializing)]
-    pub(crate) norm_intervals: Vec<Interval>,
+    pub(crate) normalized_intervals: Vec<Interval>,
     /// Interval degrees of the notes
     #[serde(skip_serializing)]
     interval_degrees: Vec<u8>,
-    #[serde(skip_serializing)]
-    is_sus: bool,
 }
 
 impl Chord {
@@ -86,9 +84,8 @@ impl Chord {
             .note_literals(note_literals)
             .semitones(semitones)
             .interval_degrees(interval_degrees)
-            .normalized_intervals(self.norm_intervals.clone())
+            .normalized_intervals(self.normalized_intervals.clone())
             .intervals(self.intervals.clone())
-            .is_sus(self.is_sus)
             .build()
     }
 
@@ -106,7 +103,7 @@ impl Chord {
         } else {
             codes.push(root - 12);
         }
-        for note in self.norm_intervals.iter().skip(1) {
+        for note in self.normalized_intervals.iter().skip(1) {
             codes.push(note.st() + root);
         }
         codes
@@ -140,7 +137,6 @@ pub struct ChordBuilder {
     intervals: Vec<Interval>,
     normalized_intervals: Vec<Interval>,
     quality: ChordQuality,
-    is_sus: bool,
 }
 
 impl ChordBuilder {
@@ -157,7 +153,6 @@ impl ChordBuilder {
             interval_degrees: Vec::new(),
             normalized_intervals: Vec::new(),
             intervals: Vec::new(),
-            is_sus: false,
             quality: Default::default(),
         }
     }
@@ -192,11 +187,6 @@ impl ChordBuilder {
         self
     }
 
-    pub fn is_sus(mut self, is_sus: bool) -> ChordBuilder {
-        self.is_sus = is_sus;
-        self
-    }
-
     pub fn notes(mut self, notes: Vec<Note>) -> ChordBuilder {
         self.notes = notes;
         self
@@ -227,8 +217,7 @@ impl ChordBuilder {
             note_literals: self.note_literals,
             interval_degrees: self.interval_degrees,
             intervals: self.intervals,
-            norm_intervals: self.normalized_intervals,
-            is_sus: self.is_sus,
+            normalized_intervals: self.normalized_intervals,
             semitones: self.semitones,
             normalized: self.normalized,
             quality: self.quality,
