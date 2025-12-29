@@ -29,9 +29,8 @@ impl Lexer {
             self.scan_token(&mut iter, tokens, source);
         }
         self.add_token(TokenType::Eof, self.current + 1, 0, tokens);
-        let res = std::mem::take(tokens);
         self.current = 0;
-        res
+        tokens.to_vec()
     }
 
     fn is_at_end(&self) -> bool {
