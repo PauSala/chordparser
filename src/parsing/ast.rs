@@ -40,11 +40,6 @@ impl BaseForm {
             }
             BaseForm::Minor => {
                 intervals.remove_then_add(Interval::MajorThird, Interval::MinorThird);
-                // if intervals.contains(Interval::PerfectFifth)
-                //     && intervals.contains(Interval::DiminishedSeventh)
-                // {
-                //     intervals.remove_then_add(Interval::DiminishedSeventh, Interval::MajorSixth);
-                // }
             }
             BaseForm::Dim | BaseForm::HalfDim | BaseForm::Dim7 => {
                 intervals.remove_then_add(Interval::MajorThird, Interval::MinorThird);
