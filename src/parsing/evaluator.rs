@@ -14,7 +14,7 @@ use crate::{
     },
 };
 
-static CONFLICT_MAP: LazyLock<HashMap<Interval, Vec<Interval>>> = LazyLock::new(|| {
+static EQUIVALENCE_MAP: LazyLock<HashMap<Interval, Vec<Interval>>> = LazyLock::new(|| {
     HashMap::from([
         (
             Interval::Ninth,
@@ -157,7 +157,7 @@ impl<'a> Evaluator<'a> {
             };
 
             for interval in to_add {
-                let conflicts = CONFLICT_MAP.get(&interval).cloned().unwrap_or_default();
+                let conflicts = EQUIVALENCE_MAP.get(&interval).cloned().unwrap_or_default();
                 if !conflicts.iter().any(|c| self.dc.interval_set.contains(c)) {
                     self.dc.interval_set.insert(interval);
                 }
