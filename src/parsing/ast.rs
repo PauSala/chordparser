@@ -47,4 +47,31 @@ impl BaseForm {
             }
         }
     }
+
+    /// Determines the resulting `BaseForm` when transitioning from `self` to `other`
+    /// according to the **chord base hierarchy**.
+    ///
+    /// Since the parser yields tokens in any specific order, and we want to parse anything,
+    /// it could happen that an expression triggers a `baseForm` change when there is already one
+    /// with higher priority. e.g.: Cdim-9. In this case, the chord is C-9(b5), not Cmin9.
+    pub(crate) fn transition(&self, other: BaseForm) -> BaseForm {
+        use BaseForm::*;
+
+        fn priority(form: &BaseForm) -> u8 {
+            match form {
+                Power => 5,
+                Dim7 => 4,
+                Dim => 3,
+                Minor => 2,
+                HalfDim => 1,
+                Major => 0,
+            }
+        }
+
+        if priority(self) >= priority(&other) {
+            self.clone()
+        } else {
+            other
+        }
+    }
 }

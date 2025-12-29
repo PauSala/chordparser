@@ -116,7 +116,7 @@ impl<'a> Evaluator<'a> {
                 Exp::Aug => self.dc.alts.push(Interval::AugmentedFifth),
                 Exp::Omit(exp) => self.dc.omits.push(exp.interval),
                 Exp::Bass => Evaluator::evaluate_bass(&mut self.dc),
-                Exp::Power => self.dc.base_form = BaseForm::Power,
+                Exp::Power => self.dc.base_form = self.dc.base_form.transition(BaseForm::Power),
                 Exp::SlashBass(exp) => self.dc.bass = Some(exp.note),
             }
         }
@@ -351,25 +351,23 @@ impl<'a> Evaluator<'a> {
     }
 
     fn evaluate_minor(desc: &mut Descriptor) {
-        if desc.base_form == BaseForm::Major {
-            desc.base_form = BaseForm::Minor;
-        }
+        desc.base_form = desc.base_form.transition(BaseForm::Minor);
         desc.third = Some(Interval::MinorThird);
     }
 
     fn evaluate_dim(desc: &mut Descriptor) {
-        desc.base_form = BaseForm::Dim;
+        desc.base_form = desc.base_form.transition(BaseForm::Dim);
         desc.third = Some(Interval::MinorThird);
     }
 
     fn evaluate_dim7(desc: &mut Descriptor) {
-        desc.base_form = BaseForm::Dim7;
+        desc.base_form = desc.base_form.transition(BaseForm::Dim7);
         desc.third = Some(Interval::MinorThird);
         desc.insert_seventh(Interval::DiminishedSeventh);
     }
 
     fn evaluate_half_dim(desc: &mut Descriptor) {
-        desc.base_form = BaseForm::HalfDim;
+        desc.base_form = desc.base_form.transition(BaseForm::HalfDim);
         desc.third = Some(Interval::MinorThird);
         desc.insert_seventh(Interval::MinorSeventh);
     }
