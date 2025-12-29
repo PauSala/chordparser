@@ -195,9 +195,25 @@ use test_case::test_case;
 #[test_case("Csus6/9", vec!["C", "F", "G", "A", "D"])]
 #[test_case("Csus69", vec!["C", "F", "G", "A", "D"])]
 #[test_case("Csus26", vec!["C", "D", "G", "A"])]
-fn test_notes(i: &str, expected: Vec<&str>) {
+fn test_notes(input: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
-    let res = parser.parse(i);
+
+    let chord = parser.parse(input).unwrap_or_else(|e| {
+        let msg = e
+            .errors
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(", ");
+        panic!("Failed to parse `{}`: {}", input, msg);
+    });
+
+    assert_eq!(
+        &chord.note_literals, &expected,
+        "Note literals mismatch for `{}`",
+        input
+    );
+
     let notes = vec![
         Note::new(NoteLiteral::C, Some(Modifier::Flat)),
         Note::new(NoteLiteral::C, Some(Modifier::Sharp)),
@@ -215,45 +231,32 @@ fn test_notes(i: &str, expected: Vec<&str>) {
         Note::new(NoteLiteral::G, Some(Modifier::Sharp)),
         Note::new(NoteLiteral::A, Some(Modifier::Flat)),
         Note::new(NoteLiteral::A, None),
-        Note::new(NoteLiteral::A, Some(Modifier::Flat)),
-        Note::new(NoteLiteral::B, None),
-        Note::new(NoteLiteral::B, Some(Modifier::Flat)),
         Note::new(NoteLiteral::A, Some(Modifier::Sharp)),
+        Note::new(NoteLiteral::B, Some(Modifier::Flat)),
+        Note::new(NoteLiteral::B, None),
         Note::new(NoteLiteral::B, Some(Modifier::Sharp)),
     ];
-    match res {
-        Ok(chord) => {
-            let literals = &chord.note_literals;
-            dbg!(i);
-            assert_eq!(literals, &expected);
-            for n in notes {
-                let t = chord.transpose(&n);
-                assert_eq!(
-                    chord.intervals, t.intervals,
-                    "Error parsing chord {}",
-                    chord.origin
-                );
 
-                let parsed = parser.parse(&t.origin);
-                match parsed {
-                    Ok(p) => assert_eq!(
-                        t.intervals, p.intervals,
-                        "Error transposing chord {} into {}",
-                        &chord.origin, n
-                    ),
-                    Err(e) => panic!("{e}"),
-                }
-            }
-        }
-        Err(e) => {
-            let a = e.errors.iter().fold("".to_owned(), |acc, e| {
-                if acc.is_empty() {
-                    e.to_string()
-                } else {
-                    format!("{acc} {e}")
-                }
-            });
-            panic!("{}", a);
-        }
+    for n in notes {
+        let t = chord.transpose(&n);
+
+        assert_eq!(
+            chord.intervals, t.intervals,
+            "Interval mismatch transposing `{}` by {:?}",
+            chord.origin, n
+        );
+
+        let parsed = parser.parse(&t.origin).unwrap_or_else(|e| {
+            panic!(
+                "Failed to parse transposed chord `{}` (from `{}`): {}",
+                t.origin, chord.origin, e
+            )
+        });
+
+        assert_eq!(
+            t.intervals, parsed.intervals,
+            "Round-trip mismatch: `{}` → `{}`",
+            chord.origin, t.origin
+        );
     }
 }

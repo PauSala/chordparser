@@ -95,21 +95,20 @@ use test_case::test_case;
 #[test_case("C+susMa76", "C6sus(#5,addMa7)")]
 fn test_normalize(input: &str, expected: &str) {
     let mut parser = Parser::new();
-    let res = parser.parse(input);
 
-    match res {
-        Ok(chord) => {
-            assert_eq!(chord.normalized, expected);
-        }
-        Err(e) => {
-            let a = e.errors.iter().fold("".to_owned(), |acc, e| {
-                if acc.is_empty() {
-                    e.to_string()
-                } else {
-                    format!("{acc} {e}")
-                }
-            });
-            panic!("{}", a);
-        }
-    }
+    let chord = parser.parse(input).unwrap_or_else(|e| {
+        let msg = e
+            .errors
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(", ");
+        panic!("Failed to parse `{}`: {}", input, msg);
+    });
+
+    assert_eq!(
+        chord.normalized, expected,
+        "Normalization mismatch for `{}`",
+        input
+    );
 }

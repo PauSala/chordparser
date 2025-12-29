@@ -30,10 +30,7 @@ mod tests {
                     base.push_str(note);
                     base.push_str(&sym);
                     base.push_str(&desc);
-                    match parser.parse(&base) {
-                        Ok(_) => (),
-                        Err(e) => panic!("{e}"),
-                    }
+                    assert!(parser.parse(&base).is_ok(), "Failed to parse `{}`", base);
                 }
             }
         }
@@ -60,10 +57,7 @@ mod tests {
                         base.push_str(sym);
                         base.push_str(seven);
                         base.push_str(desc);
-                        match parser.parse(&base) {
-                            Ok(_) => (),
-                            Err(e) => panic!("{e} {base}"),
-                        }
+                        assert!(parser.parse(&base).is_ok(), "Failed to parse `{}`", base);
                     }
                 }
             }
@@ -86,10 +80,7 @@ mod tests {
                     base.push_str(note);
                     base.push_str(&sym);
                     base.push_str(&desc);
-                    match parser.parse(&base) {
-                        Ok(_) => (),
-                        Err(e) => panic!("{e}"),
-                    }
+                    assert!(parser.parse(&base).is_ok(), "Failed to parse `{}`", base);
                 }
             }
         }
@@ -132,10 +123,7 @@ mod tests {
                 let mut base = String::new();
                 base.push_str(note);
                 base.push_str(&sym);
-                match parser.parse(&base) {
-                    Ok(_) => (),
-                    Err(e) => panic!("{e}"),
-                }
+                assert!(parser.parse(&base).is_ok(), "Failed to parse `{}`", base);
             }
         }
     }

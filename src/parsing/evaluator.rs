@@ -72,7 +72,7 @@ impl<'a> Evaluator<'a> {
         }
         .seed_defaults()
         .evaluate_expressions()
-        .update_triad()
+        .apply_base_form()
         .apply_sus()
         .apply_alterations()
         .implied_extensions()
@@ -120,9 +120,9 @@ impl<'a> Evaluator<'a> {
         self
     }
 
-    /// Update the triad base on the derived baseForm
-    fn update_triad(mut self) -> Self {
-        self.dc.base_form.update_triad(&mut self.dc.interval_set);
+    /// Update interval set based on the derived baseForm
+    fn apply_base_form(mut self) -> Self {
+        self.dc.base_form.apply(&mut self.dc.interval_set);
         self
     }
 

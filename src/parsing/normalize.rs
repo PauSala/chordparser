@@ -12,6 +12,7 @@ const MA: &str = "Ma";
 const MA7: &str = "Ma7";
 const MI7: &str = "mi7";
 const MIMA7: &str = "miMa7";
+const MIMA: &str = "miMa";
 const AUG: &str = "+";
 const DIM: &str = "dim";
 const DIM7: &str = "dim7";
@@ -100,7 +101,7 @@ impl<'a> Evaluator<'a> {
             Mi => MI.into(),
             Mi6 => format!("{MI}{SIX}"),
             Mi7 => mod_str.map_or_else(|| MI7.into(), |m| format!("{MI}{m}")),
-            MiMaj7 => mod_str.map_or_else(|| MIMA7.into(), |m| format!("{MIMA7}{m}")),
+            MiMaj7 => mod_str.map_or_else(|| MIMA7.into(), |m| format!("{MIMA}{m}")),
             Augmented => mod_str.map_or_else(|| AUG.into(), |m| format!("{AUG}{m}")),
             Diminished => DIM.into(),
             Diminished7 => DIM7.into(),
