@@ -31,8 +31,7 @@ impl Lexer {
             self.scan_token(&mut iter);
         }
         self.add_token(TokenType::Eof, self.current + 1, 0);
-        let res = self.tokens.clone();
-        self.tokens.clear();
+        let res = std::mem::take(&mut self.tokens);
         self.current = 0;
         res
     }
