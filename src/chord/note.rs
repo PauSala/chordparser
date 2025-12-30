@@ -71,6 +71,9 @@ impl Display for NoteLiteral {
     }
 }
 
+/// Any note modifier, including double, triple or n sharp/flat modifiers.
+///
+/// Used to handle any transposition while maintaining the correct enharmonic names.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 pub struct NoteModifier(pub i8);
 
@@ -161,13 +164,11 @@ impl Display for NoteModifier {
     }
 }
 
-impl From<Modifier> for NoteModifier {
-    fn from(value: Modifier) -> Self {
+impl From<RootModifier> for NoteModifier {
+    fn from(value: RootModifier) -> Self {
         match value {
-            Modifier::Sharp => NoteModifier(1),
-            Modifier::Flat => NoteModifier(-1),
-            Modifier::DSharp => NoteModifier(2),
-            Modifier::DFlat => NoteModifier(-2),
+            RootModifier::Sharp => NoteModifier(1),
+            RootModifier::Flat => NoteModifier(-1),
         }
     }
 }
@@ -241,23 +242,26 @@ impl Display for Note {
     }
 }
 
-/// Represents a note modifier. It can be sharp, flat, double sharp or double flat.
+/// A simplified accidental used specifically for identifying chord roots.
+///
+/// Unlike [`NoteModifier`], which supports complex accidentals (double sharps,
+/// double flats, or parenthesized offsets), `RootModifier` is restricted
+/// to the primary accidentals found in standard chord root notation.
+///
+/// For musical calculations or representing intervals where double-sharps/flats
+/// may occur, use [`NoteModifier`] instead.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 #[repr(u8)]
-pub enum Modifier {
+pub enum RootModifier {
     Sharp,
     Flat,
-    DSharp,
-    DFlat,
 }
 
-impl Display for Modifier {
+impl Display for RootModifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Modifier::Sharp => f.write_str("#"),
-            Modifier::Flat => f.write_str("b"),
-            Modifier::DSharp => f.write_str("𝄪"),
-            Modifier::DFlat => f.write_str("𝄫"),
+            RootModifier::Sharp => f.write_str("#"),
+            RootModifier::Flat => f.write_str("b"),
         }
     }
 }

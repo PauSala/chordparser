@@ -1,5 +1,5 @@
 use chordparser::{
-    chord::note::{Modifier, Note, NoteLiteral},
+    chord::note::{Note, NoteLiteral, RootModifier},
     parsing::Parser,
 };
 
@@ -220,26 +220,26 @@ fn test_notes(input: &str, expected: Vec<&str>) {
     );
 
     let notes = vec![
-        Note::new(NoteLiteral::C, Some(Modifier::Flat.into())),
-        Note::new(NoteLiteral::C, Some(Modifier::Sharp.into())),
-        Note::new(NoteLiteral::D, Some(Modifier::Flat.into())),
+        Note::new(NoteLiteral::C, Some(RootModifier::Flat.into())),
+        Note::new(NoteLiteral::C, Some(RootModifier::Sharp.into())),
+        Note::new(NoteLiteral::D, Some(RootModifier::Flat.into())),
         Note::new(NoteLiteral::D, None),
-        Note::new(NoteLiteral::D, Some(Modifier::Sharp.into())),
-        Note::new(NoteLiteral::E, Some(Modifier::Flat.into())),
+        Note::new(NoteLiteral::D, Some(RootModifier::Sharp.into())),
+        Note::new(NoteLiteral::E, Some(RootModifier::Flat.into())),
         Note::new(NoteLiteral::E, None),
-        Note::new(NoteLiteral::E, Some(Modifier::Sharp.into())),
-        Note::new(NoteLiteral::F, Some(Modifier::Flat.into())),
+        Note::new(NoteLiteral::E, Some(RootModifier::Sharp.into())),
+        Note::new(NoteLiteral::F, Some(RootModifier::Flat.into())),
         Note::new(NoteLiteral::F, None),
-        Note::new(NoteLiteral::F, Some(Modifier::Sharp.into())),
-        Note::new(NoteLiteral::G, Some(Modifier::Flat.into())),
+        Note::new(NoteLiteral::F, Some(RootModifier::Sharp.into())),
+        Note::new(NoteLiteral::G, Some(RootModifier::Flat.into())),
         Note::new(NoteLiteral::G, None),
-        Note::new(NoteLiteral::G, Some(Modifier::Sharp.into())),
-        Note::new(NoteLiteral::A, Some(Modifier::Flat.into())),
+        Note::new(NoteLiteral::G, Some(RootModifier::Sharp.into())),
+        Note::new(NoteLiteral::A, Some(RootModifier::Flat.into())),
         Note::new(NoteLiteral::A, None),
-        Note::new(NoteLiteral::A, Some(Modifier::Sharp.into())),
-        Note::new(NoteLiteral::B, Some(Modifier::Flat.into())),
+        Note::new(NoteLiteral::A, Some(RootModifier::Sharp.into())),
+        Note::new(NoteLiteral::B, Some(RootModifier::Flat.into())),
         Note::new(NoteLiteral::B, None),
-        Note::new(NoteLiteral::B, Some(Modifier::Sharp.into())),
+        Note::new(NoteLiteral::B, Some(RootModifier::Sharp.into())),
     ];
 
     for n in notes {

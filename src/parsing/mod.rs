@@ -12,7 +12,7 @@ use crate::{
     chord::{
         Chord,
         interval::Interval,
-        note::{Modifier, Note, NoteLiteral},
+        note::{Note, NoteLiteral, RootModifier},
     },
     parsing::{evaluator::Evaluator, expression::*},
 };
@@ -150,8 +150,8 @@ impl Parser {
     fn process_token(&mut self, token: &Token, tokens: &mut Peekable<Iter<Token>>, ast: &mut Ast) {
         match &token.token_type {
             TokenType::Note(_) => self.note(token),
-            TokenType::Sharp => self.modifier(tokens, Modifier::Sharp, token, ast),
-            TokenType::Flat => self.modifier(tokens, Modifier::Flat, token, ast),
+            TokenType::Sharp => self.modifier(tokens, RootModifier::Sharp, token, ast),
+            TokenType::Flat => self.modifier(tokens, RootModifier::Flat, token, ast),
             TokenType::Aug => self.aug(tokens, ast),
             TokenType::Dim => ast.expressions.push(Exp::Dim),
             TokenType::Dim7 => ast.expressions.push(Exp::Dim7),
@@ -331,7 +331,7 @@ impl Parser {
     fn modifier(
         &mut self,
         tokens: &mut Peekable<Iter<Token>>,
-        modifier: Modifier,
+        modifier: RootModifier,
         token: &Token,
         ast: &mut Ast,
     ) {
@@ -455,10 +455,10 @@ impl Parser {
     }
 
     /// Returns Some(modifier) and advances tokens or returns None if any
-    fn match_modifier(&self, tokens: &mut Peekable<Iter<Token>>) -> Option<Modifier> {
+    fn match_modifier(&self, tokens: &mut Peekable<Iter<Token>>) -> Option<RootModifier> {
         let modifier = match tokens.peek()?.token_type {
-            TokenType::Flat => Modifier::Flat,
-            TokenType::Sharp => Modifier::Sharp,
+            TokenType::Flat => RootModifier::Flat,
+            TokenType::Sharp => RootModifier::Sharp,
             _ => return None,
         };
         tokens.next();
@@ -576,36 +576,35 @@ impl Default for Parser {
 }
 
 /// Build an interval from a modifier and an extension
-fn from_modifier_extension(mdf: Option<Modifier>, ext: u8) -> Option<Interval> {
+fn from_modifier_extension(mdf: Option<RootModifier>, ext: u8) -> Option<Interval> {
     match (mdf, ext) {
         (None, 1) => Some(Interval::Unison),
         (None, 8) => Some(Interval::Octave),
 
-        (Some(Modifier::Flat), 2) => Some(Interval::MinorSecond),
+        (Some(RootModifier::Flat), 2) => Some(Interval::MinorSecond),
         (None, 2) => Some(Interval::MajorSecond),
-        (Some(Modifier::Flat), 9) => Some(Interval::FlatNinth),
+        (Some(RootModifier::Flat), 9) => Some(Interval::FlatNinth),
         (None, 9) => Some(Interval::Ninth),
-        (Some(Modifier::Sharp), 9) => Some(Interval::SharpNinth),
+        (Some(RootModifier::Sharp), 9) => Some(Interval::SharpNinth),
 
-        (Some(Modifier::Flat), 3) => Some(Interval::MinorThird),
+        (Some(RootModifier::Flat), 3) => Some(Interval::MinorThird),
         (None, 3) => Some(Interval::MajorThird),
 
         (None, 4) => Some(Interval::PerfectFourth),
-        (Some(Modifier::Sharp), 4) => Some(Interval::AugmentedFourth),
+        (Some(RootModifier::Sharp), 4) => Some(Interval::AugmentedFourth),
         (None, 11) => Some(Interval::Eleventh),
-        (Some(Modifier::Sharp), 11) => Some(Interval::SharpEleventh),
+        (Some(RootModifier::Sharp), 11) => Some(Interval::SharpEleventh),
 
-        (Some(Modifier::Flat), 5) => Some(Interval::DiminishedFifth),
+        (Some(RootModifier::Flat), 5) => Some(Interval::DiminishedFifth),
         (None, 5) => Some(Interval::PerfectFifth),
-        (Some(Modifier::Sharp), 5) => Some(Interval::AugmentedFifth),
+        (Some(RootModifier::Sharp), 5) => Some(Interval::AugmentedFifth),
 
-        (Some(Modifier::Flat), 6) => Some(Interval::MinorSixth),
+        (Some(RootModifier::Flat), 6) => Some(Interval::MinorSixth),
         (None, 6) => Some(Interval::MajorSixth),
-        (Some(Modifier::Flat), 13) => Some(Interval::FlatThirteenth),
+        (Some(RootModifier::Flat), 13) => Some(Interval::FlatThirteenth),
         (None, 13) => Some(Interval::Thirteenth),
 
-        (Some(Modifier::DFlat), 7) => Some(Interval::DiminishedSeventh),
-        (Some(Modifier::Flat), 7) => Some(Interval::MinorSeventh),
+        (Some(RootModifier::Flat), 7) => Some(Interval::MinorSeventh),
         // Be aware: this is correct. If the parser receives a 7 extension alone it's a MinorSeventh
         (None, 7) => Some(Interval::MinorSeventh),
 
