@@ -183,13 +183,21 @@ impl Parser {
         }) = tokens.next_if(|t| self.is_extension(t))
         {
             match a {
-                9 => ast
-                    .expressions
-                    .push(Exp::Add(AddExp::new(Interval::Ninth, *pos))),
+                x if *a == 9
+                    && matches!(
+                        ast.expressions.last(),
+                        Some(Exp::Extension(ExtensionExp {
+                            interval: Interval::MajorSixth,
+                            ..
+                        }))
+                    ) =>
+                {
+                    ast.expressions
+                        .push(Exp::Add(AddExp::new(Interval::Ninth, *pos)))
+                }
                 _ => {
-                    let next_pos = tokens.peek().map_or(token.pos, |t| t.pos);
                     self.errors
-                        .push(ParserError::IllegalSlashNotation(next_pos));
+                        .push(ParserError::IllegalSlashNotation(token.pos));
                 }
             }
         } else if let Some(b) = self.expect_note(tokens) {
@@ -198,12 +206,11 @@ impl Parser {
             let next_pos = tokens.peek().map_or(token.pos, |t| t.pos);
             self.errors
                 .push(ParserError::IllegalSlashNotation(next_pos));
+            return;
         }
-
         if !self.expect_peek(TokenType::Eof, tokens) {
-            let next_pos = tokens.peek().map_or(token.pos, |t| t.pos);
             self.errors
-                .push(ParserError::IllegalSlashNotation(next_pos));
+                .push(ParserError::IllegalSlashNotation(token.pos));
         }
     }
 
@@ -440,10 +447,6 @@ impl Parser {
         }
     }
 
-    fn expect_peek(&self, expected: TokenType, tokens: &mut Peekable<Iter<Token>>) -> bool {
-        matches!(tokens.peek(), Some(token) if token.token_type == expected)
-    }
-
     fn allowed_sus_interval(&self, int: Interval) -> bool {
         matches!(
             int,
@@ -474,6 +477,10 @@ impl Parser {
             NoteLiteral::from_string(n),
             modifier.map(|m| m.into()),
         ))
+    }
+
+    fn expect_peek(&self, expected: TokenType, tokens: &mut Peekable<Iter<Token>>) -> bool {
+        matches!(tokens.peek(), Some(token) if token.token_type == expected)
     }
 
     /// Normalizes the token stream by collapsing 7ths if possible (matching them with non-synthetic maj and dim tokens)

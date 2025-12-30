@@ -156,8 +156,6 @@ use test_case::test_case;
 #[test_case("C7omit5,9", vec!["C", "E", "Bb", "D"])]
 #[test_case("Cdimmaj7", vec!["C", "Eb", "Gb", "B"])]
 #[test_case("CBass", vec!["C"])]
-#[test_case("C7/9", vec!["C", "E", "G", "Bb", "D"])]
-#[test_case("Cdim7/9", vec!["C", "Eb", "Gb", "B𝄫", "D"])]
 #[test_case("C(add 9,omit 3)", vec!["C", "G", "D"])]
 #[test_case("Fb(add 9,add b13)", vec!["Fb", "Ab", "Gb", "D𝄫"])]
 #[test_case("Eb+(add b9,add #9)", vec!["Eb", "G", "B", "Fb", "F#"])]
