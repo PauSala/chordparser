@@ -109,7 +109,6 @@ impl<'a> Evaluator<'a> {
     }
 
     fn append_quality_modifier(f: &mut String, quality: &ChordQuality, modifier: Option<Interval>) {
-        let modstring = modifier.map_or(SEVEN.to_string(), |m| m.to_chord_notation());
         match quality {
             Maj | Bass => {}
             Maj6 => f.push_str(SIX),
@@ -120,7 +119,10 @@ impl<'a> Evaluator<'a> {
                     f.push_str(&m.to_chord_notation());
                 }
             },
-            Dominant7 => f.push_str(&modstring),
+            Dominant7 => {
+                let modstring = modifier.map_or(SEVEN.to_string(), |m| m.to_chord_notation());
+                f.push_str(&modstring);
+            }
             Mi => f.push_str(MI),
             Mi6 => {
                 f.push_str(MI);
