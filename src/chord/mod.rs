@@ -60,8 +60,8 @@ impl Chord {
         let semitones = self.semitones.clone();
         let interval_degrees = self.interval_degrees.clone();
 
-        for (st, sem_int) in semitones.iter().zip(&interval_degrees) {
-            let note = transpose_to.get_note(*st, *sem_int);
+        for (st, degree) in semitones.iter().zip(&interval_degrees) {
+            let note = transpose_to.get_note(*st, *degree);
             notes.push(note);
         }
 
