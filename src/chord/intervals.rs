@@ -6,7 +6,7 @@ use serde::Deserialize;
 use serde::ser::{Serialize, Serializer};
 use std::fmt::Display;
 
-/// Enum representing all possible intervals of a chord
+/// Enum representing intervals of a chord
 #[derive(
     Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Hash, EnumBitset, Default,
 )]
