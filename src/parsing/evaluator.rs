@@ -288,8 +288,6 @@ impl<'a> Evaluator<'a> {
         }
 
         let notes = self.notes();
-        let note_literals = notes.iter().map(|a| a.to_string()).collect();
-
         let mut interval_degrees = Vec::new();
         for e in &self.dc.intervals {
             interval_degrees.push(e.to_degree().numeric());
@@ -306,7 +304,6 @@ impl<'a> Evaluator<'a> {
             .descriptor(&self.descriptor(&self.name))
             .bass(self.dc.bass)
             .notes(notes)
-            .note_literals(note_literals)
             .semitones(semitones)
             .interval_degrees(interval_degrees)
             .quality(self.quality())

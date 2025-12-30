@@ -211,8 +211,10 @@ fn test_notes(input: &str, expected: Vec<&str>) {
         panic!("Failed to parse `{}`: {}", input, msg);
     });
 
+    let literals: Vec<String> = chord.note_literals().collect();
+
     assert_eq!(
-        &chord.note_literals, &expected,
+        &literals, &expected,
         "Note literals mismatch for `{}`",
         input
     );

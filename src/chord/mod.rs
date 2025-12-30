@@ -22,8 +22,6 @@ pub struct Chord {
     pub bass: Option<Note>,
     /// The notes of the chord.
     pub notes: Vec<Note>,
-    /// The notes of the chord as string literals.
-    pub note_literals: Vec<String>,
     /// The semitones of the notes relative to root.
     pub semitones: Vec<u8>,
     /// The real intervals of the notes.
@@ -40,6 +38,10 @@ pub struct Chord {
 impl Chord {
     pub fn builder(origin: &str, root: Note) -> ChordBuilder {
         ChordBuilder::new(origin, root)
+    }
+
+    pub fn note_literals(&self) -> impl Iterator<Item = String> {
+        self.notes.iter().map(|n| n.to_string())
     }
 
     /// Transposes the chord to a different root note.
@@ -63,8 +65,6 @@ impl Chord {
             notes.push(note);
         }
 
-        let note_literals = notes.iter().map(|a| a.to_string()).collect::<Vec<String>>();
-
         let mut origin = transpose_to.to_string();
 
         // Set origin string
@@ -80,7 +80,6 @@ impl Chord {
             .descriptor(&self.descriptor)
             .bass(bass)
             .notes(notes)
-            .note_literals(note_literals)
             .semitones(semitones)
             .interval_degrees(interval_degrees)
             .normalized_intervals(self.normalized_intervals.clone())
@@ -130,7 +129,6 @@ pub struct ChordBuilder {
     root: Note,
     bass: Option<Note>,
     notes: Vec<Note>,
-    note_literals: Vec<String>,
     semitones: Vec<u8>,
     interval_degrees: Vec<u8>,
     intervals: Vec<Interval>,
@@ -147,7 +145,6 @@ impl ChordBuilder {
             root,
             bass: None,
             notes: Vec::new(),
-            note_literals: Vec::new(),
             semitones: Vec::new(),
             interval_degrees: Vec::new(),
             normalized_intervals: Vec::new(),
@@ -181,11 +178,6 @@ impl ChordBuilder {
         self
     }
 
-    pub fn note_literals(mut self, note_literals: Vec<String>) -> ChordBuilder {
-        self.note_literals = note_literals;
-        self
-    }
-
     pub fn notes(mut self, notes: Vec<Note>) -> ChordBuilder {
         self.notes = notes;
         self
@@ -213,7 +205,6 @@ impl ChordBuilder {
             root: self.root,
             bass: self.bass,
             notes: self.notes,
-            note_literals: self.note_literals,
             interval_degrees: self.interval_degrees,
             intervals: self.intervals,
             normalized_intervals: self.normalized_intervals,
