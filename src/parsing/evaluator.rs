@@ -233,6 +233,13 @@ impl<'a> Evaluator<'a> {
         if self.dc.interval_set.contains(Interval::MajorSixth) {
             self.dc.interval_set.remove(Interval::Thirteenth);
         }
+        if self.dc.interval_set.contains(&Interval::MajorThird)
+            && self.dc.interval_set.contains(&Interval::Eleventh)
+        {
+            self.dc
+                .interval_set
+                .remove_then_add(Interval::Eleventh, Interval::PerfectFourth);
+        }
         self
     }
 
