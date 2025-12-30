@@ -146,35 +146,6 @@ impl Interval {
             Thirteenth => "13".to_string(),
         }
     }
-
-    pub fn from_chord_notation(i: &str) -> Option<Interval> {
-        match i {
-            "1" => Some(Interval::Unison),
-            "b2" => Some(Interval::MinorSecond),
-            "2" => Some(Interval::MajorSecond),
-            "b3" => Some(Interval::MinorThird),
-            "3" => Some(Interval::MajorThird),
-            "4" => Some(Interval::PerfectFourth),
-            "#4" => Some(Interval::AugmentedFourth),
-            "b5" => Some(Interval::DiminishedFifth),
-            "5" => Some(Interval::PerfectFifth),
-            "#5" => Some(Interval::AugmentedFifth),
-            "b6" => Some(Interval::MinorSixth),
-            "6" => Some(Interval::MajorSixth),
-            "bb7" => Some(Interval::DiminishedSeventh),
-            "7" => Some(Interval::MinorSeventh),
-            "maj7" => Some(Interval::MajorSeventh),
-            "8" => Some(Interval::Octave),
-            "b9" => Some(Interval::FlatNinth),
-            "9" => Some(Interval::Ninth),
-            "#9" => Some(Interval::SharpNinth),
-            "11" => Some(Interval::Eleventh),
-            "#11" => Some(Interval::SharpEleventh),
-            "b13" => Some(Interval::FlatThirteenth),
-            "13" => Some(Interval::Thirteenth),
-            _ => None,
-        }
-    }
 }
 
 impl Display for Interval {

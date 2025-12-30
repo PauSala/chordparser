@@ -296,9 +296,7 @@ impl Parser {
             self.context = Context::start_group(GroupKind::Add);
         }
 
-        let modifier = self
-            .match_modifier(tokens)
-            .map_or(String::new(), |m| m.to_string());
+        let modifier = self.match_modifier(tokens);
 
         // Extension after optional modifier
         if let Some(Token {
@@ -307,7 +305,7 @@ impl Parser {
             ..
         }) = tokens.next_if(|t| self.is_extension(t))
         {
-            match Interval::from_chord_notation(&format!("{}{}", modifier, ext)) {
+            match from_modifier_extension(modifier, *ext) {
                 Some(interval) => ast.expressions.push(Exp::Add(AddExp::new(interval, *pos))),
                 None => self.errors.push(ParserError::InvalidExtension(token.pos)),
             }
@@ -348,7 +346,7 @@ impl Parser {
             }
         };
 
-        match Interval::from_chord_notation(&format!("{}{}", modifier, extension)) {
+        match from_modifier_extension(Some(modifier), *extension) {
             Some(int) => self.add_interval(int, token.pos, ast),
             None => self
                 .errors
@@ -381,7 +379,7 @@ impl Parser {
     fn extension(&mut self, ext: &u8, token: &Token, ast: &mut Ast) {
         if *ext == 5 && self.context == Context::None {
             ast.expressions.push(Exp::Power);
-        } else if let Some(int) = Interval::from_chord_notation(&ext.to_string()) {
+        } else if let Some(int) = from_modifier_extension(None, *ext) {
             self.add_interval(int, token.pos, ast);
         } else {
             self.errors.push(ParserError::InvalidExtension(token.pos));
@@ -574,5 +572,43 @@ impl Parser {
 impl Default for Parser {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Build an interval from a modifier and an extension
+fn from_modifier_extension(mdf: Option<Modifier>, ext: u8) -> Option<Interval> {
+    match (mdf, ext) {
+        (None, 1) => Some(Interval::Unison),
+        (None, 8) => Some(Interval::Octave),
+
+        (Some(Modifier::Flat), 2) => Some(Interval::MinorSecond),
+        (None, 2) => Some(Interval::MajorSecond),
+        (Some(Modifier::Flat), 9) => Some(Interval::FlatNinth),
+        (None, 9) => Some(Interval::Ninth),
+        (Some(Modifier::Sharp), 9) => Some(Interval::SharpNinth),
+
+        (Some(Modifier::Flat), 3) => Some(Interval::MinorThird),
+        (None, 3) => Some(Interval::MajorThird),
+
+        (None, 4) => Some(Interval::PerfectFourth),
+        (Some(Modifier::Sharp), 4) => Some(Interval::AugmentedFourth),
+        (None, 11) => Some(Interval::Eleventh),
+        (Some(Modifier::Sharp), 11) => Some(Interval::SharpEleventh),
+
+        (Some(Modifier::Flat), 5) => Some(Interval::DiminishedFifth),
+        (None, 5) => Some(Interval::PerfectFifth),
+        (Some(Modifier::Sharp), 5) => Some(Interval::AugmentedFifth),
+
+        (Some(Modifier::Flat), 6) => Some(Interval::MinorSixth),
+        (None, 6) => Some(Interval::MajorSixth),
+        (Some(Modifier::Flat), 13) => Some(Interval::FlatThirteenth),
+        (None, 13) => Some(Interval::Thirteenth),
+
+        (Some(Modifier::DFlat), 7) => Some(Interval::DiminishedSeventh),
+        (Some(Modifier::Flat), 7) => Some(Interval::MinorSeventh),
+        // Be aware: this is correct. If the parser receives a 7 extension alone it's a MinorSeventh
+        (None, 7) => Some(Interval::MinorSeventh),
+
+        _ => None,
     }
 }
