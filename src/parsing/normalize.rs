@@ -109,8 +109,6 @@ impl<'a> Evaluator<'a> {
     }
 
     fn append_quality_modifier(f: &mut String, quality: &ChordQuality, modifier: Option<Interval>) {
-        dbg!(&quality);
-        dbg!(&modifier);
         match quality {
             Maj | Bass => {}
             Maj6 => match modifier {
