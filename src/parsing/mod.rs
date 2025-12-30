@@ -198,14 +198,14 @@ impl Parser {
                 _ => {
                     self.errors
                         .push(ParserError::IllegalSlashNotation(token.pos));
+                    return;
                 }
             }
         } else if let Some(b) = self.expect_note(tokens) {
             ast.expressions.push(Exp::SlashBass(SlashBassExp::new(b)));
         } else {
-            let next_pos = tokens.peek().map_or(token.pos, |t| t.pos);
             self.errors
-                .push(ParserError::IllegalSlashNotation(next_pos));
+                .push(ParserError::IllegalSlashNotation(token.pos));
             return;
         }
         if !self.expect_peek(TokenType::Eof, tokens) {
