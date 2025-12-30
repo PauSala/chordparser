@@ -35,7 +35,6 @@ pub enum ParserError {
 
 impl ParserError {
     fn surround_element_at_index(&self, s: &str, index: usize) -> String {
-        let index = index - 1;
         if index >= s.len() {
             let mut res = s.to_string();
             res.push_str("(_)");
@@ -49,7 +48,7 @@ impl ParserError {
     }
 
     fn surround_element_at_index_with_span(&self, s: &str, index: usize, len: usize) -> String {
-        let index = index - 1 + len;
+        let index = index + len;
         if index >= s.len() {
             let mut res = s.to_string();
             res.push_str("(_)");
