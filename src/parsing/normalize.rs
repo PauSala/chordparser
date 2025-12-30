@@ -6,6 +6,7 @@ use crate::{
     parsing::evaluator::Evaluator,
 };
 use ChordQuality::*;
+use std::fmt::Write;
 
 const MI: &str = "mi";
 const MA: &str = "Ma";
@@ -36,25 +37,27 @@ impl<'a> Evaluator<'a> {
     }
 
     pub fn normalize(&self) -> String {
-        let mut descriptor = self.ast.root.to_string();
-        let quality: ChordQuality = self.quality();
+        let mut descriptor = String::with_capacity(128);
+        write!(descriptor, "{}", self.ast.root).ok();
 
+        let quality = self.quality();
         if quality == Bass {
             descriptor.push_str("Bass");
             return descriptor;
         }
 
-        // Collect data
-        let is_sus = quality.is_sus(&(self.dc.intervals.as_slice()).into());
+        let intervals_pc: PcSet = self.dc.intervals.as_slice().into();
+        let is_sus = quality.is_sus(&intervals_pc);
         let alterations = quality.alterations(&self.dc.interval_set);
         let extensions = quality
             .extensions(&self.dc.interval_set)
             .replace(Interval::MajorSixth, Interval::Thirteenth);
+
         let (modifier, mut adds) = Evaluator::split_extensions(&extensions, &alterations, &quality);
         let omits = self.omits(is_sus, &quality);
 
-        // Render descriptor
-        descriptor.push_str(&Evaluator::format_quality_modifier(&quality, modifier));
+        Self::append_quality_modifier(&mut descriptor, &quality, modifier);
+
         if is_sus {
             if self.dc.interval_set.contains(Interval::MajorThird) {
                 adds.push(Interval::MajorThird);
@@ -62,53 +65,90 @@ impl<'a> Evaluator<'a> {
             descriptor.push_str("sus");
         }
 
-        let mut items: Vec<String> = Vec::new();
+        // Handle the items inside parentheses (alterations, adds, omits)
+        let mut has_items = false;
+
+        let mut append_item = |desc: &mut String, item: &str, prefix: &str| {
+            if !has_items {
+                desc.push('(');
+                has_items = true;
+            } else {
+                desc.push(',');
+            }
+            desc.push_str(prefix);
+            desc.push_str(item);
+        };
+
         for alt in alterations {
-            items.push(alt.to_chord_notation());
+            append_item(&mut descriptor, &alt.to_chord_notation(), "");
         }
 
         for (i, add) in adds.iter().enumerate() {
-            let prefix = if i == 0 { "add" } else { "" };
-            // Handle 69
             if *add == Interval::Ninth && (quality == Maj6 || quality == Mi6) {
                 descriptor.push_str(NINE);
                 continue;
             }
-            items.push(format!("{}{}", prefix, add.to_chord_notation()));
+            let prefix = if i == 0 { "add" } else { "" };
+            append_item(&mut descriptor, &add.to_chord_notation(), prefix);
         }
 
         for (i, omit) in omits.iter().enumerate() {
             let prefix = if i == 0 { "omit" } else { "" };
-            items.push(format!("{}{}", prefix, omit));
+            append_item(&mut descriptor, omit, prefix);
         }
 
-        if !items.is_empty() {
-            descriptor.push('(');
-            descriptor.push_str(&items.join(","));
-            descriptor.push(')');
+        if has_items {
+            write!(descriptor, ")").ok();
         }
 
         if let Some(bass) = self.dc.bass {
-            descriptor.push_str(&format!("/{}", bass.literal));
+            write!(descriptor, "/{}", bass.literal).ok();
         }
+
         descriptor
     }
 
-    fn format_quality_modifier(quality: &ChordQuality, modifier: Option<Interval>) -> String {
-        let mod_str = modifier.map(|m| m.to_chord_notation());
+    fn append_quality_modifier(f: &mut String, quality: &ChordQuality, modifier: Option<Interval>) {
+        let modstring = modifier.map_or(SEVEN.to_string(), |m| m.to_chord_notation());
         match quality {
-            Maj | Bass => String::new(),
-            Maj6 => SIX.into(),
-            Maj7 => mod_str.map_or_else(|| MA7.into(), |m| format!("{MA}{m}")),
-            Dominant7 => mod_str.unwrap_or_else(|| SEVEN.into()),
-            Mi => MI.into(),
-            Mi6 => format!("{MI}{SIX}"),
-            Mi7 => mod_str.map_or_else(|| MI7.into(), |m| format!("{MI}{m}")),
-            MiMaj7 => mod_str.map_or_else(|| MIMA7.into(), |m| format!("{MIMA}{m}")),
-            Augmented => mod_str.map_or_else(|| AUG.into(), |m| format!("{AUG}{m}")),
-            Diminished => DIM.into(),
-            Diminished7 => DIM7.into(),
-            Power => FIVE.into(),
+            Maj | Bass => {}
+            Maj6 => f.push_str(SIX),
+            Maj7 => match modifier {
+                None => f.push_str(MA7),
+                Some(m) => {
+                    f.push_str(MA);
+                    f.push_str(&m.to_chord_notation());
+                }
+            },
+            Dominant7 => f.push_str(&modstring),
+            Mi => f.push_str(MI),
+            Mi6 => {
+                f.push_str(MI);
+                f.push_str(SIX);
+            }
+            Mi7 => match modifier {
+                None => f.push_str(MI7),
+                Some(m) => {
+                    f.push_str(MI);
+                    f.push_str(&m.to_chord_notation());
+                }
+            },
+            MiMaj7 => match modifier {
+                None => f.push_str(MIMA7),
+                Some(m) => {
+                    f.push_str(MIMA);
+                    f.push_str(&m.to_chord_notation());
+                }
+            },
+            Augmented => {
+                f.push_str(AUG);
+                if let Some(m) = modifier {
+                    f.push_str(&m.to_chord_notation());
+                }
+            }
+            Diminished => f.push_str(DIM),
+            Diminished7 => f.push_str(DIM7),
+            Power => f.push_str(FIVE),
         }
     }
 
