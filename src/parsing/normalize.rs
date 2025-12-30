@@ -50,12 +50,15 @@ impl<'a> Evaluator<'a> {
         let extensions = quality
             .extensions(&self.dc.interval_set)
             .replace(Interval::MajorSixth, Interval::Thirteenth);
-        let (modifier, adds) = Evaluator::split_extensions(&extensions, &alterations, &quality);
+        let (modifier, mut adds) = Evaluator::split_extensions(&extensions, &alterations, &quality);
         let omits = self.omits(is_sus, &quality);
 
         // Render descriptor
         descriptor.push_str(&Evaluator::format_quality_modifier(&quality, modifier));
         if is_sus {
+            if self.dc.interval_set.contains(Interval::MajorThird) {
+                adds.push(Interval::MajorThird);
+            }
             descriptor.push_str("sus");
         }
 
