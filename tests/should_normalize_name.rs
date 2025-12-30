@@ -87,6 +87,7 @@ use test_case::test_case;
 #[test_case("Cmi7sus#4", "Cmi7(#11,omit3)")]
 #[test_case("Cmi7sus4", "Cmi7sus")]
 #[test_case("Cmi7omit3", "Cmi7(omit3)")]
+#[test_case("C7sus4(add3)", "C7sus(add3)")]
 #[test_case("Csusdim", "Cdimsus")]
 #[test_case("Csusdim7", "Cdim7sus")]
 #[test_case("Csusdim7omit5", "Cmi6sus(omit5)")]
