@@ -30,16 +30,16 @@ impl NoteLiteral {
             _ => NoteLiteral::C,
         }
     }
-    pub fn from_u8(n: u8) -> NoteLiteral {
+    pub fn from_u8(n: u8) -> Option<NoteLiteral> {
         match n % 7 {
-            0 => NoteLiteral::C,
-            1 => NoteLiteral::D,
-            2 => NoteLiteral::E,
-            3 => NoteLiteral::F,
-            4 => NoteLiteral::G,
-            5 => NoteLiteral::A,
-            6 => NoteLiteral::B,
-            _ => unreachable!(),
+            0 => Some(NoteLiteral::C),
+            1 => Some(NoteLiteral::D),
+            2 => Some(NoteLiteral::E),
+            3 => Some(NoteLiteral::F),
+            4 => Some(NoteLiteral::G),
+            5 => Some(NoteLiteral::A),
+            6 => Some(NoteLiteral::B),
+            _ => None,
         }
     }
 
@@ -196,7 +196,8 @@ impl Note {
     }
 
     pub fn get_note(&self, semitones_from_root: u8, interval_degree: u8) -> Note {
-        let target_literal = NoteLiteral::from_u8(self.literal as u8 + (interval_degree - 1));
+        let target_literal = NoteLiteral::from_u8(self.literal as u8 + (interval_degree - 1))
+            .unwrap_or(NoteLiteral::C);
         let root_pitch = self.to_semitone();
         let goal_pitch = (root_pitch + semitones_from_root) % 12;
         let natural_pitch = target_literal.natural_semitone();

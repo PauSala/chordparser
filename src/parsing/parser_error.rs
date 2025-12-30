@@ -80,7 +80,7 @@ impl ParserError {
             | ParserError::NestedParenthesis(pos)
             | ParserError::WrongExpressionTarget(pos)
             | ParserError::MissingClosingParenthesis(pos) => Some(*pos),
-            ParserError::MissingRootNote => Some(1),
+            ParserError::MissingRootNote => Some(0),
             ParserError::IllegalAddTarget((pos, len))
             | ParserError::IllegalOrMissingOmitTarget((pos, len))
             | ParserError::MissingAddTarget((pos, len)) => Some(*pos + *len),
