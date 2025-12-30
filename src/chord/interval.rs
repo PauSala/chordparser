@@ -159,7 +159,7 @@ impl Serialize for Interval {
     where
         S: Serializer,
     {
-        serializer.serialize_str(self.to_chord_notation().as_str())
+        serializer.serialize_str(&format!("{:?}", self))
     }
 }
 
