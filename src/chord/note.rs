@@ -1,6 +1,6 @@
 //! Useful abstractions to work with notes
 //!
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 
@@ -74,6 +74,77 @@ impl Display for NoteLiteral {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 pub struct NoteModifier(pub i8);
 
+impl NoteModifier {
+    pub fn serialize_as_string<S>(
+        modifier: &Option<NoteModifier>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match modifier {
+            Some(m) => serializer.serialize_str(&m.to_string()),
+            None => serializer.serialize_none(),
+        }
+    }
+    pub fn deserialize_from_string<'de, D>(
+        deserializer: D,
+    ) -> Result<Option<NoteModifier>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = Option::<String>::deserialize(deserializer)?;
+        match s {
+            Some(s_str) => {
+                if s_str.is_empty() {
+                    Ok(None)
+                } else {
+                    NoteModifier::from_str(&s_str)
+                        .map(Some)
+                        .map_err(serde::de::Error::custom)
+                }
+            }
+            None => Ok(None),
+        }
+    }
+}
+
+impl FromStr for NoteModifier {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "#" => Ok(NoteModifier(1)),
+            "b" => Ok(NoteModifier(-1)),
+            "𝄪" => Ok(NoteModifier(2)),
+            "𝄫" => Ok(NoteModifier(-2)),
+            "" => Ok(NoteModifier(0)),
+            // Handle the (n)# and (n)b cases
+            _ if s.starts_with('(') => parse_extended_modifier(s),
+            _ => Err(format!("Invalid modifier format: {}", s)),
+        }
+    }
+}
+/// Helper to parse formats like "(3)#" or "(-4)b"
+fn parse_extended_modifier(s: &str) -> Result<NoteModifier, String> {
+    let end_paren = s
+        .find(')')
+        .ok_or_else(|| "Missing closing parenthesis".to_string())?;
+
+    let num_str = &s[1..end_paren];
+
+    let n = num_str
+        .parse::<i8>()
+        .map_err(|_| format!("Invalid number in modifier: {}", num_str))?;
+
+    let suffix = &s[end_paren + 1..];
+    match suffix {
+        "#" => Ok(NoteModifier(n)),
+        "b" => Ok(NoteModifier(n)),
+        _ => Err(format!("Invalid suffix after parenthesis: {}", suffix)),
+    }
+}
+
 impl Display for NoteModifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.0 {
@@ -105,6 +176,10 @@ impl From<Modifier> for NoteModifier {
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 pub struct Note {
     pub literal: NoteLiteral,
+    #[serde(
+        serialize_with = "NoteModifier::serialize_as_string",
+        deserialize_with = "NoteModifier::deserialize_from_string"
+    )]
     pub modifier: Option<NoteModifier>,
 }
 
@@ -184,5 +259,58 @@ impl Display for Modifier {
             Modifier::DSharp => f.write_str("𝄪"),
             Modifier::DFlat => f.write_str("𝄫"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_serialization_format() {
+        let note = Note::new(NoteLiteral::C, Some(NoteModifier(1)));
+        let expected_json = json!({
+            "literal": "C",
+            "modifier": "#"
+        });
+
+        let actual_json = serde_json::to_value(&note).unwrap();
+        assert_eq!(actual_json, expected_json);
+    }
+
+    #[test]
+    fn test_round_trip() {
+        let cases = [
+            (NoteLiteral::A, Some(NoteModifier(-1)), "Ab"),
+            (NoteLiteral::F, Some(NoteModifier(2)), "F𝄪"),
+            (NoteLiteral::E, None, "E"),
+            (NoteLiteral::E, Some(NoteModifier(-2)), "E𝄫"),
+            (NoteLiteral::B, Some(NoteModifier(-4)), "B(-4)b"),
+            (NoteLiteral::D, Some(NoteModifier(5)), "D(5)#"),
+        ];
+
+        for (lit, modif, display_str) in cases {
+            let note = Note::new(lit, modif);
+
+            assert_eq!(note.to_string(), display_str);
+            let serialized = serde_json::to_string(&note).unwrap();
+            let deserialized: Note = serde_json::from_str(&serialized).unwrap();
+            assert_eq!(note, deserialized, "Failed to round-trip: {}", display_str);
+        }
+    }
+
+    #[test]
+    fn test_deserializing_custom_strings() {
+        let input = r#"
+        {
+            "literal": "G",
+            "modifier": "(3)#"
+        }
+        "#;
+
+        let note: Note = serde_json::from_str(input).expect("Should parse (3)#");
+        assert_eq!(note.literal, NoteLiteral::G);
+        assert_eq!(note.modifier.unwrap().0, 3);
     }
 }
