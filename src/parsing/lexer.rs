@@ -30,7 +30,7 @@ impl Lexer {
         }
         self.add_token(TokenType::Eof, self.current + 1, 0, tokens);
         self.current = 0;
-        tokens.to_vec()
+        std::mem::take(tokens)
     }
 
     fn is_at_end(&self) -> bool {
