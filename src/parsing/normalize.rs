@@ -100,7 +100,7 @@ impl<'a> Evaluator<'a> {
             Maj | Bass => String::new(),
             Maj6 => SIX.into(),
             Maj7 => mod_str.map_or_else(|| MA7.into(), |m| format!("{MA}{m}")),
-            Dom => mod_str.unwrap_or_else(|| SEVEN.into()),
+            Dominant7 => mod_str.unwrap_or_else(|| SEVEN.into()),
             Mi => MI.into(),
             Mi6 => format!("{MI}{SIX}"),
             Mi7 => mod_str.map_or_else(|| MI7.into(), |m| format!("{MI}{m}")),
@@ -108,7 +108,7 @@ impl<'a> Evaluator<'a> {
             Augmented => mod_str.map_or_else(|| AUG.into(), |m| format!("{AUG}{m}")),
             Diminished => DIM.into(),
             Diminished7 => DIM7.into(),
-            Pow => FIVE.into(),
+            Power => FIVE.into(),
         }
     }
 
@@ -155,7 +155,7 @@ impl<'a> Evaluator<'a> {
         quality: &ChordQuality,
     ) -> IntDegreeSet {
         let seventh = match quality {
-            Diminished7 | Dom | Maj7 | Mi7 | MiMaj7 => Some(IntDegree::Seventh),
+            Diminished7 | Dominant7 | Maj7 | Mi7 | MiMaj7 => Some(IntDegree::Seventh),
             _ => None,
         };
         let alt_degrees: IntDegreeSet = alterations.into();
@@ -170,7 +170,7 @@ impl<'a> Evaluator<'a> {
 
     fn omits(&self, is_sus: bool, quality: &ChordQuality) -> Vec<String> {
         let mut omits = vec![];
-        if matches!(quality, ChordQuality::Bass | ChordQuality::Pow) {
+        if matches!(quality, ChordQuality::Bass | ChordQuality::Power) {
             return omits;
         }
         let intervals_slice = self.dc.intervals.as_slice();

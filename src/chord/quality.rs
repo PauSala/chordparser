@@ -29,7 +29,7 @@ pub(crate) const THIRDS_SET: PcSet = PcSet::from_array([Pc3, Pc4]);
 pub(crate) const FIFTHS_SET: PcSet = PcSet::from_array([Pc6, Pc7, Pc8]);
 
 const QUALITY_SETS: &[(ChordQuality, PcSet)] = &[
-    (Dom, DOM7_SET),
+    (Dominant7, DOM7_SET),
     (MiMaj7, MIMA7SET),
     (Mi7, MIN7_SET),
     (Mi6, MIN6_SET),
@@ -37,7 +37,7 @@ const QUALITY_SETS: &[(ChordQuality, PcSet)] = &[
     (Maj6, MAJ6_SET),
     (Maj7, MAJ7_SET),
     (Maj, MAJ_SET),
-    (Pow, POW_SET),
+    (Power, POW_SET),
 ];
 
 // Interval sets
@@ -116,7 +116,7 @@ pub enum ChordQuality {
     Maj,
     Maj6,
     Maj7,
-    Dom,
+    Dominant7,
 
     Mi,
     Mi6,
@@ -127,14 +127,14 @@ pub enum ChordQuality {
     Diminished,
     Diminished7,
 
-    Pow,
+    Power,
     Bass,
 }
 
 impl ChordQuality {
     pub(crate) fn is_sus(&self, ints: &PcSet) -> bool {
         match self {
-            ChordQuality::Pow | ChordQuality::Bass => false,
+            ChordQuality::Power | ChordQuality::Bass => false,
             _ => !ints.contains(Pc3) && !ints.intersection(&SUS_SET).is_empty(),
         }
     }
@@ -153,8 +153,8 @@ impl ChordQuality {
             IntDegreeSet::from_array([IntDegree::Seventh, IntDegree::Ninth, IntDegree::Thirteenth]);
         const M11: IntDegreeSet = IntDegreeSet::from_array([IntDegree::Eleventh]).union(&DEFAULT);
         match self {
-            Pow | Bass => &EMPTY_INTERVAL_SET,
-            Dom | Maj7 | Maj | Augmented => &DEFAULT,
+            Power | Bass => &EMPTY_INTERVAL_SET,
+            Dominant7 | Maj7 | Maj | Augmented => &DEFAULT,
             _ => &M11,
         }
     }
@@ -169,11 +169,11 @@ impl ChordQuality {
         const M6: IntervalSet = IntervalSet::from_array([Interval::MajorSixth]).union(&DEFAULT);
 
         match self {
-            Pow | Bass => &EMPTY_INTERVAL_SET,
+            Power | Bass => &EMPTY_INTERVAL_SET,
             Diminished7 | Diminished | Mi6 => &M7_11,
             Mi | Mi7 | MiMaj7 => &M11_M6,
             Maj6 => &M7,
-            Dom | Maj7 | Maj | Augmented => &M6,
+            Dominant7 | Maj7 | Maj | Augmented => &M6,
         }
     }
 
@@ -197,7 +197,7 @@ impl ChordQuality {
             FlatThirteenth,
         ]);
         match self {
-            Pow | Bass => &EMPTY_INTERVAL_SET,
+            Power | Bass => &EMPTY_INTERVAL_SET,
             Diminished | Diminished7 => &DIM,
             Augmented => &AUG,
             _ => &DEFAULT,
