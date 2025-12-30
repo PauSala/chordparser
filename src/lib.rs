@@ -22,7 +22,7 @@
 //! # [Parser rules](#parsing_rules)
 //! Since there isn't a full consensus on how chords should be written, any chord parser is by definition opinionated.  
 //! We try to get a good balance between rejecting all invalid notations and accept any possible chord representation.  
-//! Check the test cases in the /test folder to have a grasp of what chords can and cannot be parsed.
+//! Check the test cases in the `test` folder to have a grasp of what chords can and cannot be parsed.
 //!
 //! # [Voicing generation](#voicing_generation)
 //! The voicings module exposes a function to generate a set of MIDI notes from a [Chord](chord/struct.Chord.html) representing a voicing for it.
@@ -30,12 +30,7 @@
 //!
 //!
 //! # [Limitations](#limitations)
-//! - Parsed chord notes have enharmonically correct names when possible (for example, a `B#9` chord will have `C𝄪` as the ninth instead of D), but triple flat/sharps are not suported.
-//! - When transposed, slash-bass notes (like C in Ab/C) may not be enharmonically correct.
-//! - The parser is not customizable for now, but it is expected to be in the future, for example:
-//!     - Include or remove both custom and default validators.
-//!     - Include or remove sets of allowed symbols.
-//!     - Maybe allow other notations like Latin or German.
+//! - Root notes with Double/Triple Flats/Sharps are not supported.  
 //!
 //! # [Examples](#examples)
 //! ```rust

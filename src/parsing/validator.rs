@@ -1,5 +1,5 @@
 use crate::{
-    chord::intervals::{Interval, IntervalSet},
+    chord::interval::{Interval, IntervalSet},
     parsing::{expression::Exp, parser_error::ParserError},
 };
 use Interval::*;

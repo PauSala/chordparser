@@ -1,4 +1,4 @@
-use crate::chord::intervals::{IntDegree, IntDegreeSet, Interval, IntervalSet};
+use crate::chord::interval::{IntDegree, IntDegreeSet, Interval, IntervalSet};
 use ChordQuality::*;
 use Interval::*;
 use Pc::*;

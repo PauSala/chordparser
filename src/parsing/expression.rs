@@ -1,4 +1,4 @@
-use crate::chord::{intervals::Interval, note::Note};
+use crate::chord::{interval::Interval, note::Note};
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, PartialEq, Clone)]

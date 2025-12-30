@@ -11,7 +11,7 @@ pub(crate) mod validator;
 use crate::{
     chord::{
         Chord,
-        intervals::Interval,
+        interval::Interval,
         note::{Modifier, Note, NoteLiteral},
     },
     parsing::{evaluator::Evaluator, expression::*},
@@ -95,14 +95,14 @@ impl Parser {
     /// * A Result containing a [Chord] if the parsing was successful, otherwise a [ParserErrors] struct.
     ///   
     /// # Rules
-    /// There is a set of semantic and syntactic rules to ensure chord's consistency, for now the parser will reject a chord if:
+    /// There is a set of semantic and syntactic rules to ensure chord's consistency, the parser will reject a chord if:
     /// - There are no Root.
     /// - There are multiple roots.
     /// - There are duplicate basses (like C/E/Eb).
     /// - There are two thirds.
     /// - There are two fifths (except for (b5, #5) which is allowed).
     /// - There are contradictory sevenths (like m7 and Maj7) or multiple ones.
-    /// - There are illegal alterations (like #2, b4, #6).
+    /// - There are non-standard alterations (like #2, b4, #6).
     /// - An alteration has no target.
     /// - There are duplicate tensions, like 11, #11 (except for (b9, #9), which is allowed).
     /// - A sus modifier is not sus2, susb2, sus4 or sus#4.

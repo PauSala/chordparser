@@ -5,7 +5,7 @@ use std::{
     fmt::{self},
 };
 
-use crate::chord::intervals::Interval;
+use crate::chord::interval::Interval;
 
 /// Errors that can occur when parsing a chord.
 /// Includes a list of string messages with a reason an the position in the input string when possible.

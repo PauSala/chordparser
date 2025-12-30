@@ -1,6 +1,6 @@
 use super::expression::Exp;
 use crate::chord::{
-    intervals::{Interval, IntervalSet},
+    interval::{Interval, IntervalSet},
     note::{Note, NoteLiteral},
 };
 #[derive(Debug, PartialEq, Eq, Clone)]

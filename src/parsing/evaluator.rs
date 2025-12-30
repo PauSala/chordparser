@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::LazyLock};
 use crate::{
     chord::{
         Chord,
-        intervals::{Interval, IntervalSet},
+        interval::{Interval, IntervalSet},
         note::Note,
     },
     parsing::{

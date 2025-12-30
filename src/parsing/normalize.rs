@@ -1,6 +1,6 @@
 use crate::{
     chord::{
-        intervals::{IntDegree, IntDegreeSet, Interval, IntervalSet},
+        interval::{IntDegree, IntDegreeSet, Interval, IntervalSet},
         quality::{ChordQuality, EXACT_POW_SET, FIFTHS_SET, Pc, PcSet, THIRDS_SET},
     },
     parsing::evaluator::Evaluator,
