@@ -229,10 +229,14 @@ impl<'a> Evaluator<'a> {
         self
     }
 
+    /// Place to handle some edge cases in the interval set for that I couldn't find a more generic rule.
     fn prune(mut self) -> Self {
+        // For chords like Cmin613, store both is redundant. 6 takes precedence as it could change the quality of the chord.
         if self.dc.interval_set.contains(Interval::MajorSixth) {
             self.dc.interval_set.remove(Interval::Thirteenth);
         }
+        // For chords like C11add3, the 11 is updated to a 4, and the normalized version is C7sus(add3).
+        // This is highly opinionated.
         if self.dc.interval_set.contains(&Interval::MajorThird)
             && self.dc.interval_set.contains(&Interval::Eleventh)
         {
