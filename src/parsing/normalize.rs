@@ -98,7 +98,7 @@ impl<'a> Evaluator<'a> {
         }
 
         if has_items {
-            write!(descriptor, ")").ok();
+            descriptor.push(')');
         }
 
         if let Some(bass) = self.dc.bass {

@@ -57,17 +57,23 @@ impl NoteLiteral {
     }
 }
 
-impl Display for NoteLiteral {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl AsRef<str> for NoteLiteral {
+    fn as_ref(&self) -> &str {
         match self {
-            NoteLiteral::C => f.write_str("C"),
-            NoteLiteral::D => f.write_str("D"),
-            NoteLiteral::E => f.write_str("E"),
-            NoteLiteral::F => f.write_str("F"),
-            NoteLiteral::G => f.write_str("G"),
-            NoteLiteral::A => f.write_str("A"),
-            NoteLiteral::B => f.write_str("B"),
+            NoteLiteral::C => "C",
+            NoteLiteral::D => "D",
+            NoteLiteral::E => "E",
+            NoteLiteral::F => "F",
+            NoteLiteral::G => "G",
+            NoteLiteral::A => "A",
+            NoteLiteral::B => "B",
         }
+    }
+}
+
+impl std::fmt::Display for NoteLiteral {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_ref())
     }
 }
 
@@ -78,6 +84,16 @@ impl Display for NoteLiteral {
 pub struct NoteModifier(pub i8);
 
 impl NoteModifier {
+    pub fn as_static_str(&self) -> Option<&'static str> {
+        match self.0 {
+            0 => Some(""),
+            1 => Some("#"),
+            -1 => Some("b"),
+            2 => Some("𝄪"),
+            -2 => Some("𝄫"),
+            _ => None,
+        }
+    }
     pub fn serialize_as_string<S>(
         modifier: &Option<NoteModifier>,
         serializer: S,
@@ -148,18 +164,18 @@ fn parse_extended_modifier(s: &str) -> Result<NoteModifier, String> {
     }
 }
 
-impl Display for NoteModifier {
+impl std::fmt::Display for NoteModifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.0 {
-            0 => Ok(()),
-            1 => f.write_str("#"),
-            -1 => f.write_str("b"),
-            2 => f.write_str("𝄪"),
-            -2 => f.write_str("𝄫"),
-            // Handle other accidentals for the sake of completeness
-            n if n > 2 => write!(f, "({})#", n),
-            n if n < -2 => write!(f, "({})b", n),
-            _ => Ok(()),
+        if let Some(s) = self.as_static_str() {
+            return f.write_str(s);
+        }
+        let n = self.0;
+        if n > 2 {
+            write!(f, "({})#", n)
+        } else if n < -2 {
+            write!(f, "({})b", -n)
+        } else {
+            Ok(())
         }
     }
 }
@@ -231,13 +247,12 @@ impl Note {
     }
 }
 
-impl Display for Note {
+impl std::fmt::Display for Note {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let m = match &self.modifier {
-            Some(m) => m.to_string(),
-            None => "".to_owned(),
-        };
-        f.write_str(&format!("{}{}", self.literal, m))?;
+        f.write_str(self.literal.as_ref())?;
+        if let Some(m) = &self.modifier {
+            write!(f, "{}", m)?;
+        }
         Ok(())
     }
 }
