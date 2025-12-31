@@ -173,7 +173,7 @@ impl std::fmt::Display for NoteModifier {
         if n > 2 {
             write!(f, "({})#", n)
         } else if n < -2 {
-            write!(f, "({})b", -n)
+            write!(f, "({})b", n)
         } else {
             Ok(())
         }
