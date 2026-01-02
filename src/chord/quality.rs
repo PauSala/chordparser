@@ -26,8 +26,6 @@ const DIM7_SET: PcSet = PcSet::from_array([Pc3, Pc6, Pc9]);
 // Other convenient sets
 const SEVENTH_SET: PcSet = PcSet::from_array([Pc10, Pc11]);
 const SUS_SET: PcSet = PcSet::from_array([Pc5, Pc17]);
-pub(crate) const THIRDS_SET: PcSet = PcSet::from_array([Pc3, Pc4]);
-pub(crate) const FIFTHS_SET: PcSet = PcSet::from_array([Pc6, Pc7, Pc8]);
 
 const QUALITY_SETS: &[(ChordQuality, PcSet)] = &[
     (Dominant7, DOM7_SET),

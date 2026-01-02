@@ -1,6 +1,6 @@
 use crate::chord::{
-    interval::{IntDegree, IntDegreeSet, Interval, IntervalSet},
-    quality::{ChordQuality, FIFTHS_SET, Pc, PcSet, THIRDS_SET},
+    interval::{FIFTHS_SET, IntDegree, IntDegreeSet, Interval, IntervalSet, THIRDS_SET},
+    quality::{ChordQuality, PcSet},
 };
 use ChordQuality::*;
 
@@ -18,9 +18,8 @@ const SIX: &str = "6";
 const SEVEN: &str = "7";
 const NINE: &str = "9";
 
-pub fn normalize(pitch_set: PcSet, interval_set: IntervalSet) -> String {
+pub fn normalize(pitch_set: PcSet, interval_set: IntervalSet, quality: ChordQuality) -> String {
     let mut descriptor = String::with_capacity(128);
-    let quality: ChordQuality = (&pitch_set).into();
 
     if quality == ChordQuality::Bass {
         descriptor.push_str("Bass");
@@ -34,7 +33,7 @@ pub fn normalize(pitch_set: PcSet, interval_set: IntervalSet) -> String {
         .replace(Interval::MajorSixth, Interval::Thirteenth);
 
     let (modifier, mut adds) = split_extensions(&extensions, &alterations, &quality);
-    let omits = omits(pitch_set, is_sus, &quality);
+    let (omits_list, omits_count) = omits(interval_set, is_sus, &quality);
 
     append_quality_modifier(&mut descriptor, &quality, modifier);
 
@@ -45,22 +44,19 @@ pub fn normalize(pitch_set: PcSet, interval_set: IntervalSet) -> String {
         descriptor.push_str("sus");
     }
 
-    // Handle items inside parentheses (alterations, adds, omits)
-    let mut has_items = false;
-
-    let mut append_item = |desc: &mut String, item: &str, prefix: &str| {
-        if !has_items {
-            desc.push('(');
-            has_items = true;
+    let mut open_paren = false;
+    let ensure_paren = |d: &mut String, has_p: &mut bool| {
+        if !*has_p {
+            d.push('(');
+            *has_p = true;
         } else {
-            desc.push(',');
+            d.push(',');
         }
-        desc.push_str(prefix);
-        desc.push_str(item);
     };
 
     for alt in alterations {
-        append_item(&mut descriptor, &alt.to_chord_notation(), "");
+        ensure_paren(&mut descriptor, &mut open_paren);
+        descriptor.push_str(alt.to_chord_notation());
     }
 
     for (i, add) in adds.iter().enumerate() {
@@ -68,36 +64,55 @@ pub fn normalize(pitch_set: PcSet, interval_set: IntervalSet) -> String {
             descriptor.push_str(NINE);
             continue;
         }
-        let prefix = if i == 0 { "add" } else { "" };
-        append_item(&mut descriptor, &add.to_chord_notation(), prefix);
+        ensure_paren(&mut descriptor, &mut open_paren);
+        if i == 0 {
+            descriptor.push_str("add");
+        }
+        descriptor.push_str(add.to_chord_notation());
     }
 
-    for (i, omit) in omits.iter().enumerate() {
-        let prefix = if i == 0 { "omit" } else { "" };
-        append_item(&mut descriptor, omit, prefix);
+    for i in 0..omits_count {
+        if let Some(omit_str) = omits_list[i] {
+            ensure_paren(&mut descriptor, &mut open_paren);
+            if i == 0 {
+                descriptor.push_str("omit");
+            }
+            descriptor.push_str(omit_str);
+        }
     }
 
-    if has_items {
+    if open_paren {
         descriptor.push(')');
     }
 
     descriptor
 }
 
-fn omits(pitch_set: PcSet, is_sus: bool, quality: &ChordQuality) -> Vec<String> {
-    let mut omits = vec![];
+fn omits(
+    interval_set: IntervalSet,
+    is_sus: bool,
+    quality: &ChordQuality,
+) -> ([Option<&'static str>; 2], usize) {
+    let mut res = [None; 2];
+    let mut count = 0;
+
     if matches!(quality, ChordQuality::Bass | ChordQuality::Power) {
-        return omits;
+        return (res, 0);
     }
     // is omit 3 if is not sus and there isn't a third
-    if !is_sus && pitch_set.intersection(&THIRDS_SET).is_empty() {
-        omits.push("3".to_string());
+    if !is_sus && interval_set.intersection(&THIRDS_SET).is_empty() {
+        res[count] = Some("3");
+        count += 1;
     }
     // is omit 5 if there isn't a five and there isn't a b13 (bc in this case the 5 is omited by default)
-    if pitch_set.intersection(&FIFTHS_SET).is_empty() && !pitch_set.contains_const(&Pc::Pc20) {
-        omits.push("5".to_string());
+    if interval_set.intersection(&FIFTHS_SET).is_empty()
+        && !interval_set.contains(&Interval::FlatThirteenth)
+    {
+        res[count] = Some("5");
+        count += 1;
     }
-    omits
+
+    (res, count)
 }
 
 fn split_extensions(
@@ -174,7 +189,7 @@ fn append_quality_modifier(f: &mut String, quality: &ChordQuality, modifier: Opt
             }
         },
         Dominant7 => {
-            let modstring = modifier.map_or(SEVEN.to_string(), |m| m.to_chord_notation());
+            let modstring = modifier.map_or(SEVEN, |m| m.to_chord_notation());
             f.push_str(&modstring);
         }
         Mi => f.push_str(MI),

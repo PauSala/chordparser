@@ -1,11 +1,11 @@
-use std::{collections::HashMap, sync::LazyLock};
-
 use crate::{
     chord::{
         Chord,
         interval::{Interval, IntervalSet},
         note::Note,
+        quality::{ChordQuality, EXACT_POW_SET, Pc, PcSet},
     },
+    inference::normalize::normalize,
     parsing::{
         ast::{Ast, BaseForm},
         expression::*,
@@ -13,6 +13,8 @@ use crate::{
         validator::Validator,
     },
 };
+use std::fmt::Write;
+use std::{collections::HashMap, sync::LazyLock};
 
 static EQUIVALENCE_MAP: LazyLock<HashMap<Interval, Vec<Interval>>> = LazyLock::new(|| {
     HashMap::from([
@@ -298,7 +300,7 @@ impl<'a> Evaluator<'a> {
             let v = e.st();
             semitones.push(v);
         }
-        let normalized = self.normalize();
+        let normalized = self.normalize_chord();
 
         Ok(Chord::builder(&self.name, self.ast.root)
             .descriptor(&self.descriptor(&self.name))
@@ -323,7 +325,7 @@ impl<'a> Evaluator<'a> {
         notes
     }
 
-    pub fn descriptor(&self, name: &str) -> String {
+    fn descriptor(&self, name: &str) -> String {
         let modifier_str = match &self.ast.root.modifier {
             Some(m) => m.to_string(),
             None => "".to_string(),
@@ -397,5 +399,37 @@ impl<'a> Evaluator<'a> {
             }
             _ => {}
         }
+    }
+
+    pub(crate) fn quality(&self) -> ChordQuality {
+        let intervals_slice = self.dc.intervals.as_slice();
+        let mut virtual_set: PcSet = intervals_slice.into();
+
+        // This is just in case of an omited third the quality can still be derived as Major or Minor.
+        if let Some(third) = self.dc.third
+            && !virtual_set.difference(&EXACT_POW_SET).is_empty()
+        {
+            virtual_set.insert(Into::<Pc>::into(&third));
+        }
+        (&virtual_set).into()
+    }
+
+    pub(crate) fn normalize_chord(&self) -> String {
+        let mut descriptor = String::with_capacity(128);
+        write!(descriptor, "{}", self.ast.root).ok();
+
+        let quality = self.quality();
+
+        descriptor.push_str(&normalize(
+            self.dc.intervals.as_slice().into(),
+            self.dc.interval_set,
+            quality,
+        ));
+
+        if let Some(bass) = self.dc.bass {
+            write!(descriptor, "/{}", bass.literal).ok();
+        }
+
+        descriptor
     }
 }

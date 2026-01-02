@@ -37,7 +37,7 @@ pub fn from_midi_codes(midi_codes: &[u8]) -> Vec<String> {
             .first()
             .map(|n| n.to_string())
             .unwrap_or_default();
-        chord_name.push_str(&normalize(pitch_set, interval_set));
+        chord_name.push_str(&normalize(pitch_set, interval_set, (&pitch_set).into()));
 
         if index > 0 {
             chord_name.push('/');
@@ -51,25 +51,18 @@ pub fn from_midi_codes(midi_codes: &[u8]) -> Vec<String> {
 fn pitch_class(root: u8, other: u8) -> Pc {
     let pc = ((other as i16 - root as i16).rem_euclid(12)) as u8;
     match pc {
-        0 | 12 => Pc::Pc0,
+        0 => Pc::Pc0,
         1 => Pc::Pc1,
         2 => Pc::Pc2,
         3 => Pc::Pc3,
-        4 | 16 => Pc::Pc4,
+        4 => Pc::Pc4,
         5 => Pc::Pc5,
         6 => Pc::Pc6,
-        7 | 19 => Pc::Pc7,
+        7 => Pc::Pc7,
         8 => Pc::Pc8,
         9 => Pc::Pc9,
-        10 | 22 => Pc::Pc10,
-        11 | 23 => Pc::Pc11,
-        13 => Pc::Pc13,
-        14 => Pc::Pc14,
-        15 => Pc::Pc15,
-        17 => Pc::Pc17,
-        18 => Pc::Pc18,
-        20 => Pc::Pc20,
-        21 => Pc::Pc21,
+        10 => Pc::Pc10,
+        11 => Pc::Pc11,
         _ => unreachable!(),
     }
 }
@@ -85,7 +78,7 @@ impl From<PcSet> for IntervalSet {
                 Pc::Pc2 | Pc::Pc14 => iset.insert(Interval::Ninth),
                 Pc::Pc3 | Pc::Pc15 => process_later.insert(Interval::MinorThird),
                 Pc::Pc4 | Pc::Pc16 => iset.insert(Interval::MajorThird),
-                Pc::Pc5 | Pc::Pc17 => process_later.insert(Interval::PerfectFourth),
+                Pc::Pc5 | Pc::Pc17 => iset.insert(Interval::Eleventh),
                 Pc::Pc6 | Pc::Pc18 => process_later.insert(Interval::AugmentedFourth),
                 Pc::Pc7 | Pc::Pc19 => iset.insert(Interval::PerfectFifth),
                 Pc::Pc8 | Pc::Pc20 => process_later.insert(Interval::AugmentedFifth),
@@ -102,13 +95,6 @@ impl From<PcSet> for IntervalSet {
                         iset.insert(Interval::SharpNinth);
                     } else {
                         iset.insert(Interval::MinorThird);
-                    }
-                }
-                Interval::PerfectFourth => {
-                    if iset.contains(Interval::MajorThird) {
-                        iset.insert(Interval::Eleventh);
-                    } else {
-                        iset.insert(Interval::PerfectFourth);
                     }
                 }
                 Interval::AugmentedFourth => {
@@ -163,14 +149,14 @@ mod test {
         let mut parser = Parser::new();
         let parsed = parser.parse("C6").unwrap();
         let intervals_slice = parsed.intervals.as_slice();
-        let pcset: PcSet = intervals_slice.into();
-        let intervals: IntervalSet = pcset.into();
-        let _normalized = normalize(pcset, intervals);
+        let pitch_set: PcSet = intervals_slice.into();
+        let intervals: IntervalSet = pitch_set.into();
+        let _normalized = normalize(pitch_set, intervals, (&pitch_set).into());
     }
 
     #[test]
     fn test_from_midi_codes() {
-        let midi_codes: &[u8] = &[16, 55, 72, 93];
+        let midi_codes: &[u8] = &[12, 16, 18, 20, 21, 23];
         let candidates = from_midi_codes(midi_codes);
         dbg!(candidates);
     }
