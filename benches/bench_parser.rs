@@ -11,7 +11,7 @@ fn parse(n: &str, parser: &mut Parser) -> Result<Chord, ParserErrors> {
 
 fn criterion_benchmark(c: &mut Criterion) {
     let mut parser = Parser::new();
-    c.bench_function("C", |b| {
+    c.bench_function("bench parser", |b| {
         b.iter(|| {
             let chord = parse(black_box("CMaj7#9#11b6Omit5"), black_box(&mut parser)).unwrap();
             let _ = black_box(chord);
