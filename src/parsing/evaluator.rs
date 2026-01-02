@@ -237,8 +237,8 @@ impl<'a> Evaluator<'a> {
         }
         // For chords like C11add3, the 11 is updated to a 4, and the normalized version is C7sus(add3).
         // This is highly opinionated.
-        if self.dc.interval_set.contains(&Interval::MajorThird)
-            && self.dc.interval_set.contains(&Interval::Eleventh)
+        if self.dc.interval_set.contains(Interval::MajorThird)
+            && self.dc.interval_set.contains(Interval::Eleventh)
         {
             self.dc
                 .interval_set

@@ -108,7 +108,11 @@ impl<'a> Evaluator<'a> {
         descriptor
     }
 
-    fn append_quality_modifier(f: &mut String, quality: &ChordQuality, modifier: Option<Interval>) {
+    pub(crate) fn append_quality_modifier(
+        f: &mut String,
+        quality: &ChordQuality,
+        modifier: Option<Interval>,
+    ) {
         match quality {
             Maj | Bass => {}
             Maj6 => match modifier {
@@ -160,7 +164,7 @@ impl<'a> Evaluator<'a> {
         }
     }
 
-    fn split_extensions(
+    pub(crate) fn split_extensions(
         extensions: &IntervalSet,
         alterations: &IntervalSet,
         quality: &ChordQuality,

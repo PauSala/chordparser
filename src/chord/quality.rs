@@ -12,6 +12,7 @@ const MAJ_SET: PcSet = PcSet::from_array([Pc4]);
 const MAJ6_SET: PcSet = PcSet::from_array([Pc4, Pc9]);
 const MAJ7_SET: PcSet = PcSet::from_array([Pc4, Pc11]);
 const DOM7_SET: PcSet = PcSet::from_array([Pc4, Pc10]);
+const SUS7_SET: PcSet = PcSet::from_array([Pc5, Pc10]);
 
 const MIN_SET: PcSet = PcSet::from_array([Pc3]);
 const MIN6_SET: PcSet = PcSet::from_array([Pc3, Pc9]);
@@ -36,6 +37,7 @@ const QUALITY_SETS: &[(ChordQuality, PcSet)] = &[
     (Mi, MIN_SET),
     (Maj6, MAJ6_SET),
     (Maj7, MAJ7_SET),
+    (Dominant7, SUS7_SET),
     (Maj, MAJ_SET),
     (Power, POW_SET),
 ];
@@ -55,7 +57,7 @@ pub enum Pc {
     Pc6,  // #4 / b5
     Pc7,  // P5
     Pc8,  // #5 / b6
-    Pc9,  // M6
+    Pc9,  // M6 / d7
     Pc10, // m7
     Pc11, // M7
 
@@ -68,7 +70,7 @@ pub enum Pc {
     Pc18, // #11
     Pc19, // 12 / 5
     Pc20, // b13
-    Pc21, // 13
+    Pc21, // 13 / 6 / d7
     Pc22, // m7
     Pc23, // M7
 }
