@@ -1,5 +1,5 @@
 use crate::chord::{interval::Interval, note::Note};
-use std::fmt::{Display, Formatter};
+use std::fmt::{self};
 
 #[derive(Debug, PartialEq, Clone)]
 #[repr(u8)]
@@ -30,26 +30,6 @@ impl Exp {
         }
     }
 
-    fn stringify(&self) -> String {
-        match self {
-            Exp::Extension(_) => "Extension".to_string(),
-            Exp::Add(_) => "Add".to_string(),
-            Exp::Sus(_) => "Sus".to_string(),
-            Exp::Omit(_) => "Omit".to_string(),
-            Exp::SlashBass(_) => "SlashBass".to_string(),
-            Exp::Bass => "Bass".to_string(),
-            Exp::Alt => "Alt".to_string(),
-            Exp::Minor => "Minor".to_string(),
-            Exp::Aug => "Aug".to_string(),
-            Exp::HalfDim => "HalfDim".to_string(),
-            Exp::Dim => "Dim".to_string(),
-            Exp::Dim7 => "Dim7".to_string(),
-            Exp::Maj => "Maj".to_string(),
-            Exp::Maj7 => "Maj".to_string(),
-            Exp::Power => "Power".to_string(),
-        }
-    }
-
     pub fn priority(&self) -> u32 {
         match self {
             Exp::Power => 0,
@@ -69,30 +49,47 @@ impl Exp {
             Exp::SlashBass(_) => 14,
         }
     }
-    pub fn from_priority(p: u32) -> String {
+    pub fn from_priority(p: u32) -> &'static str {
         match p {
-            0 => "5".to_string(),
-            1 => "Alt".to_string(),
-            2 => "Bass".to_string(),
-            3 => "Minor".to_string(),
-            4 => "Dim7".to_string(),
-            5 => "Dim".to_string(),
-            6 => "halfDim".to_string(),
-            7 => "Sus".to_string(),
-            8 => "Maj".to_string(),
-            9 => "Maj".to_string(),
-            10 => "Extension".to_string(),
-            11 => "Add".to_string(),
-            12 => "Aug".to_string(),
-            13 => "Omit".to_string(),
-            14 => "SlashBass".to_string(),
-            _ => "".to_string(),
+            0 => "5",
+            1 => "Alt",
+            2 => "Bass",
+            3 => "Minor",
+            4 => "Dim7",
+            5 => "Dim",
+            6 => "halfDim",
+            7 => "Sus",
+            8 => "Maj",
+            9 => "Maj",
+            10 => "Extension",
+            11 => "Add",
+            12 => "Aug",
+            13 => "Omit",
+            14 => "SlashBass",
+            _ => "",
         }
     }
 }
-impl Display for Exp {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.stringify().fmt(f)
+impl fmt::Display for Exp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Exp::Extension(_) => "Extension",
+            Exp::Add(_) => "Add",
+            Exp::Sus(_) => "Sus",
+            Exp::Omit(_) => "Omit",
+            Exp::SlashBass(_) => "SlashBass",
+            Exp::Bass => "Bass",
+            Exp::Alt => "Alt",
+            Exp::Minor => "Minor",
+            Exp::Aug => "Aug",
+            Exp::HalfDim => "HalfDim",
+            Exp::Dim => "Dim",
+            Exp::Dim7 => "Dim7",
+            Exp::Maj => "Maj",
+            Exp::Maj7 => "Maj",
+            Exp::Power => "Power",
+        };
+        write!(f, "{}", s)
     }
 }
 

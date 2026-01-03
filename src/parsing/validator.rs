@@ -66,7 +66,9 @@ impl Validator {
 
         for (key, count) in counts {
             if key < u32::MAX && count > 1 {
-                errors.push(ParserError::DuplicateModifier(Exp::from_priority(key)));
+                errors.push(ParserError::DuplicateModifier(
+                    Exp::from_priority(key).to_string(),
+                ));
                 return false;
             }
         }
