@@ -5,7 +5,7 @@ use crate::{
         note::Note,
         quality::{ChordQuality, EXACT_POW_SET, Pc, PcSet},
     },
-    inference::normalize::normalize,
+    inference::normalize::normalized_descriptor,
     parsing::{
         ast::{Ast, BaseForm},
         expression::*,
@@ -422,7 +422,7 @@ impl<'a> Evaluator<'a> {
 
         let quality = self.quality();
 
-        descriptor.push_str(&normalize(self.dc.interval_set, quality));
+        descriptor.push_str(&normalized_descriptor(self.dc.interval_set, quality));
 
         if let Some(bass) = self.dc.bass {
             write!(descriptor, "/{}", bass.literal).ok();

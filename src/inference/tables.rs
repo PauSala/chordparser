@@ -180,7 +180,7 @@ pub(crate) static MIDI_NOTE_TABLE: [NoteEntry; 12] = [
     },
 ];
 
-pub fn notes_from_midi(midi: u8) -> &'static [Note] {
+pub(crate) fn notes_from_midi(midi: u8) -> &'static [Note] {
     let entry = &MIDI_NOTE_TABLE[(midi % 12) as usize];
     &entry.notes[..entry.len]
 }

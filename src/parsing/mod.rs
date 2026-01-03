@@ -24,7 +24,7 @@ use token::{Token, TokenType};
 
 /// Used to handle `X(omit/add a,b)` cases.
 /// An omit/add modifier inside a parenthesis changes context to `Group` with active = false.  
-/// When a comma is encountered, if a Group context exits it is changed to active = true.    
+/// When a comma is encountered, if a Group context exists it is changed to active = true.    
 /// This allows for handling subsequent tokens assuming this context.  
 /// When parents are closed the context is reset to None.  
 /// Commas with no context are ignored.  

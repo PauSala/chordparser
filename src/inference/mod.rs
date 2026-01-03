@@ -1,11 +1,31 @@
-use crate::chord::{
-    interval::{Interval, IntervalSet, THIRDS_SET},
-    quality::{Pc, PcSet},
-};
-use crate::inference::normalize::normalize;
+use crate::chord::Chord;
+use crate::inference::normalize::normalized_descriptor;
 use crate::inference::tables::notes_from_midi;
+use crate::{
+    chord::{
+        interval::{Interval, IntervalSet, THIRDS_SET},
+        quality::{Pc, PcSet},
+    },
+    parsing::Parser,
+};
 pub(crate) mod normalize;
 mod tables;
+
+/// Builds an iterator of chords from the given MIDI note numbers.
+///
+/// If the MIDI notes can be interpreted as a valid chord, the iterator yields:
+/// - the chord built with the lowest note treated as the root, and
+/// - all inversions of that chord, treating the lowest note as the bass and
+///   each chord tone in turn as the root.
+///
+/// Invalid or unparseable chord descriptors are skipped.
+pub fn from_midi_codes<'a>(midi_codes: &'a [u8]) -> impl Iterator<Item = Chord> + 'a {
+    let mut parser = Parser::new();
+
+    descriptors_from_midi_codes(midi_codes)
+        .into_iter()
+        .filter_map(move |f| parser.parse(&f).ok())
+}
 
 /// Builds a list of chord descriptor strings from the given MIDI note numbers.
 ///
@@ -50,7 +70,7 @@ pub fn descriptors_from_midi_codes(midi_codes: &[u8]) -> Vec<String> {
             .first()
             .map(|n| n.to_string())
             .unwrap_or_default();
-        chord_name.push_str(&normalize(interval_set, (&pitch_set).into()));
+        chord_name.push_str(&normalized_descriptor(interval_set, (&pitch_set).into()));
 
         if index > 0 {
             chord_name.push('/');
@@ -178,7 +198,7 @@ fn resolve_augmented_fifth(iset: &mut IntervalSet) {
 mod test {
     use crate::{
         chord::{interval::IntervalSet, quality::PcSet},
-        inference::{descriptors_from_midi_codes, normalize},
+        inference::{descriptors_from_midi_codes, normalized_descriptor},
         parsing::Parser,
     };
 
@@ -189,7 +209,7 @@ mod test {
         let intervals_slice = parsed.intervals.as_slice();
         let pitch_set: PcSet = intervals_slice.into();
         let intervals: IntervalSet = pitch_set.into();
-        let _normalized = normalize(intervals, (&pitch_set).into());
+        let _normalized = normalized_descriptor(intervals, (&pitch_set).into());
     }
 
     #[test]

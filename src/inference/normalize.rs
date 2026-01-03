@@ -18,7 +18,8 @@ const SIX: &str = "6";
 const SEVEN: &str = "7";
 const NINE: &str = "9";
 
-pub(crate) fn normalize(interval_set: IntervalSet, quality: ChordQuality) -> String {
+/// Given an [`IntervalSet`] and a [`ChordQuality`], returns a String representing the normalized descriptor of a chord.
+pub(crate) fn normalized_descriptor(interval_set: IntervalSet, quality: ChordQuality) -> String {
     let mut descriptor = String::with_capacity(64);
     let pitch_set: PcSet = interval_set.into();
 
