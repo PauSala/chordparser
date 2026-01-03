@@ -1,3 +1,4 @@
+//! Inference module
 use crate::chord::Chord;
 use crate::inference::normalize::normalized_descriptor;
 use crate::inference::tables::notes_from_midi;
