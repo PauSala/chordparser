@@ -77,6 +77,32 @@ enum Phase {
     PostProcess,
 }
 
+impl From<PcSet> for IntervalSet {
+    fn from(pitch_set: PcSet) -> Self {
+        let mut iset = IntervalSet::new();
+        let mut process_later = IntervalSet::new();
+        let mut pending_aug_fifth = false;
+        for pc in pitch_set {
+            match classify_pc(pc) {
+                Phase::Immediate(i) => iset.insert(i),
+                Phase::Deferred(i) => process_later.insert(i),
+                Phase::PostProcess => pending_aug_fifth = true,
+            }
+        }
+        for interval in process_later {
+            if interval == Interval::AugmentedFifth {
+                pending_aug_fifth = true;
+            }
+            resolve_interval(&mut iset, interval);
+        }
+        if pending_aug_fifth {
+            resolve_augmented_fifth(&mut iset);
+        }
+
+        iset
+    }
+}
+
 fn classify_pc(pc: Pc) -> Phase {
     use Phase::*;
     match pc {
@@ -136,32 +162,6 @@ fn resolve_augmented_fifth(iset: &mut IntervalSet) {
         iset.insert(Interval::AugmentedFifth);
     } else {
         iset.insert(Interval::MinorSixth);
-    }
-}
-
-impl From<PcSet> for IntervalSet {
-    fn from(pitch_set: PcSet) -> Self {
-        let mut iset = IntervalSet::new();
-        let mut process_later = IntervalSet::new();
-        let mut pending_aug_fifth = false;
-        for pc in pitch_set {
-            match classify_pc(pc) {
-                Phase::Immediate(i) => iset.insert(i),
-                Phase::Deferred(i) => process_later.insert(i),
-                Phase::PostProcess => pending_aug_fifth = true,
-            }
-        }
-        for interval in process_later {
-            if interval == Interval::AugmentedFifth {
-                pending_aug_fifth = true;
-            }
-            resolve_interval(&mut iset, interval);
-        }
-        if pending_aug_fifth {
-            resolve_augmented_fifth(&mut iset);
-        }
-
-        iset
     }
 }
 
