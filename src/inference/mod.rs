@@ -197,26 +197,5 @@ fn resolve_augmented_fifth(iset: &mut IntervalSet) {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        chord::{interval::IntervalSet, quality::PcSet},
-        inference::{descriptors_from_midi_codes, normalized_descriptor},
-        parsing::Parser,
-    };
-
-    #[test]
-    fn test() {
-        let mut parser = Parser::new();
-        let parsed = parser.parse("C6").unwrap();
-        let intervals_slice = parsed.intervals.as_slice();
-        let pitch_set: PcSet = intervals_slice.into();
-        let intervals: IntervalSet = pitch_set.into();
-        let _normalized = normalized_descriptor(intervals, (&pitch_set).into());
-    }
-
-    #[test]
-    fn test_from_midi_codes() {
-        let midi_codes: &[u8] = &[4, 7, 12];
-        let candidates = descriptors_from_midi_codes(midi_codes);
-        dbg!(candidates);
-    }
+    // TODO: Add `descriptors_from_midi_codes` tests
 }
