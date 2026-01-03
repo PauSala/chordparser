@@ -18,8 +18,9 @@ const SIX: &str = "6";
 const SEVEN: &str = "7";
 const NINE: &str = "9";
 
-pub fn normalize(pitch_set: PcSet, interval_set: IntervalSet, quality: ChordQuality) -> String {
-    let mut descriptor = String::with_capacity(128);
+pub(crate) fn normalize(interval_set: IntervalSet, quality: ChordQuality) -> String {
+    let mut descriptor = String::with_capacity(64);
+    let pitch_set: PcSet = interval_set.into();
 
     if quality == ChordQuality::Bass {
         descriptor.push_str("Bass");

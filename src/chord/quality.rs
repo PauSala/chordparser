@@ -45,7 +45,7 @@ const EMPTY_INTERVAL_SET: IntervalSet = IntervalSet::from_array([]);
 
 /// PitchClass: semitones in two octaves
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, EnumBitset)]
-pub enum Pc {
+pub(crate) enum Pc {
     Pc0,  // Root
     Pc1,  // m2
     Pc2,  // M2
@@ -104,6 +104,15 @@ impl From<&[Interval]> for PcSet {
     fn from(value: &[Interval]) -> Self {
         value.iter().fold(PcSet::new(), |mut acc, int| {
             acc.insert(Into::<Pc>::into(int));
+            acc
+        })
+    }
+}
+
+impl From<IntervalSet> for PcSet {
+    fn from(value: IntervalSet) -> Self {
+        value.iter().fold(PcSet::new(), |mut acc, int| {
+            acc.insert(Into::<Pc>::into(&int));
             acc
         })
     }

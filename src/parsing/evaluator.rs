@@ -300,7 +300,7 @@ impl<'a> Evaluator<'a> {
             let v = e.st();
             semitones.push(v);
         }
-        let normalized = self.normalize_chord();
+        let normalized = self.normalize_descriptor();
 
         Ok(Chord::builder(&self.name, self.ast.root)
             .descriptor(&self.descriptor(&self.name))
@@ -401,7 +401,8 @@ impl<'a> Evaluator<'a> {
         }
     }
 
-    pub(crate) fn quality(&self) -> ChordQuality {
+    /// Get the quality of the chord
+    fn quality(&self) -> ChordQuality {
         let intervals_slice = self.dc.intervals.as_slice();
         let mut virtual_set: PcSet = intervals_slice.into();
 
@@ -414,17 +415,14 @@ impl<'a> Evaluator<'a> {
         (&virtual_set).into()
     }
 
-    pub(crate) fn normalize_chord(&self) -> String {
-        let mut descriptor = String::with_capacity(128);
+    /// Build a normalized version of the descriptor
+    fn normalize_descriptor(&self) -> String {
+        let mut descriptor = String::with_capacity(64);
         write!(descriptor, "{}", self.ast.root).ok();
 
         let quality = self.quality();
 
-        descriptor.push_str(&normalize(
-            self.dc.intervals.as_slice().into(),
-            self.dc.interval_set,
-            quality,
-        ));
+        descriptor.push_str(&normalize(self.dc.interval_set, quality));
 
         if let Some(bass) = self.dc.bass {
             write!(descriptor, "/{}", bass.literal).ok();
