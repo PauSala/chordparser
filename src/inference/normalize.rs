@@ -73,8 +73,8 @@ pub(crate) fn normalized_descriptor(interval_set: IntervalSet, quality: ChordQua
         descriptor.push_str(add.to_chord_notation());
     }
 
-    for i in 0..omits_count {
-        if let Some(omit_str) = omits_list[i] {
+    for (i, omit) in omits_list.iter().enumerate().take(omits_count) {
+        if let Some(omit_str) = omit {
             ensure_paren(&mut descriptor, &mut open_paren);
             if i == 0 {
                 descriptor.push_str("omit");
@@ -108,7 +108,7 @@ fn omits(
     }
     // is omit 5 if there isn't a five and there isn't a b13 (bc in this case the 5 is omited by default)
     if interval_set.intersection(&FIFTHS_SET).is_empty()
-        && !interval_set.contains(&Interval::FlatThirteenth)
+        && !interval_set.contains(Interval::FlatThirteenth)
     {
         res[count] = Some("5");
         count += 1;
@@ -180,19 +180,19 @@ fn append_quality_modifier(f: &mut String, quality: &ChordQuality, modifier: Opt
             None => f.push_str(SIX),
             Some(m) => {
                 f.push_str(SIX);
-                f.push_str(&m.to_chord_notation());
+                f.push_str(m.to_chord_notation());
             }
         },
         Maj7 => match modifier {
             None => f.push_str(MA7),
             Some(m) => {
                 f.push_str(MA);
-                f.push_str(&m.to_chord_notation());
+                f.push_str(m.to_chord_notation());
             }
         },
         Dominant7 => {
             let modstring = modifier.map_or(SEVEN, |m| m.to_chord_notation());
-            f.push_str(&modstring);
+            f.push_str(modstring);
         }
         Mi => f.push_str(MI),
         Mi6 => {
@@ -203,20 +203,20 @@ fn append_quality_modifier(f: &mut String, quality: &ChordQuality, modifier: Opt
             None => f.push_str(MI7),
             Some(m) => {
                 f.push_str(MI);
-                f.push_str(&m.to_chord_notation());
+                f.push_str(m.to_chord_notation());
             }
         },
         MiMaj7 => match modifier {
             None => f.push_str(MIMA7),
             Some(m) => {
                 f.push_str(MIMA);
-                f.push_str(&m.to_chord_notation());
+                f.push_str(m.to_chord_notation());
             }
         },
         Augmented => {
             f.push_str(AUG);
             if let Some(m) = modifier {
-                f.push_str(&m.to_chord_notation());
+                f.push_str(m.to_chord_notation());
             }
         }
         Diminished => f.push_str(DIM),
