@@ -43,7 +43,7 @@ pub fn descriptors_from_midi_codes(midi_codes: &[u8]) -> Vec<String> {
     }
 
     let root_note = notes_from_midi(midi_codes[0])
-        .first()
+        .last()
         .map(|n| n.to_string())
         .unwrap_or_default();
     let mut candidates = Vec::with_capacity(midi_codes.len());
@@ -68,7 +68,7 @@ pub fn descriptors_from_midi_codes(midi_codes: &[u8]) -> Vec<String> {
         }
 
         let mut chord_name = notes_from_midi(midi_note)
-            .first()
+            .last()
             .map(|n| n.to_string())
             .unwrap_or_default();
         chord_name.push_str(&normalized_descriptor(interval_set, (&pitch_set).into()));
@@ -197,5 +197,52 @@ fn resolve_augmented_fifth(iset: &mut IntervalSet) {
 
 #[cfg(test)]
 mod test {
-    // TODO: Add `descriptors_from_midi_codes` tests
+    use crate::inference::descriptors_from_midi_codes;
+
+    #[test]
+    fn test_from_midi_codes() {
+        // Ebdim7(b13, add9)
+        let midi_codes: &[u8] = &[3, 6, 9, 12, 17, 107];
+        let candidates = descriptors_from_midi_codes(midi_codes);
+        let expected = [
+            "Ebdim7(b13,add9)",
+            "Gbdim7(addMa7,11)/Eb",
+            "Adim7(b13,add9)/Eb",
+            "Cdim7(addMa7,11)/Eb",
+            "F7(b9,#11)/Eb",
+            "B7(b9,#11)/Eb",
+        ];
+        for (result, expected) in candidates.iter().zip(expected) {
+            assert_eq!(result, expected);
+        }
+
+        // C69
+        let midi_codes: &[u8] = &[0, 4, 7, 9, 14];
+        let candidates = descriptors_from_midi_codes(midi_codes);
+        let expected = [
+            "C69",
+            "Emi7(b13,add11)/C",
+            "G6sus9/C",
+            "Ami7(add11)/C",
+            "D9sus/C",
+        ];
+        for (result, expected) in candidates.iter().zip(expected) {
+            assert_eq!(result, expected);
+        }
+
+        // CmiMa11
+        let midi_codes: &[u8] = &[0, 27, 43, 59, 74, 5];
+        let candidates = descriptors_from_midi_codes(midi_codes);
+        let expected = [
+            "CmiMa11",
+            "Eb69(b13,addMa7)/C",
+            "G7sus(b13,add3)/C",
+            "B+(b5,b9,#9)/C",
+            "Dmi13(b9,omit5)/C",
+            "F13(#11,omit3)/C",
+        ];
+        for (result, expected) in candidates.iter().zip(expected) {
+            assert_eq!(result, expected);
+        }
+    }
 }
