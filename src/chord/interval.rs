@@ -6,10 +6,10 @@ use serde::Deserialize;
 use serde::ser::{Serialize, Serializer};
 use std::fmt::Display;
 
-pub const THIRDS_SET: IntervalSet =
+pub(crate) const THIRDS_SET: IntervalSet =
     IntervalSet::from_array([Interval::MinorThird, Interval::MajorThird]);
 
-pub const FIFTHS_SET: IntervalSet = IntervalSet::from_array([
+pub(crate) const FIFTHS_SET: IntervalSet = IntervalSet::from_array([
     Interval::DiminishedFifth,
     Interval::PerfectFifth,
     Interval::AugmentedFifth,

@@ -1,3 +1,5 @@
+//! Quality of the chord and its derived rules
+
 use crate::chord::interval::{IntDegree, IntDegreeSet, Interval, IntervalSet};
 use ChordQuality::*;
 use Interval::*;

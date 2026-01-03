@@ -1,4 +1,4 @@
-//! # Midi Codes voicing generator
+//! Midi Codes voicing generator
 
 use crate::chord::{Chord, interval::Interval, note::Note};
 

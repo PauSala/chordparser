@@ -1,9 +1,9 @@
-use chordparser::inference::from_midi_codes;
+use chordparser::inference::descriptors_from_midi_codes;
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
 
 fn infere(midi_codes: &[u8]) -> Vec<String> {
-    from_midi_codes(midi_codes)
+    descriptors_from_midi_codes(midi_codes)
 }
 
 fn criterion_benchmark(c: &mut Criterion) {

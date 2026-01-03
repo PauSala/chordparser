@@ -4,10 +4,19 @@ use crate::chord::{
 };
 use crate::inference::normalize::normalize;
 use crate::inference::tables::notes_from_midi;
-pub mod normalize;
+pub(crate) mod normalize;
 mod tables;
 
-pub fn from_midi_codes(midi_codes: &[u8]) -> Vec<String> {
+/// Builds a list of chord descriptor strings from the given MIDI note numbers.
+///
+/// Each descriptor represents either:
+/// - a chord assuming the lowest note as the root, or
+/// - an inversion, with the lowest note treated as the bass.
+///
+/// The generated descriptors are *candidates only* and are **not guaranteed**
+/// to represent valid chords. They can be validated and converted into a
+/// [`crate::chord::Chord`] by passing them to the chord parser.
+pub fn descriptors_from_midi_codes(midi_codes: &[u8]) -> Vec<String> {
     if midi_codes.is_empty() {
         return vec![];
     }
@@ -169,7 +178,7 @@ fn resolve_augmented_fifth(iset: &mut IntervalSet) {
 mod test {
     use crate::{
         chord::{interval::IntervalSet, quality::PcSet},
-        inference::{from_midi_codes, normalize},
+        inference::{descriptors_from_midi_codes, normalize},
         parsing::Parser,
     };
 
@@ -186,7 +195,7 @@ mod test {
     #[test]
     fn test_from_midi_codes() {
         let midi_codes: &[u8] = &[4, 7, 12];
-        let candidates = from_midi_codes(midi_codes);
+        let candidates = descriptors_from_midi_codes(midi_codes);
         dbg!(candidates);
     }
 }

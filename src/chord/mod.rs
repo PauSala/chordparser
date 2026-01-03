@@ -1,4 +1,4 @@
-//! # Chords, notes and intervals
+//! Chords, notes and intervals
 use crate::chord::{note::Note, quality::ChordQuality};
 use interval::Interval;
 use serde::{Deserialize, Serialize};

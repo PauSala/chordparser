@@ -1,4 +1,4 @@
-//! # Chord parsing module
+//! Chord parsing module
 pub(crate) mod ast;
 pub(crate) mod evaluator;
 pub(crate) mod expression;
