@@ -37,11 +37,14 @@ pub fn from_midi_codes<'a>(midi_codes: &'a [u8]) -> impl Iterator<Item = Chord> 
 /// The generated descriptors are *candidates only* and are **not guaranteed**
 /// to represent valid chords. They can be validated and converted into a
 /// [`crate::chord::Chord`] by passing them to the chord parser.
+///
+/// The returned descriptors are always enharmonized as the flat version.
 pub fn descriptors_from_midi_codes(midi_codes: &[u8]) -> Vec<String> {
     if midi_codes.is_empty() {
         return vec![];
     }
 
+    // TODO: we are skipping the sharp versions
     let root_note = notes_from_midi(midi_codes[0])
         .last()
         .map(|n| n.to_string())
