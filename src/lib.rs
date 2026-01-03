@@ -51,5 +51,6 @@
 //! ```
 
 pub mod chord;
+pub mod inference;
 pub mod parsing;
 pub mod voicings;

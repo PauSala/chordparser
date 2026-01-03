@@ -27,6 +27,10 @@ path = "examples/parse-chord.rs"
 name = "bench_parser"
 harness = false
 
+[[bench]]
+name = "bench_infere"
+harness = false
+
 
 [profile.release]
 opt-level = 3

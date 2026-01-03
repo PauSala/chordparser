@@ -1,3 +1,5 @@
+//! Quality of the chord and its derived rules
+
 use crate::chord::interval::{IntDegree, IntDegreeSet, Interval, IntervalSet};
 use ChordQuality::*;
 use Interval::*;
@@ -12,6 +14,7 @@ const MAJ_SET: PcSet = PcSet::from_array([Pc4]);
 const MAJ6_SET: PcSet = PcSet::from_array([Pc4, Pc9]);
 const MAJ7_SET: PcSet = PcSet::from_array([Pc4, Pc11]);
 const DOM7_SET: PcSet = PcSet::from_array([Pc4, Pc10]);
+const SUS7_SET: PcSet = PcSet::from_array([Pc5, Pc10]);
 
 const MIN_SET: PcSet = PcSet::from_array([Pc3]);
 const MIN6_SET: PcSet = PcSet::from_array([Pc3, Pc9]);
@@ -25,8 +28,6 @@ const DIM7_SET: PcSet = PcSet::from_array([Pc3, Pc6, Pc9]);
 // Other convenient sets
 const SEVENTH_SET: PcSet = PcSet::from_array([Pc10, Pc11]);
 const SUS_SET: PcSet = PcSet::from_array([Pc5, Pc17]);
-pub(crate) const THIRDS_SET: PcSet = PcSet::from_array([Pc3, Pc4]);
-pub(crate) const FIFTHS_SET: PcSet = PcSet::from_array([Pc6, Pc7, Pc8]);
 
 const QUALITY_SETS: &[(ChordQuality, PcSet)] = &[
     (Dominant7, DOM7_SET),
@@ -36,6 +37,7 @@ const QUALITY_SETS: &[(ChordQuality, PcSet)] = &[
     (Mi, MIN_SET),
     (Maj6, MAJ6_SET),
     (Maj7, MAJ7_SET),
+    (Dominant7, SUS7_SET),
     (Maj, MAJ_SET),
     (Power, POW_SET),
 ];
@@ -45,7 +47,7 @@ const EMPTY_INTERVAL_SET: IntervalSet = IntervalSet::from_array([]);
 
 /// PitchClass: semitones in two octaves
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, EnumBitset)]
-pub enum Pc {
+pub(crate) enum Pc {
     Pc0,  // Root
     Pc1,  // m2
     Pc2,  // M2
@@ -55,7 +57,7 @@ pub enum Pc {
     Pc6,  // #4 / b5
     Pc7,  // P5
     Pc8,  // #5 / b6
-    Pc9,  // M6
+    Pc9,  // M6 / d7
     Pc10, // m7
     Pc11, // M7
 
@@ -68,7 +70,7 @@ pub enum Pc {
     Pc18, // #11
     Pc19, // 12 / 5
     Pc20, // b13
-    Pc21, // 13
+    Pc21, // 13 / 6 / d7
     Pc22, // m7
     Pc23, // M7
 }
@@ -104,6 +106,15 @@ impl From<&[Interval]> for PcSet {
     fn from(value: &[Interval]) -> Self {
         value.iter().fold(PcSet::new(), |mut acc, int| {
             acc.insert(Into::<Pc>::into(int));
+            acc
+        })
+    }
+}
+
+impl From<IntervalSet> for PcSet {
+    fn from(value: IntervalSet) -> Self {
+        value.iter().fold(PcSet::new(), |mut acc, int| {
+            acc.insert(Into::<Pc>::into(&int));
             acc
         })
     }

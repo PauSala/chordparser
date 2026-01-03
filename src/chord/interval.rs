@@ -6,6 +6,15 @@ use serde::Deserialize;
 use serde::ser::{Serialize, Serializer};
 use std::fmt::Display;
 
+pub(crate) const THIRDS_SET: IntervalSet =
+    IntervalSet::from_array([Interval::MinorThird, Interval::MajorThird]);
+
+pub(crate) const FIFTHS_SET: IntervalSet = IntervalSet::from_array([
+    Interval::DiminishedFifth,
+    Interval::PerfectFifth,
+    Interval::AugmentedFifth,
+]);
+
 /// Enum representing intervals of a chord
 #[derive(
     Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Hash, EnumBitset, Default,
@@ -119,31 +128,31 @@ impl Interval {
     /// * `self` - The interval
     /// # Returns
     /// * `String` - The chord notation form for this interval
-    pub fn to_chord_notation(&self) -> String {
+    pub fn to_chord_notation(&self) -> &'static str {
         match self {
-            Unison => "1".to_string(),
-            MinorSecond => "b2".to_string(),
-            MajorSecond => "2".to_string(),
-            MinorThird => "b3".to_string(),
-            MajorThird => "3".to_string(),
-            PerfectFourth => "4".to_string(),
-            AugmentedFourth => "#4".to_string(),
-            DiminishedFifth => "b5".to_string(),
-            PerfectFifth => "5".to_string(),
-            AugmentedFifth => "#5".to_string(),
-            MinorSixth => "b6".to_string(),
-            MajorSixth => "6".to_string(),
-            DiminishedSeventh => "bb7".to_string(),
-            MinorSeventh => "7".to_string(),
-            MajorSeventh => "Ma7".to_string(),
-            Octave => "8".to_string(),
-            FlatNinth => "b9".to_string(),
-            Ninth => "9".to_string(),
-            SharpNinth => "#9".to_string(),
-            Eleventh => "11".to_string(),
-            SharpEleventh => "#11".to_string(),
-            FlatThirteenth => "b13".to_string(),
-            Thirteenth => "13".to_string(),
+            Unison => "1",
+            MinorSecond => "b2",
+            MajorSecond => "2",
+            MinorThird => "b3",
+            MajorThird => "3",
+            PerfectFourth => "4",
+            AugmentedFourth => "#4",
+            DiminishedFifth => "b5",
+            PerfectFifth => "5",
+            AugmentedFifth => "#5",
+            MinorSixth => "b6",
+            MajorSixth => "6",
+            DiminishedSeventh => "bb7",
+            MinorSeventh => "7",
+            MajorSeventh => "Ma7",
+            Octave => "8",
+            FlatNinth => "b9",
+            Ninth => "9",
+            SharpNinth => "#9",
+            Eleventh => "11",
+            SharpEleventh => "#11",
+            FlatThirteenth => "b13",
+            Thirteenth => "13",
         }
     }
 }
