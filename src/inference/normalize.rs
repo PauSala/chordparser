@@ -1,6 +1,6 @@
 use crate::chord::{
     interval::{FIFTHS_SET, IntDegree, IntDegreeSet, Interval, IntervalSet, THIRDS_SET},
-    quality::{ChordQuality, PcSet},
+    quality::{ChordQuality, Pc, PcSet},
 };
 use ChordQuality::*;
 
@@ -63,7 +63,9 @@ pub(crate) fn normalized_descriptor(interval_set: IntervalSet, quality: ChordQua
 
     for (i, add) in adds.iter().enumerate() {
         if *add == Interval::Ninth && (quality == Maj6 || quality == Mi6) {
-            descriptor.push_str(NINE);
+            if let Some(pos) = descriptor.find('6') {
+                descriptor.insert_str(pos + 1, NINE);
+            }
             continue;
         }
         ensure_paren(&mut descriptor, &mut open_paren);
@@ -145,9 +147,10 @@ fn split_extensions(
             .iter()
             .filter(|ext| ext <= &curr.into())
             .collect();
+        let pc: Pc = (&curr).into();
         if stack.is_subset_of(&degrees) {
             main = Some(curr);
-        } else {
+        } else if !quality.self_mask().contains(pc) {
             adds.push(curr);
         }
     }

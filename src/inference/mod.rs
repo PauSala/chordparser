@@ -139,18 +139,18 @@ impl From<PcSet> for IntervalSet {
 fn classify_pc(pc: Pc) -> Phase {
     use Phase::*;
     match pc {
-        Pc::Pc0 | Pc::Pc12 => Immediate(Interval::Unison),
-        Pc::Pc1 | Pc::Pc13 => Immediate(Interval::FlatNinth),
-        Pc::Pc2 | Pc::Pc14 => Immediate(Interval::Ninth),
-        Pc::Pc3 | Pc::Pc15 => Deferred(Interval::MinorThird),
-        Pc::Pc4 | Pc::Pc16 => Immediate(Interval::MajorThird),
-        Pc::Pc5 | Pc::Pc17 => Immediate(Interval::Eleventh),
-        Pc::Pc6 | Pc::Pc18 => Deferred(Interval::AugmentedFourth),
-        Pc::Pc7 | Pc::Pc19 => Immediate(Interval::PerfectFifth),
-        Pc::Pc8 | Pc::Pc20 => PostProcess,
-        Pc::Pc9 | Pc::Pc21 => Deferred(Interval::MajorSixth),
-        Pc::Pc10 | Pc::Pc22 => Immediate(Interval::MinorSeventh),
-        Pc::Pc11 | Pc::Pc23 => Immediate(Interval::MajorSeventh),
+        Pc::Pc0 => Immediate(Interval::Unison),
+        Pc::Pc1 => Immediate(Interval::FlatNinth),
+        Pc::Pc2 => Immediate(Interval::Ninth),
+        Pc::Pc3 => Deferred(Interval::MinorThird),
+        Pc::Pc4 => Immediate(Interval::MajorThird),
+        Pc::Pc5 => Immediate(Interval::Eleventh),
+        Pc::Pc6 => Deferred(Interval::AugmentedFourth),
+        Pc::Pc7 => Immediate(Interval::PerfectFifth),
+        Pc::Pc8 => PostProcess,
+        Pc::Pc9 => Deferred(Interval::MajorSixth),
+        Pc::Pc10 => Immediate(Interval::MinorSeventh),
+        Pc::Pc11 => Immediate(Interval::MajorSeventh),
     }
 }
 
@@ -225,7 +225,7 @@ mod test {
         let expected = [
             "C69",
             "Emi7(b13,add11)/C",
-            "G6sus9/C",
+            "G69sus/C",
             "Ami7(add11)/C",
             "D9sus/C",
         ];

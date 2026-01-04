@@ -8,6 +8,7 @@ use enum_bitset::EnumBitset;
 use serde::{Deserialize, Serialize};
 
 // Quality sets
+const EMPTY_SET: PcSet = PcSet::from_array([]);
 const POW_SET: PcSet = PcSet::from_array([Pc7]);
 pub(crate) const EXACT_POW_SET: PcSet = PcSet::from_array([Pc::Pc0, Pc::Pc7]);
 const MAJ_SET: PcSet = PcSet::from_array([Pc4]);
@@ -27,7 +28,7 @@ const DIM7_SET: PcSet = PcSet::from_array([Pc3, Pc6, Pc9]);
 
 // Other convenient sets
 const SEVENTH_SET: PcSet = PcSet::from_array([Pc10, Pc11]);
-const SUS_SET: PcSet = PcSet::from_array([Pc5, Pc17]);
+const SUS_SET: PcSet = PcSet::from_array([Pc5]);
 
 const QUALITY_SETS: &[(ChordQuality, PcSet)] = &[
     (Dominant7, DOM7_SET),
@@ -60,44 +61,23 @@ pub(crate) enum Pc {
     Pc9,  // M6 / d7
     Pc10, // m7
     Pc11, // M7
-
-    Pc12, // Root
-    Pc13, // b9
-    Pc14, // 9
-    Pc15, // #9 / ♭3
-    Pc16, // M10 / 3
-    Pc17, // 11
-    Pc18, // #11
-    Pc19, // 12 / 5
-    Pc20, // b13
-    Pc21, // 13 / 6 / d7
-    Pc22, // m7
-    Pc23, // M7
 }
 
 impl From<&Interval> for Pc {
     fn from(value: &Interval) -> Self {
         match value {
-            Unison => Pc0,
-            MinorSecond => Pc1,
-            MajorSecond => Pc2,
-            MinorThird => Pc3,
+            Unison | Octave => Pc0,
+            MinorSecond | FlatNinth => Pc1,
+            MajorSecond | Ninth => Pc2,
+            MinorThird | SharpNinth => Pc3,
             MajorThird => Pc4,
-            PerfectFourth => Pc5,
-            AugmentedFourth | DiminishedFifth => Pc6,
+            PerfectFourth | Eleventh => Pc5,
+            AugmentedFourth | DiminishedFifth | SharpEleventh => Pc6,
             PerfectFifth => Pc7,
-            AugmentedFifth | MinorSixth => Pc8,
-            MajorSixth | DiminishedSeventh => Pc9,
+            AugmentedFifth | MinorSixth | FlatThirteenth => Pc8,
+            MajorSixth | DiminishedSeventh | Thirteenth => Pc9,
             MinorSeventh => Pc10,
             MajorSeventh => Pc11,
-            Octave => Pc12,
-            FlatNinth => Pc13,
-            Ninth => Pc14,
-            SharpNinth => Pc15,
-            Eleventh => Pc17,
-            SharpEleventh => Pc18,
-            FlatThirteenth => Pc20,
-            Thirteenth => Pc21,
         }
     }
 }
@@ -147,6 +127,24 @@ impl ChordQuality {
         match self {
             ChordQuality::Power | ChordQuality::Bass => false,
             _ => !ints.contains(Pc3) && !ints.intersection(&SUS_SET).is_empty(),
+        }
+    }
+
+    pub(crate) fn self_mask(&self) -> PcSet {
+        match self {
+            Maj => MAJ_SET,
+            Maj6 => MAJ6_SET,
+            Maj7 => MAJ7_SET,
+            Dominant7 => DOM7_SET,
+            Mi => MIN_SET,
+            Mi6 => MIN6_SET,
+            Mi7 => MIN7_SET,
+            MiMaj7 => MIMA7SET,
+            Augmented => AUG_SET,
+            Diminished => DIM_SET,
+            Diminished7 => DIM7_SET,
+            Power => POW_SET,
+            Bass => EMPTY_SET,
         }
     }
 
@@ -264,7 +262,7 @@ impl From<&PcSet> for ChordQuality {
     }
 }
 
-const DIM_SET_EXCLUDES: PcSet = PcSet::from_array([Pc10, Pc4, Pc22, Pc16]);
+const DIM_SET_EXCLUDES: PcSet = PcSet::from_array([Pc4, Pc7, Pc10]);
 
 fn is_augmented(value: &PcSet) -> bool {
     // If it has a 7th or 6th is not handled as aug.
