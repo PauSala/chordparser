@@ -198,6 +198,10 @@ use test_case::test_case;
 #[test_case("C-9dim", vec!["C","Eb","Gb","Bb","D"])]
 #[test_case("CMaj7+Omit5", vec!["C","E","B"])]
 #[test_case("CmiMa7(b6)", vec!["C","Eb","G", "Ab", "B"])]
+#[test_case("C6(#9,#11,addMa7)", vec!["C", "E", "G", "A", "B", "D#", "F#"])]
+#[test_case("CMaj7#9", vec!["C", "E", "G", "B", "D#"])]
+#[test_case("Cdim7Maj7", vec!["C", "Eb", "Gb", "B𝄫", "B"])]
+#[test_case("C-7#11", vec!["C", "Eb", "G", "Bb", "F#"])]
 fn test_notes(input: &str, expected: Vec<&str>) {
     let mut parser = Parser::new();
 

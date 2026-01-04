@@ -247,5 +247,21 @@ mod test {
         for (result, expected) in candidates.iter().zip(expected) {
             assert_eq!(result, expected);
         }
+
+        // Stravinsky's Rite of Spring chord
+        let midi_codes: &[u8] = &[0, 4, 7, 11, 15, 18, 21];
+        let candidates = descriptors_from_midi_codes(midi_codes);
+        let expected = [
+            "C6(#9,#11,addMa7)",
+            "EmiMa11(b6)/C",
+            "G69sus(b13,addMa7,3)/C",
+            "B7sus(b9,b13,add3)/C",
+            "Eb6(b5,b9,#9,b13)/C",
+            "Gbmi13(b5,b9)/C",
+            "Ami13(#11)/C",
+        ];
+        for (result, expected) in candidates.iter().zip(expected) {
+            assert_eq!(result, expected);
+        }
     }
 }

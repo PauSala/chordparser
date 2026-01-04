@@ -31,14 +31,14 @@ const SUS_SET: PcSet = PcSet::from_array([Pc5, Pc17]);
 
 const QUALITY_SETS: &[(ChordQuality, PcSet)] = &[
     (Dominant7, DOM7_SET),
+    (Maj6, MAJ6_SET),
+    (Maj7, MAJ7_SET),
+    (Maj, MAJ_SET),
     (MiMaj7, MIMA7SET),
     (Mi7, MIN7_SET),
     (Mi6, MIN6_SET),
     (Mi, MIN_SET),
-    (Maj6, MAJ6_SET),
-    (Maj7, MAJ7_SET),
     (Dominant7, SUS7_SET),
-    (Maj, MAJ_SET),
     (Power, POW_SET),
 ];
 
@@ -264,15 +264,17 @@ impl From<&PcSet> for ChordQuality {
     }
 }
 
+const DIM_SET_EXCLUDES: PcSet = PcSet::from_array([Pc10, Pc4, Pc22, Pc16]);
+
 fn is_augmented(value: &PcSet) -> bool {
-    // If it has a 7th ir 6th is not handled as aug.
+    // If it has a 7th or 6th is not handled as aug.
     value.is_superset_of(&AUG_SET) && value.is_disjoint(&SEVENTH_SET) && !value.contains_const(&Pc9)
 }
 fn is_diminished(value: &PcSet) -> bool {
-    // no m7, otherwise b5 will be handled as alteration.
-    value.is_superset_of(&DIM_SET) && !value.contains(Pc10)
+    // no m7 or M3, otherwise b5 will be handled as alteration.
+    value.is_superset_of(&DIM_SET) && value.intersection(&DIM_SET_EXCLUDES).is_empty()
 }
 fn is_diminished7(value: &PcSet) -> bool {
-    // no m7, otherwise b5 will be handled as alteration.
-    value.is_superset_of(&DIM7_SET) && !value.contains(Pc10)
+    // no m7 or M3, otherwise b5 will be handled as alteration.
+    value.is_superset_of(&DIM7_SET) && value.intersection(&DIM_SET_EXCLUDES).is_empty()
 }
